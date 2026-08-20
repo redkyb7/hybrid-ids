@@ -1,0 +1,13 @@
+Installation:
+pip install tensorflow scikit-learn imbalanced-learn pandas numpy \
+            matplotlib seaborn
+
+Running:
+# Train + save model
+python train.py
+
+# Full evaluation with plots
+python evaluate.py
+
+# Test inference (smoke test)
+python predict.py

@@ -1,3 +1,15 @@
+# Python & Virtual Env
 venv/
 *.pyc
 __pycache__/
+.ipynb_checkpoints/
+
+# Large Datasets & Databases (GitHub 100MB file limit)
+*.csv
+*.arff
+*.db
+*.db-journal
+
+# Checkpoints & Tensorboard Logs
+logs/
+*.log
