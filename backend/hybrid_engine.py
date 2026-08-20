@@ -57,6 +57,9 @@ class HybridIDSEngine:
             try:
                 import sys
                 import importlib.util
+                if self.dl_dir not in sys.path:
+                    sys.path.insert(0, self.dl_dir)
+
                 predict_path = os.path.join(self.dl_dir, "predict.py")
                 if os.path.exists(predict_path):
                     spec = importlib.util.spec_from_file_location("dl_predict", predict_path)
