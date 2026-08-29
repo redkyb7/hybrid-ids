@@ -1,5 +1,7 @@
 # Python & Virtual Env
 venv/
+.venv/
+env/
 *.pyc
 __pycache__/
 .ipynb_checkpoints/
@@ -10,6 +12,23 @@ __pycache__/
 *.db
 *.db-journal
 
-# Checkpoints & Tensorboard Logs
+# Checkpoints, Logs & Outputs
 logs/
 *.log
+output/
+
+# Proposal PDFs & Personal Analysis Docs (Keep team READMEs only)
+*.pdf
+*ANALYSIS*.md
+*PLAN*.md
+readable_proposal.md
+*.txt.bak
+
+# IDE & Tooling Metadata
+.vscode/
+.idea/
+.agents/
+.claude/
+.codex-plugin/
+.DS_Store
+Thumbs.db

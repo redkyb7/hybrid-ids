@@ -1,0 +1,71 @@
+services:
+  # ----------------------------------------------------------------------------
+  # 1. Victim Target Node (Web Server & OpenSSH)
+  # ----------------------------------------------------------------------------
+  victim:
+    build:
+      context: ./testbed/victim
+      dockerfile: Dockerfile
+    container_name: ids-victim
+    hostname: victim-server
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      ids-network:
+        ipv4_address: 192.168.100.10
+    ports:
+      - "8080:80"     # Web application accessible on host localhost:8080
+      - "2222:22"     # OpenSSH server accessible on host localhost:2222
+    restart: unless-stopped
+
+  # ----------------------------------------------------------------------------
+  # 2. Benign Client Node (Legitimate Traffic Generator)
+  # ----------------------------------------------------------------------------
+  benign_client:
+    build:
+      context: ./testbed/client
+      dockerfile: Dockerfile
+    container_name: ids-benign-client
+    hostname: client-workstation
+    environment:
+      - PYTHONUNBUFFERED=1
+    networks:
+      ids-network:
+        ipv4_address: 192.168.100.101
+    depends_on:
+      - victim
+    restart: unless-stopped
+
+  # ----------------------------------------------------------------------------
+  # 3. Attacker Node (Penetration Testing & Campaign Launcher)
+  # ----------------------------------------------------------------------------
+  attacker:
+    build:
+      context: ./testbed/attacker
+      dockerfile: Dockerfile
+    container_name: ids-attacker
+    hostname: kali-attacker
+    environment:
+      - PYTHONUNBUFFERED=1
+    cap_add:
+      - NET_ADMIN
+      - NET_RAW
+    networks:
+      ids-network:
+        ipv4_address: 192.168.100.66
+    depends_on:
+      - victim
+    restart: unless-stopped
+
+# ------------------------------------------------------------------------------
+# Isolated Network Definition
+# ------------------------------------------------------------------------------
+networks:
+  ids-network:
+    name: br-ids-net
+    driver: bridge
+    ipam:
+      driver: default
+      config:
+        - subnet: 192.168.100.0/24
+          gateway: 192.168.100.1
