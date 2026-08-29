@@ -94,9 +94,10 @@ class LiveCaptureDaemon:
         self._init_database()
 
     def _init_database(self):
-        """Initializes SQLite database with schema and WAL mode."""
+        """Initializes SQLite database with schema and compatible journal mode."""
         self.db_conn = sqlite3.connect(self.db_path, timeout=30.0, isolation_level=None, check_same_thread=False)
-        self.db_conn.execute("PRAGMA journal_mode=WAL;")
+        self.db_conn.execute("PRAGMA journal_mode=DELETE;")
+        self.db_conn.execute("PRAGMA synchronous=NORMAL;")
         self.db_conn.execute("PRAGMA busy_timeout=30000;")
         self.db_conn.execute('''
             CREATE TABLE IF NOT EXISTS logs (

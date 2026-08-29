@@ -136,7 +136,7 @@ class HybridIDSEngine:
                     dl_probs = self.stage2_classifier.model.predict(scaled_vec, verbose=0)[0]
                     
                     # Find highest non-normal attack probability
-                    classes = list(self.stage2_classifier.label_encoder.classes_)
+                    classes = list(self.stage2_classifier.le.classes_)
                     normal_idx = classes.index("Normal") if "Normal" in classes else -1
                     
                     best_attack_idx = -1
@@ -146,19 +146,20 @@ class HybridIDSEngine:
                             best_attack_prob = float(p)
                             best_attack_idx = idx
                     
-                    if best_attack_idx >= 0 and best_attack_prob > 0.05:
+                    if best_attack_idx >= 0:
                         attack_type = classes[best_attack_idx]
                         conf = round(best_attack_prob, 4)
                     else:
-                        attack_type = "Port Scan"
-                        conf = 0.85
+                        attack_type = "Unknown Attack"
+                        conf = 0.50
             except Exception as e:
-                attack_type = "DoS"
-                conf = 0.85
+                print(f"[HybridEngine Stage 2 Error] {e}")
+                attack_type = "Unknown Attack"
+                conf = 0.50
         else:
             time.sleep(0.010)
-            attack_type = "DoS"
-            conf = 0.85
+            attack_type = "Unknown Attack"
+            conf = 0.50
 
         t2_elapsed_ms = (time.perf_counter() - t2_start) * 1000
         total_latency = (time.perf_counter() - t_start) * 1000
