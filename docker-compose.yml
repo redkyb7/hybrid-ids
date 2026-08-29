@@ -57,6 +57,27 @@ services:
       - victim
     restart: unless-stopped
 
+  # ----------------------------------------------------------------------------
+  # 4. IDS Monitor Node (Promiscuous Sniffer & Two-Stage AI Brain)
+  # ----------------------------------------------------------------------------
+  monitor:
+    build:
+      context: .
+      dockerfile: ./testbed/monitor/Dockerfile
+    container_name: ids-monitor
+    network_mode: "service:victim"
+    environment:
+      - PYTHONUNBUFFERED=1
+    depends_on:
+      - victim
+      - attacker
+      - benign_client
+    volumes:
+      - ./data:/app/data
+      - ./backend:/app/backend
+      - ./deep learning model:/app/deep learning model
+    restart: unless-stopped
+
 # ------------------------------------------------------------------------------
 # Isolated Network Definition
 # ------------------------------------------------------------------------------
