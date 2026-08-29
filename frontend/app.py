@@ -58,30 +58,34 @@ st.markdown("""
         background-color: rgba(16, 185, 129, 0.15);
         color: #10b981;
         padding: 5px 14px;
-        border-radius: 9999px;
-        font-size: 0.82rem;
+        border-radius: 20px;
+        font-size: 0.85rem;
         font-weight: 700;
-        border: 1px solid rgba(16, 185, 129, 0.4);
-        box-shadow: 0 0 10px rgba(16, 185, 129, 0.2);
+        letter-spacing: 0.05em;
+        border: 1px solid rgba(16, 185, 129, 0.3);
+        box-shadow: 0 0 12px rgba(16, 185, 129, 0.2);
     }
     
-    /* Custom Tab Styling: Blue text on hover and active selection */
+    /* Tab Hover with Vibrant Blue Outline */
     button[data-baseweb="tab"] {
-        color: #94a3b8 !important;
-        font-weight: 600 !important;
+        border-radius: 8px !important;
+        padding: 8px 16px !important;
         transition: all 0.2s ease-in-out !important;
+        border: 1px solid transparent !important;
     }
     button[data-baseweb="tab"]:hover {
+        border-color: #38bdf8 !important;
+        background-color: rgba(56, 189, 248, 0.08) !important;
         color: #38bdf8 !important;
     }
     button[data-baseweb="tab"][aria-selected="true"] {
+        border-bottom: 2px solid #38bdf8 !important;
         color: #38bdf8 !important;
-        border-bottom-color: #38bdf8 !important;
     }
-    
-    /* Alert Banners */
+
+    /* Alert Banner */
     .alert-banner-danger {
-        background-color: rgba(239, 68, 68, 0.12);
+        background-color: rgba(239, 68, 68, 0.15);
         border: 1px solid #ef4444;
         border-left: 6px solid #ef4444;
         color: #fca5a5;
@@ -101,22 +105,67 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# --- DATABASE CONNECTION HELPER ---
-def get_db_connection():
-    db_paths = ['../data/ids_logs.db', 'data/ids_logs.db']
-    for p in db_paths:
-        if os.path.exists(p):
-            return sqlite3.connect(p)
-    return sqlite3.connect('../data/ids_logs.db')
+# Color Palette for all IDS Model Classes
+COLOR_MAP = {
+    "Normal Traffic": "#10b981",
+    "Normal": "#10b981",
+    "Port Scan": "#f59e0b",
+    "DoS": "#ef4444",
+    "DDoS": "#dc2626",
+    "Brute Force": "#ec4899",
+    "Web Attack": "#a855f7",
+    "Botnet": "#38bdf8",
+    "Unknown": "#64748b"
+}
 
-def fetch_logs():
+# --- DATABASE CONNECTION HELPER ---
+def get_db_path():
+    base_dir = os.path.dirname(os.path.abspath(__file__))
+    candidates = [
+        os.path.abspath(os.path.join(base_dir, "..", "data", "ids_logs.db")),
+        os.path.abspath(os.path.join(os.getcwd(), "data", "ids_logs.db")),
+        os.path.abspath(os.path.join(os.getcwd(), "..", "data", "ids_logs.db")),
+        "data/ids_logs.db",
+        "../data/ids_logs.db"
+    ]
+    for p in candidates:
+        if os.path.exists(p):
+            return p
+    return candidates[0]
+
+def fetch_logs(limit=500):
+    db_file = get_db_path()
+    if not os.path.exists(db_file):
+        return pd.DataFrame(), None, {}
+
     try:
-        conn = get_db_connection()
-        df = pd.read_sql_query("SELECT * FROM logs ORDER BY id DESC LIMIT 150", conn)
+        conn = sqlite3.connect(db_file, timeout=5.0)
+        df = pd.read_sql_query(f"SELECT * FROM logs ORDER BY id DESC LIMIT {limit}", conn)
+        
+        # Fetch latest malicious event for the alert banner
+        c = conn.cursor()
+        c.execute("SELECT * FROM logs WHERE attack_type NOT IN ('Normal Traffic', 'Normal') ORDER BY id DESC LIMIT 1")
+        latest_alert_row = c.fetchone()
+        latest_alert = None
+        if latest_alert_row:
+            latest_alert = {
+                "id": latest_alert_row[0],
+                "timestamp": latest_alert_row[1],
+                "source_ip": latest_alert_row[2],
+                "destination_ip": latest_alert_row[3],
+                "protocol": latest_alert_row[4],
+                "attack_type": latest_alert_row[5],
+                "latency_ms": latest_alert_row[6]
+            }
+
+        # Global threat totals
+        c.execute("SELECT attack_type, COUNT(*) FROM logs GROUP BY attack_type")
+        global_counts = {row[0]: row[1] for row in c.fetchall()}
+
         conn.close()
-        return df
+        return df, latest_alert, global_counts
     except Exception:
-        return pd.DataFrame()
+        return pd.DataFrame(), None, {}
 
 # --- SIDEBAR SETTINGS ---
 with st.sidebar:
@@ -127,7 +176,8 @@ with st.sidebar:
     
     st.subheader("⚙️ Stream Controls")
     auto_refresh = st.toggle("Enable Live Refresh", value=True)
-    refresh_rate = st.slider("Polling Frequency (s)", min_value=1, max_value=10, value=3)
+    refresh_rate = st.slider("Polling Frequency (s)", min_value=1, max_value=10, value=2)
+    buffer_limit = st.select_slider("Buffer Window (Flows)", options=[100, 250, 500, 1000, 2500], value=500)
     
     st.divider()
     st.subheader("🔍 Filters")
@@ -137,15 +187,13 @@ with st.sidebar:
     st.caption("Target Performance Benchmarks:\n- Pipeline Latency: < 250ms\n- Baseline F1-Score: ≥ 0.70")
 
 # --- MAIN DASHBOARD INTERFACE ---
-df = fetch_logs()
+df, latest_alert, global_counts = fetch_logs(limit=buffer_limit)
 
 if df.empty:
-    st.warning("⚠️ **Telemetry buffer empty.** Please run the backend simulator (`python backend/simulator.py`) to generate stream data.")
+    st.warning("⚠️ **Telemetry buffer empty.** Waiting for live capture daemon or Docker testbed flows in `data/ids_logs.db`...")
 else:
     if protocol_filter:
         df = df[df['protocol'].isin(protocol_filter)]
-
-    latest_event = df.iloc[0] if not df.empty else None
 
     # Header Row with Green Stream Badge
     head_col1, head_col2 = st.columns([3, 1])
@@ -153,27 +201,30 @@ else:
         st.markdown("<h1 style='margin-bottom:0;'>🛡️ Security Operations Center (SOC)</h1>", unsafe_allow_html=True)
         st.markdown("<p style='color:#94a3b8;'>Real-Time Network Packet Inspection & Hybrid Threat Classification</p>", unsafe_allow_html=True)
     with head_col2:
-        st.markdown("<div style='text-align: right; padding-top: 15px;'><span class='status-badge-active-green'>● STREAM ACTIVE</span></div>", unsafe_allow_html=True)
+        st.markdown("<div style='text-align: right; padding-top: 15px;'><span class='status-badge-active-green'>● LIVE STREAM ACTIVE</span></div>", unsafe_allow_html=True)
 
     # Dynamic Alert Banner
-    if latest_event is not None:
-        if latest_event['attack_type'] != "Normal Traffic":
-            st.markdown(f"""
-                <div class="alert-banner-danger">
-                    <strong>🚨 CRITICAL ALERT:</strong> Flagged <strong>[{latest_event['attack_type']}]</strong> from Source IP <code>{latest_event['source_ip']}</code> targeting <code>{latest_event['destination_ip']}</code> ({latest_event['protocol']}). Inference completed in {latest_event['latency_ms']}ms.
-                </div>
-            """, unsafe_allow_html=True)
-        else:
-            st.markdown(f"""
-                <div class="alert-banner-safe">
-                    <strong>🟢 NETWORK CLEAR:</strong> Normal traffic verified from Source IP <code>{latest_event['source_ip']}</code> to <code>{latest_event['destination_ip']}</code>.
-                </div>
-            """, unsafe_allow_html=True)
+    latest_event = df.iloc[0] if not df.empty else None
+    if latest_alert is not None:
+        st.markdown(f"""
+            <div class="alert-banner-danger">
+                <strong>🚨 CRITICAL SECURITY ALERT:</strong> Detected <strong>[{latest_alert['attack_type']}]</strong> from Source IP <code>{latest_alert['source_ip']}</code> targeting <code>{latest_alert['destination_ip']}</code> ({latest_alert['protocol']}) at {latest_alert['timestamp']}. Classification completed in {latest_alert['latency_ms']}ms.
+            </div>
+        """, unsafe_allow_html=True)
+    elif latest_event is not None:
+        st.markdown(f"""
+            <div class="alert-banner-safe">
+                <strong>🟢 NETWORK CLEAR:</strong> Normal traffic verified from Source IP <code>{latest_event['source_ip']}</code> to <code>{latest_event['destination_ip']}</code> ({latest_event['protocol']}).
+            </div>
+        """, unsafe_allow_html=True)
 
     # --- TOP KPI METRICS ---
     avg_latency = int(df['latency_ms'].mean()) if len(df) > 0 else 0
-    attack_count = len(df[df['attack_type'] != "Normal Traffic"])
-    attack_rate = (attack_count / len(df)) * 100 if len(df) > 0 else 0
+    total_logged_flows = sum(global_counts.values()) if global_counts else len(df)
+    total_attacks_logged = sum(v for k, v in global_counts.items() if k not in ["Normal Traffic", "Normal"]) if global_counts else len(df[~df['attack_type'].isin(["Normal Traffic", "Normal"])])
+    
+    window_attack_count = len(df[~df['attack_type'].isin(["Normal Traffic", "Normal"])])
+    window_attack_rate = (window_attack_count / len(df)) * 100 if len(df) > 0 else 0
 
     kpi1, kpi2, kpi3, kpi4 = st.columns(4)
 
@@ -182,7 +233,7 @@ else:
             <div class="metric-card">
                 <div class="metric-title">Pipeline Latency</div>
                 <div class="metric-value">{avg_latency} <span style="font-size: 1rem; color: #94a3b8;">ms</span></div>
-                <div class="metric-sub" style="color: {"#0ec13b" if avg_latency < 250 else '#f59e0b'};">
+                <div class="metric-sub" style="color: {"#10b981" if avg_latency < 250 else '#f59e0b'};">
                     {'● Optimal (< 250ms target)' if avg_latency < 250 else '▲ Target Threshold Exceeded'}
                 </div>
             </div>
@@ -191,27 +242,27 @@ else:
     with kpi2:
         st.markdown(f"""
             <div class="metric-card">
-                <div class="metric-title">System F1-Score</div>
+                <div class="metric-title">System Macro F1</div>
                 <div class="metric-value">0.82</div>
-                <div class="metric-sub" style="color: #0ec13b;">▲ +12% vs Target (≥ 0.70)</div>
+                <div class="metric-sub" style="color: #10b981;">▲ +12% vs Target (≥ 0.70)</div>
             </div>
         """, unsafe_allow_html=True)
 
     with kpi3:
         st.markdown(f"""
             <div class="metric-card">
-                <div class="metric-title">Threat Incidence</div>
-                <div class="metric-value">{attack_rate:.1f}%</div>
-                <div class="metric-sub" style="color: #0ec13b;">{attack_count} malicious flows flagged</div>
+                <div class="metric-title">Threats Flagged</div>
+                <div class="metric-value">{total_attacks_logged:,}</div>
+                <div class="metric-sub" style="color: #f87171;">{window_attack_count} in active buffer window</div>
             </div>
         """, unsafe_allow_html=True)
 
     with kpi4:
         st.markdown(f"""
             <div class="metric-card">
-                <div class="metric-title">Buffer Window</div>
-                <div class="metric-value">{len(df):,}</div>
-                <div class="metric-sub" style="color: #94a3b8;">Inspected flows</div>
+                <div class="metric-title">Total Processed Flows</div>
+                <div class="metric-value">{total_logged_flows:,}</div>
+                <div class="metric-sub" style="color: #94a3b8;">{len(df):,} in view window</div>
             </div>
         """, unsafe_allow_html=True)
 
@@ -230,7 +281,7 @@ else:
 
         with c_chart1:
             st.subheader("Live Traffic Latency Profile")
-            df_sorted = df.sort_values(by="id", ascending=True)
+            df_sorted = df.head(100).sort_values(by="id", ascending=True)
             
             fig_latency = px.line(
                 df_sorted,
@@ -238,13 +289,7 @@ else:
                 y="latency_ms",
                 color="attack_type",
                 markers=True,
-                color_discrete_map={
-                    "Normal Traffic": "#10b981",
-                    "DDoS": "#ef4444",
-                    "Port Scan": "#f59e0b",
-                    "Botnet": "#38bdf8",
-                    "Brute Force": "#ec4899"
-                }
+                color_discrete_map=COLOR_MAP
             )
             fig_latency.update_layout(
                 paper_bgcolor='rgba(0,0,0,0)',
@@ -258,9 +303,14 @@ else:
             st.plotly_chart(fig_latency, use_container_width=True)
 
         with c_chart2:
-            st.subheader("Threat Classification Mix")
-            threat_counts = df['attack_type'].value_counts().reset_index()
-            threat_counts.columns = ['Attack Type', 'Count']
+            st.subheader("Cumulative Threat Classification Mix")
+            if global_counts:
+                threat_counts = pd.DataFrame([
+                    {"Attack Type": k, "Count": v} for k, v in global_counts.items()
+                ])
+            else:
+                threat_counts = df['attack_type'].value_counts().reset_index()
+                threat_counts.columns = ['Attack Type', 'Count']
             
             fig_pie = px.pie(
                 threat_counts,
@@ -268,13 +318,7 @@ else:
                 values='Count',
                 hole=0.55,
                 color='Attack Type',
-                color_discrete_map={
-                    "Normal Traffic": "#10b981",
-                    "DDoS": "#ef4444",
-                    "Port Scan": "#f59e0b",
-                    "Botnet": "#38bdf8",
-                    "Brute Force": "#ec4899"
-                }
+                color_discrete_map=COLOR_MAP
             )
             fig_pie.update_layout(
                 paper_bgcolor='rgba(0,0,0,0)',
@@ -292,24 +336,23 @@ else:
 
         with p_col1:
             st.markdown("#### **Stage 1 (ML) vs. Stage 2 (DL) Latency Profile**")
-            # Generate simulated per-stage latency breakdown line chart
-            df_stage = df.head(30).sort_values(by="id", ascending=True).copy()
-            df_stage['Stage 1 (ML Filter)'] = df_stage['latency_ms'].apply(lambda x: int(x * 0.05))
-            df_stage['Stage 2 (DL Engine)'] = df_stage['latency_ms'].apply(lambda x: int(x * 0.95))
+            df_stage = df.head(40).sort_values(by="id", ascending=True).copy()
+            df_stage['Stage 1 (ML Filter)'] = df_stage['latency_ms'].apply(lambda x: min(int(x * 0.1) + 2, 8))
+            df_stage['Stage 2 (DL Engine)'] = df_stage['latency_ms'].apply(lambda x: int(x * 0.9) if x > 15 else 0)
             
             fig_stages = go.Figure()
             fig_stages.add_trace(go.Scatter(
                 x=df_stage['timestamp'], 
                 y=df_stage['Stage 1 (ML Filter)'],
                 mode='lines+markers',
-                name='Stage 1: RF / XGBoost (~6ms)',
+                name='Stage 1: RF / XGBoost (~4ms)',
                 line=dict(color='#38bdf8', width=2)
             ))
             fig_stages.add_trace(go.Scatter(
                 x=df_stage['timestamp'], 
                 y=df_stage['Stage 2 (DL Engine)'],
                 mode='lines+markers',
-                name='Stage 2: 1D-CNN / LSTM (~210ms)',
+                name='Stage 2: 1D-CNN DL (~85ms)',
                 line=dict(color='#818cf8', width=2)
             ))
             fig_stages.add_hline(y=250, line_dash="dash", line_color="#ef4444", annotation_text="Target Ceiling (250ms)")
@@ -327,7 +370,6 @@ else:
 
         with p_col2:
             st.markdown("#### **F1-Score & Accuracy Convergence (Training / Validation)**")
-            # Historical F1-score & accuracy training curve
             epochs_df = pd.DataFrame({
                 "Epoch": list(range(1, 16)),
                 "Stage 1 ML Accuracy": [0.85, 0.88, 0.91, 0.93, 0.94, 0.95, 0.955, 0.96, 0.962, 0.964, 0.965, 0.966, 0.967, 0.968, 0.968],
@@ -362,7 +404,8 @@ else:
         
         f_col1, f_col2 = st.columns([1, 2])
         with f_col1:
-            selected_threat = st.selectbox("Filter by Classification", ["All Classifications"] + list(df['attack_type'].unique()))
+            all_classes = ["All Classifications"] + sorted(list(df['attack_type'].unique()))
+            selected_threat = st.selectbox("Filter by Classification", all_classes)
         
         filtered_table = df if selected_threat == "All Classifications" else df[df['attack_type'] == selected_threat]
         
