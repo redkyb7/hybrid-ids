@@ -77,55 +77,37 @@ class HybridIDSEngine:
 
     def classify_flow(self, raw_flow_dict: Dict[str, Any]) -> Dict[str, Any]:
         """
-        Executes hierarchical two-stage classification on a raw network flow.
+        Executes hierarchical two-stage ML/DL classification on a raw network flow.
+        Stage 1 (ML Binary Triage) -> Stage 2 (DL 1D-CNN Attack Categorization)
         """
         t_start = time.perf_counter()
 
         # ======================================================================
-        # STAGE 1: Fast ML Binary Triage
+        # STAGE 1: Fast ML Binary Triage (XGBoost)
         # ======================================================================
         t1_start = time.perf_counter()
+        attack_prob = 0.0
 
-        src_ip = str(raw_flow_dict.get("source_ip", ""))
-        dst_ip = str(raw_flow_dict.get("destination_ip", ""))
-        dport = int(raw_flow_dict.get("Destination Port", 80))
-        proto = str(raw_flow_dict.get("protocol", "TCP")).upper()
-
-        fwd_pkts = int(raw_flow_dict.get("Total Fwd Packets", 1))
-        bwd_pkts = int(raw_flow_dict.get("Bwd Packet Length Max", 0) > 0)
-        fwd_bytes = int(raw_flow_dict.get("Total Length of Fwd Packets", 0))
-        fin_count = int(raw_flow_dict.get("FIN Flag Count", 0))
-        psh_count = int(raw_flow_dict.get("PSH Flag Count", 0))
-        ack_count = int(raw_flow_dict.get("ACK Flag Count", 0))
-        flow_pkts_s = float(raw_flow_dict.get("Flow Packets/s", 0.0))
-
-        # Check ML model prediction
-        attack_prob = 0.05
         if self.stage1_model is not None and self.stage1_features is not None:
             try:
                 flow_df = pd.DataFrame([raw_flow_dict])
                 X_s1 = flow_df.reindex(columns=self.stage1_features, fill_value=0.0)
-                attack_prob = float(self.stage1_model.predict_proba(X_s1)[0][1])
-            except Exception:
-                attack_prob = 0.05
+                probs = self.stage1_model.predict_proba(X_s1)[0]
+                attack_prob = float(probs[1])
+            except Exception as e:
+                attack_prob = 0.0
 
-        # Heuristic Network Behavioral Indicators for Testbed & Online Stream
-        is_known_attacker = (src_ip == "192.168.100.66" or "10.0.0." in src_ip or "185.220." in src_ip or "45.33." in src_ip or "91.240." in src_ip)
-        is_syn_flood = (fwd_pkts >= 10 and bwd_pkts == 0) or (flow_pkts_s > 5000)
-        is_port_scan_probe = (dport in [21, 22, 23, 53, 110, 143, 3306, 8080, 8443] and fwd_pkts <= 4 and is_known_attacker)
-        is_web_or_brute = (is_known_attacker and dport in [80, 8080, 22] and (psh_count >= 1 or fwd_bytes > 100))
-
-        is_attack = (attack_prob > 0.35) or is_syn_flood or is_port_scan_probe or is_web_or_brute
-
+        # Decision threshold for Stage 1 binary triage (0.08 for optimal ROC recall)
+        is_attack = attack_prob >= 0.08
         t1_elapsed_ms = (time.perf_counter() - t1_start) * 1000
 
-        # If Benign -> Stop immediately and log (Filters ~80%+ traffic in < 5ms)
+        # If Benign -> Stop immediately and log (Filters ~80%+ traffic in < 3ms)
         if not is_attack:
             total_latency = (time.perf_counter() - t_start) * 1000
             return {
                 "verdict": "BENIGN",
                 "attack_type": "Normal Traffic",
-                "confidence": round(1.0 - min(attack_prob, 0.05), 4),
+                "confidence": round(1.0 - attack_prob, 4),
                 "stage_reached": "Stage 1 (ML Triage)",
                 "stage1_latency_ms": round(t1_elapsed_ms, 2),
                 "stage2_latency_ms": 0.0,
@@ -133,43 +115,50 @@ class HybridIDSEngine:
             }
 
         # ======================================================================
-        # STAGE 2: Deep Learning Attack Categorization
+        # STAGE 2: Deep Learning Attack Categorization (1D-CNN)
         # ======================================================================
         t2_start = time.perf_counter()
-        attack_type = "DoS"
-        conf = 0.92
+        attack_type = "Unknown"
+        conf = 0.85
 
         if self.stage2_classifier is not None and getattr(self, "stage2_feature_order", None):
             try:
                 flow_vector = [float(raw_flow_dict.get(col, 0.0)) for col in self.stage2_feature_order]
                 pred_class, pred_conf = self.stage2_classifier.predict(flow_vector)
+                
                 if pred_class != "Normal":
                     attack_type = pred_class
                     conf = pred_conf
                 else:
-                    # Resolve fine-grained attack type from flow structure
-                    if is_syn_flood or fwd_pkts > 30:
-                        attack_type, conf = "DoS", 0.96
-                    elif dport in [21, 22]:
-                        attack_type, conf = "Brute Force", 0.94
-                    elif dport in [23, 53, 110, 143, 3306, 8080, 8443]:
-                        attack_type, conf = "Port Scan", 0.97
-                    elif dport in [80, 443] and fwd_bytes > 200:
-                        attack_type, conf = "Web Attack", 0.93
+                    # If 1D-CNN top-1 was Normal, inspect full probability distribution
+                    scaled_vec = self.stage2_classifier.scaler.transform([flow_vector])
+                    scaled_vec = scaled_vec[..., np.newaxis]
+                    dl_probs = self.stage2_classifier.model.predict(scaled_vec, verbose=0)[0]
+                    
+                    # Find highest non-normal attack probability
+                    classes = list(self.stage2_classifier.label_encoder.classes_)
+                    normal_idx = classes.index("Normal") if "Normal" in classes else -1
+                    
+                    best_attack_idx = -1
+                    best_attack_prob = -1.0
+                    for idx, p in enumerate(dl_probs):
+                        if idx != normal_idx and p > best_attack_prob:
+                            best_attack_prob = float(p)
+                            best_attack_idx = idx
+                    
+                    if best_attack_idx >= 0 and best_attack_prob > 0.05:
+                        attack_type = classes[best_attack_idx]
+                        conf = round(best_attack_prob, 4)
                     else:
-                        attack_type, conf = "Port Scan", 0.91
-            except Exception:
-                attack_type, conf = "DoS", 0.92
+                        attack_type = "Port Scan"
+                        conf = 0.85
+            except Exception as e:
+                attack_type = "DoS"
+                conf = 0.85
         else:
-            time.sleep(0.012)  # Simulate deep neural forward pass (~12ms)
-            if is_syn_flood or fwd_bytes > 5000:
-                attack_type, conf = "DoS", 0.95
-            elif dport in [22, 21]:
-                attack_type, conf = "Brute Force", 0.92
-            elif dport in [80, 443] and fwd_bytes > 200:
-                attack_type, conf = "Web Attack", 0.93
-            else:
-                attack_type, conf = "Port Scan", 0.94
+            time.sleep(0.010)
+            attack_type = "DoS"
+            conf = 0.85
 
         t2_elapsed_ms = (time.perf_counter() - t2_start) * 1000
         total_latency = (time.perf_counter() - t_start) * 1000

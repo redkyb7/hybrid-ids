@@ -16,6 +16,7 @@ import sqlite3
 import sys
 import threading
 import time
+import traceback
 from datetime import datetime
 from typing import Optional, Dict, Any
 
@@ -76,6 +77,7 @@ class LiveCaptureDaemon:
         self.packet_queue: queue.Queue = queue.Queue(maxsize=50000)
         self.is_running = False
         self.sniffer = None
+        self.db_lock = threading.Lock()
 
         # Telemetry Statistics
         self.stats = {
@@ -93,10 +95,10 @@ class LiveCaptureDaemon:
 
     def _init_database(self):
         """Initializes SQLite database with schema and WAL mode."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        cursor.execute("PRAGMA journal_mode=WAL;")
-        cursor.execute('''
+        self.db_conn = sqlite3.connect(self.db_path, timeout=30.0, isolation_level=None, check_same_thread=False)
+        self.db_conn.execute("PRAGMA journal_mode=WAL;")
+        self.db_conn.execute("PRAGMA busy_timeout=30000;")
+        self.db_conn.execute('''
             CREATE TABLE IF NOT EXISTS logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp TEXT,
@@ -107,10 +109,8 @@ class LiveCaptureDaemon:
                 latency_ms INTEGER
             )
         ''')
-        conn.commit()
-        conn.close()
 
-    def _record_flow_verdict(self, flow_dict: Dict[str, Any], cursor: sqlite3.Cursor):
+    def _record_flow_verdict(self, flow_dict: Dict[str, Any]):
         """Passes flow through Hybrid ML/DL engine and commits verdict to database."""
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
 
@@ -128,11 +128,15 @@ class LiveCaptureDaemon:
         dport = int(flow_dict.get("Destination Port", 0))
         proto = str(flow_dict.get("protocol", "TCP"))
 
-        # Write to SQLite
-        cursor.execute('''
-            INSERT INTO logs (timestamp, source_ip, destination_ip, protocol, attack_type, latency_ms)
-            VALUES (?, ?, ?, ?, ?, ?)
-        ''', (now, src_ip, dst_ip, proto, attack_type, latency_ms))
+        # Write to SQLite thread-safely
+        with self.db_lock:
+            try:
+                self.db_conn.execute('''
+                    INSERT INTO logs (timestamp, source_ip, destination_ip, protocol, attack_type, latency_ms)
+                    VALUES (?, ?, ?, ?, ?, ?)
+                ''', (now, src_ip, dst_ip, proto, attack_type, latency_ms))
+            except Exception as e:
+                print(f"[DB ERROR] {e}")
 
         # Update telemetry stats
         with self.stats_lock:
@@ -150,10 +154,6 @@ class LiveCaptureDaemon:
 
     def _flow_worker(self):
         """Worker thread that consumes raw packets, aggregates flows, and logs classifications."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-        uncommitted_count = 0
-
         while self.is_running or not self.packet_queue.empty():
             try:
                 pkt = self.packet_queue.get(timeout=0.2)
@@ -163,39 +163,22 @@ class LiveCaptureDaemon:
             try:
                 flow_data = self.flow_aggregator.process_scapy_packet(pkt)
                 if flow_data:
-                    self._record_flow_verdict(flow_data, cursor)
-                    uncommitted_count += 1
-
-                    if uncommitted_count >= 5:
-                        conn.commit()
-                        uncommitted_count = 0
-
+                    self._record_flow_verdict(flow_data)
             except Exception as e:
-                pass
+                traceback.print_exc()
             finally:
                 self.packet_queue.task_done()
 
-        if uncommitted_count > 0:
-            conn.commit()
-        conn.close()
-
     def _purge_watchdog_worker(self):
         """Periodic timer thread to purge timed-out flows and classify them."""
-        conn = sqlite3.connect(self.db_path)
-        cursor = conn.cursor()
-
         while self.is_running:
             time.sleep(0.5)
             try:
                 expired_flows = self.flow_aggregator.purge_inactive_flows()
                 for flow_data in expired_flows:
-                    self._record_flow_verdict(flow_data, cursor)
-                if expired_flows:
-                    conn.commit()
-            except Exception:
-                pass
-
-        conn.close()
+                    self._record_flow_verdict(flow_data)
+            except Exception as e:
+                traceback.print_exc()
 
     def _packet_handler(self, pkt):
         """Enqueue packet for asynchronous processing."""

@@ -280,27 +280,48 @@ else:
         c_chart1, c_chart2 = st.columns([1.7, 1.3])
 
         with c_chart1:
-            st.subheader("Live Traffic Latency Profile")
-            df_sorted = df.head(100).sort_values(by="id", ascending=True)
+            st.subheader("Live Flow Latency Stream (Last 60 Inspected Flows)")
+            df_sorted = df.head(60).sort_values(by="id", ascending=True).reset_index(drop=True)
             
-            fig_latency = px.line(
+            fig_latency = px.scatter(
                 df_sorted,
-                x="timestamp",
+                x="id",
                 y="latency_ms",
                 color="attack_type",
-                markers=True,
-                color_discrete_map=COLOR_MAP
+                color_discrete_map=COLOR_MAP,
+                hover_data={
+                    "id": True,
+                    "timestamp": True,
+                    "source_ip": True,
+                    "destination_ip": True,
+                    "protocol": True,
+                    "attack_type": True,
+                    "latency_ms": True
+                }
             )
+            # Add line connector for trend visibility
+            for threat_class, grp in df_sorted.groupby("attack_type"):
+                fig_latency.add_trace(go.Scatter(
+                    x=grp["id"],
+                    y=grp["latency_ms"],
+                    mode="lines",
+                    name=threat_class,
+                    line=dict(color=COLOR_MAP.get(threat_class, "#38bdf8"), width=1.5),
+                    showlegend=False,
+                    hoverinfo="skip"
+                ))
+            fig_latency.add_hline(y=250, line_dash="dash", line_color="#ef4444", annotation_text="NFR-002 Ceiling (250ms)")
+            
             fig_latency.update_layout(
                 paper_bgcolor='rgba(0,0,0,0)',
                 plot_bgcolor='rgba(15, 23, 42, 0.6)',
                 font=dict(color='#94a3b8'),
                 margin=dict(l=10, r=10, t=20, b=20),
                 legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1),
-                xaxis=dict(showgrid=False),
-                yaxis=dict(showgrid=True, gridcolor='#334155', title="Latency (ms)")
+                xaxis=dict(showgrid=False, title="Flow Sequence ID"),
+                yaxis=dict(showgrid=True, gridcolor='#334155', title="Pipeline Latency (ms)", range=[0, max(120, df_sorted['latency_ms'].max() + 20) if not df_sorted.empty else 120])
             )
-            st.plotly_chart(fig_latency, use_container_width=True)
+            st.plotly_chart(fig_latency)
 
         with c_chart2:
             st.subheader("Cumulative Threat Classification Mix")
@@ -326,7 +347,7 @@ else:
                 margin=dict(l=10, r=10, t=20, b=20),
                 legend=dict(orientation="h", yanchor="bottom", y=-0.2, xanchor="center", x=0.5)
             )
-            st.plotly_chart(fig_pie, use_container_width=True)
+            st.plotly_chart(fig_pie)
 
     # --- TAB 2: PERFORMANCE METRICS AS LINE GRAPHS ---
     with tab_metrics:
@@ -366,7 +387,7 @@ else:
                 xaxis=dict(showgrid=False),
                 yaxis=dict(showgrid=True, gridcolor='#334155', title="Latency (ms)")
             )
-            st.plotly_chart(fig_stages, use_container_width=True)
+            st.plotly_chart(fig_stages)
 
         with p_col2:
             st.markdown("#### **F1-Score & Accuracy Convergence (Training / Validation)**")
@@ -396,7 +417,7 @@ else:
                 xaxis=dict(showgrid=False, dtick=1),
                 yaxis=dict(showgrid=True, gridcolor='#334155', title="Metric Score (0 - 1.0)")
             )
-            st.plotly_chart(fig_curves, use_container_width=True)
+            st.plotly_chart(fig_curves)
 
     # --- TAB 3: FORENSIC LOGS ---
     with tab_history:
@@ -411,7 +432,6 @@ else:
         
         st.dataframe(
             filtered_table[['id', 'timestamp', 'source_ip', 'destination_ip', 'protocol', 'attack_type', 'latency_ms']],
-            use_container_width=True,
             hide_index=True
         )
 

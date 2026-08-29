@@ -36,36 +36,59 @@ os.makedirs(MODEL_DIR, exist_ok=True)
 
 def load_and_prepare_data(data_path: str = DATA_PATH, sample_size: int = None):
     """
-    Loads CICIDS2017 flow data, creates binary target, strips correlated features,
-    and deduplicates before split to prevent data leakage.
+    Loads CICIDS2017 flow data with stratified sampling across all attack classes,
+    creates binary target, strips correlated features, and deduplicates before split.
     """
     print("=" * 60)
     print("1. LOADING & PREPARING CICIDS2017 FOR STAGE 1 BINARY TRIAGE")
     print("=" * 60)
-    print(f"[*] Reading dataset: {data_path}")
+    print(f"[*] Reading full dataset: {data_path}")
 
-    if sample_size:
-        print(f"[*] Subsampling {sample_size:,} rows for rapid training...")
-        # Read header first
-        df_sample = pd.read_csv(data_path, nrows=sample_size * 2, low_memory=False)
-        if len(df_sample) > sample_size:
-            df = df_sample.sample(n=sample_size, random_state=RANDOM_STATE)
-        else:
-            df = df_sample
+    # Read full dataset
+    df_raw = pd.read_csv(data_path, low_memory=False)
+    print(f"[+] Loaded raw dataset: {df_raw.shape[0]:,} rows × {df_raw.shape[1]} columns")
+
+    # Map attack labels
+    normal_labels = {"Normal Traffic", "BENIGN", "Normal"}
+    
+    if sample_size and sample_size < len(df_raw):
+        print(f"[*] Performing stratified multi-class balanced sampling (target ~{sample_size:,} rows)...")
+        # Keep 100% of rare attack classes and sample majority classes proportionally
+        dfs = []
+        for attack_name, group in df_raw.groupby("Attack Type"):
+            n_group = len(group)
+            if n_group <= 10000:
+                # Keep all rare attacks (Web Attacks, Bots, Brute Force)
+                dfs.append(group)
+            else:
+                # Sample proportionally
+                n_sample = min(n_group, max(15000, int(sample_size * (n_group / len(df_raw)))))
+                dfs.append(group.sample(n=n_sample, random_state=RANDOM_STATE))
+        df = pd.concat(dfs, ignore_index=True).sample(frac=1.0, random_state=RANDOM_STATE)
     else:
-        df = pd.read_csv(data_path, low_memory=False)
+        df = df_raw
 
-    print(f"[+] Loaded raw shape: {df.shape}")
+    print(f"[+] Sampled class distribution:\n{df['Attack Type'].value_counts().to_dict()}")
 
     # Create Binary Label: 0 = Benign/Normal, 1 = Attack
     normal_labels = {"Normal Traffic", "BENIGN", "Normal"}
     y_binary = (~df["Attack Type"].isin(normal_labels)).astype(int)
     print(f"[+] Binary class distribution:\n{y_binary.value_counts(normalize=True).to_dict()}")
 
+    # Drop temporal duration-dependent and OS window artifacts that create offline-to-online shift
+    artifact_cols = [
+        'Flow Duration', 'Flow IAT Max', 'Flow IAT Min', 'Flow IAT Mean', 'Flow IAT Std',
+        'Fwd IAT Total', 'Fwd IAT Max', 'Fwd IAT Min', 'Fwd IAT Mean', 'Fwd IAT Std',
+        'Bwd IAT Total', 'Bwd IAT Max', 'Bwd IAT Min', 'Bwd IAT Mean', 'Bwd IAT Std',
+        'Active Mean', 'Active Max', 'Active Min', 'Idle Mean', 'Idle Max', 'Idle Min',
+        'Flow Bytes/s', 'Flow Packets/s', 'Fwd Packets/s', 'Bwd Packets/s',
+        'Init_Win_bytes_forward', 'Init_Win_bytes_backward'  # OS window size shortcuts
+    ]
+
     # Feature Matrix X
-    X = df.drop(columns=["Attack Type"], errors="ignore")
+    X = df.drop(columns=["Attack Type"] + artifact_cols, errors="ignore")
     X = X.replace([np.inf, -np.inf], np.nan)
-    X = X.fillna(X.median(numeric_only=True))
+    X = X.fillna(0)
 
     # Feature Selection: Drop Collinear Features (r > 0.95)
     print("[*] Performing correlation pruning (r > 0.95)...")
@@ -73,7 +96,7 @@ def load_and_prepare_data(data_path: str = DATA_PATH, sample_size: int = None):
     upper = corr.where(np.triu(np.ones(corr.shape), k=1).astype(bool))
     to_drop = [c for c in upper.columns if any(upper[c] > 0.95)]
     X = X.drop(columns=to_drop)
-    print(f"[+] Dropped {len(to_drop)} redundant features. Retained {X.shape[1]} features.")
+    print(f"[+] Dropped {len(to_drop)} redundant features. Retained {X.shape[1]} robust features.")
 
     # Deduplicate BEFORE splitting to prevent train/test leakage
     print("[*] Deduplicating before train/test split...")

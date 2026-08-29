@@ -104,18 +104,19 @@ class Flow:
         if tcp_flags:
             if tcp_flags.get("F", False):
                 self.fin_count += 1
-                self.is_terminated = True
             if tcp_flags.get("S", False):
                 self.syn_count += 1
             if tcp_flags.get("R", False):
                 self.rst_count += 1
-                self.is_terminated = True
             if tcp_flags.get("P", False):
                 self.psh_count += 1
             if tcp_flags.get("A", False):
                 self.ack_count += 1
             if tcp_flags.get("U", False):
                 self.urg_count += 1
+
+            # Fully terminated when both endpoints FIN-teardown or RST occurs
+            self.is_terminated = (self.fin_count >= 2) or (self.rst_count >= 1)
 
     @staticmethod
     def _compute_stats(arr: List[float | int]) -> Tuple[float, float, float, float, float]:
@@ -148,7 +149,7 @@ class Flow:
         """
         Extracts all 52 statistical features formatted precisely to match CICFlowMeter / CICIDS2017.
         """
-        duration_sec = max(self.last_seen - self.start_time, 1e-6)
+        duration_sec = max(self.last_seen - self.start_time, 1e-5)
         flow_duration_us = duration_sec * 1e6
 
         # Packet Length Statistics
@@ -161,7 +162,7 @@ class Flow:
         fwd_iat_total, fwd_iat_mean, fwd_iat_std, fwd_iat_max, fwd_iat_min = self._compute_iats(self.fwd_timestamps)
         bwd_iat_total, bwd_iat_mean, bwd_iat_std, bwd_iat_max, bwd_iat_min = self._compute_iats(self.bwd_timestamps)
 
-        # Rates
+        # Rates & Statistics (Conforming to CICFlowMeter / CICIDS2017 specifications)
         total_packets = self.fwd_packets + self.bwd_packets
         total_bytes = self.fwd_bytes + self.bwd_bytes
 
@@ -169,6 +170,7 @@ class Flow:
         flow_pkts_s = total_packets / duration_sec
         fwd_pkts_s = self.fwd_packets / duration_sec
         bwd_pkts_s = self.bwd_packets / duration_sec
+
         avg_pkt_size = total_bytes / total_packets if total_packets > 0 else 0.0
 
         # Active / Idle Times (CICFlowMeter defaults for short streaming bursts)
@@ -249,9 +251,9 @@ class FlowAggregator:
     """
 
     def __init__(self,
-                 inactivity_timeout_sec: float = 1.5,
-                 micro_batch_timeout_sec: float = 0.15,
-                 max_packets_per_micro_batch: int = 25):
+                 inactivity_timeout_sec: float = 1.0,
+                 micro_batch_timeout_sec: float = 1.0,
+                 max_packets_per_micro_batch: int = 40):
         self.inactivity_timeout = inactivity_timeout_sec
         self.micro_batch_timeout = micro_batch_timeout_sec
         self.max_pkts_micro_batch = max_packets_per_micro_batch
@@ -311,15 +313,14 @@ class FlowAggregator:
 
             should_emit = (
                 flow.is_terminated or
-                (pkt_count >= self.max_pkts_micro_batch and flow.emitted_count == 0) or
-                (flow_duration >= self.micro_batch_timeout and flow.emitted_count == 0)
+                (pkt_count >= self.max_pkts_micro_batch and flow.emitted_count == 0)
             )
 
             if should_emit:
                 emitted_feature_dict = flow.extract_features()
                 flow.emitted_count += 1
                 if flow.is_terminated:
-                    # Remove terminated flows
+                    # Remove terminated flows cleanly from 5-tuple table
                     self.flows.pop(fwd_key, None)
                     self.flows.pop(bwd_key, None)
 
@@ -407,8 +408,8 @@ class FlowAggregator:
             keys_to_remove = []
             for key, flow in list(self.flows.items()):
                 if now - flow.last_seen > self.inactivity_timeout:
-                    if flow.emitted_count == 0:
-                        expired_flows.append(flow.extract_features())
+                    # Emit final complete flow statistics
+                    expired_flows.append(flow.extract_features())
                     keys_to_remove.append(key)
 
             for key in keys_to_remove:
