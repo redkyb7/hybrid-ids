@@ -118,46 +118,62 @@ class HybridIDSEngine:
         # STAGE 2: Deep Learning Attack Categorization (1D-CNN)
         # ======================================================================
         t2_start = time.perf_counter()
-        attack_type = "Unknown"
-        conf = 0.85
+        verdict = "MALICIOUS"
+        attack_type = "Unknown Attack"
+        conf = 0.50
 
         if self.stage2_classifier is not None and getattr(self, "stage2_feature_order", None):
             try:
                 flow_vector = [float(raw_flow_dict.get(col, 0.0)) for col in self.stage2_feature_order]
-                pred_class, pred_conf = self.stage2_classifier.predict(flow_vector)
                 
-                if pred_class != "Normal":
-                    attack_type = pred_class
-                    conf = pred_conf
+                # Full probability distribution from 1D-CNN
+                scaled_vec = self.stage2_classifier.scaler.transform([flow_vector])
+                scaled_vec = scaled_vec[..., np.newaxis]
+                dl_probs = self.stage2_classifier.model.predict(scaled_vec, verbose=0)[0]
+                
+                classes = list(self.stage2_classifier.le.classes_)
+                normal_idx = classes.index("Normal") if "Normal" in classes else -1
+                normal_prob = float(dl_probs[normal_idx]) if normal_idx >= 0 else 0.0
+                
+                # Top argmax prediction
+                top_idx = int(np.argmax(dl_probs))
+                top_class = classes[top_idx]
+                top_prob = float(dl_probs[top_idx])
+                
+                # Find highest non-normal attack probability
+                best_attack_idx = -1
+                best_attack_prob = -1.0
+                for idx, p in enumerate(dl_probs):
+                    if idx != normal_idx and p > best_attack_prob:
+                        best_attack_prob = float(p)
+                        best_attack_idx = idx
+                
+                # If Stage 2 neural network identifies the flow as Normal (p_normal >= 0.50)
+                # and no attack class has strong confidence (best_attack_prob < 0.30):
+                # -> Correct Stage 1 false alarm and classify as BENIGN / Normal Traffic
+                if (top_class == "Normal" and best_attack_prob < 0.30) or normal_prob >= 0.70:
+                    verdict = "BENIGN"
+                    attack_type = "Normal Traffic"
+                    conf = round(normal_prob, 4)
                 else:
-                    # If 1D-CNN top-1 was Normal, inspect full probability distribution
-                    scaled_vec = self.stage2_classifier.scaler.transform([flow_vector])
-                    scaled_vec = scaled_vec[..., np.newaxis]
-                    dl_probs = self.stage2_classifier.model.predict(scaled_vec, verbose=0)[0]
-                    
-                    # Find highest non-normal attack probability
-                    classes = list(self.stage2_classifier.le.classes_)
-                    normal_idx = classes.index("Normal") if "Normal" in classes else -1
-                    
-                    best_attack_idx = -1
-                    best_attack_prob = -1.0
-                    for idx, p in enumerate(dl_probs):
-                        if idx != normal_idx and p > best_attack_prob:
-                            best_attack_prob = float(p)
-                            best_attack_idx = idx
-                    
-                    if best_attack_idx >= 0:
+                    verdict = "MALICIOUS"
+                    if top_class != "Normal":
+                        attack_type = top_class
+                        conf = round(top_prob, 4)
+                    elif best_attack_idx >= 0:
                         attack_type = classes[best_attack_idx]
                         conf = round(best_attack_prob, 4)
                     else:
                         attack_type = "Unknown Attack"
-                        conf = 0.50
+                        conf = round(top_prob, 4)
             except Exception as e:
                 print(f"[HybridEngine Stage 2 Error] {e}")
+                verdict = "MALICIOUS"
                 attack_type = "Unknown Attack"
                 conf = 0.50
         else:
             time.sleep(0.010)
+            verdict = "MALICIOUS"
             attack_type = "Unknown Attack"
             conf = 0.50
 
@@ -165,7 +181,7 @@ class HybridIDSEngine:
         total_latency = (time.perf_counter() - t_start) * 1000
 
         return {
-            "verdict": "MALICIOUS",
+            "verdict": verdict,
             "attack_type": attack_type,
             "confidence": round(conf, 4),
             "stage_reached": "Stage 2 (DL Engine)",
