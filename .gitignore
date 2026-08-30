@@ -11,6 +11,7 @@ __pycache__/
 *.arff
 *.db
 *.db-journal
+*.npy
 
 # Checkpoints, Logs & Outputs
 logs/

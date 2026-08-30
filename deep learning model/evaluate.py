@@ -1,114 +1,485 @@
 # evaluate.py
+
+import json
 import os
 import pickle
+
 import matplotlib.pyplot as plt
 import numpy as np
-import pandas as pd
-import seaborn as sns
-from sklearn.metrics import classification_report, confusion_matrix
-from sklearn.model_selection import train_test_split
 import tensorflow as tf
+
+from sklearn.metrics import (
+    accuracy_score,
+    classification_report,
+    confusion_matrix,
+    precision_recall_fscore_support,
+)
 
 import config
 
 
-def evaluate(sample_size: int = 100000):
-    print("=" * 60)
-    print("🎯 EVALUATING PRE-TRAINED DEEP LEARNING MODEL (1D-CNN)")
-    print("=" * 60)
+def evaluate():
 
-    # 1. Load Pre-trained Model & Preprocessing Artifacts
-    if not os.path.exists(config.MODEL_SAVE_PATH):
-        raise FileNotFoundError(f"Model file not found at: {config.MODEL_SAVE_PATH}. Please train the model first.")
+    print("=" * 70)
+    print("EVALUATING PRE-TRAINED 1D-CNN NIDS MODEL")
+    print("=" * 70)
 
-    print(f"[*] Loading pre-trained model: {config.MODEL_SAVE_PATH}")
-    model = tf.keras.models.load_model(config.MODEL_SAVE_PATH)
 
-    with open(config.SCALER_SAVE_PATH, "rb") as f:
-        scaler = pickle.load(f)
-    with open(config.LABEL_ENCODER_SAVE_PATH, "rb") as f:
-        le = pickle.load(f)
+    # ========================================================
+    # 1. CHECK REQUIRED FILES
+    # ========================================================
 
-    classes = list(le.classes_)
-    print(f"[+] Loaded Model & Artifacts successfully! Classes ({len(classes)}): {classes}")
+    required_files = [
+        config.MODEL_SAVE_PATH,
+        config.LABEL_ENCODER_SAVE_PATH,
+        config.X_TEST_SAVE_PATH,
+        config.Y_TEST_SAVE_PATH,
+    ]
 
-    # 2. Load Evaluation / Test Dataset
-    print(f"\n[*] Loading evaluation dataset from: {config.DATA_PATH}")
-    if sample_size:
-        print(f"[*] Subsampling {sample_size:,} flows for fast evaluation...")
-        df = pd.read_csv(config.DATA_PATH, nrows=sample_size * 2, low_memory=False)
-        if len(df) > sample_size:
-            df = df.sample(n=sample_size, random_state=config.RANDOM_STATE)
-    else:
-        df = pd.read_csv(config.DATA_PATH, low_memory=False)
 
-    # Map labels to canonical names
-    df[config.LABEL_COLUMN] = (
-        df[config.LABEL_COLUMN]
-        .str.strip()
-        .map(config.LABEL_MAP)
-        .fillna(df[config.LABEL_COLUMN].str.strip())
+    for path in required_files:
+
+        if not os.path.exists(path):
+
+            raise FileNotFoundError(
+                "\nRequired file does not exist:\n"
+                f"{path}\n\n"
+                "Run train.py first."
+            )
+
+
+    # ========================================================
+    # 2. LOAD MODEL
+    # ========================================================
+
+    print(
+        f"\n[*] Loading model:\n"
+        f"    {config.MODEL_SAVE_PATH}"
     )
 
-    # Filter to only known classes
-    df = df[df[config.LABEL_COLUMN].isin(classes)]
+    model = tf.keras.models.load_model(
+        config.MODEL_SAVE_PATH
+    )
 
-    # Clean numeric features
-    feature_cols = [c for c in df.columns if c != config.LABEL_COLUMN]
-    df[feature_cols] = df[feature_cols].apply(pd.to_numeric, errors="coerce")
-    df.replace([np.inf, -np.inf], np.nan, inplace=True)
-    df.dropna(inplace=True)
 
-    X_raw = df[feature_cols].values.astype(np.float32)
-    y_raw = df[config.LABEL_COLUMN].values
+    # ========================================================
+    # 3. LOAD LABEL ENCODER
+    # ========================================================
 
-    # Transform features and labels
-    X_scaled = scaler.transform(X_raw)
-    X_test = X_scaled[..., np.newaxis]  # (N, 52, 1)
-    y_test = le.transform(y_raw)
+    with open(
+        config.LABEL_ENCODER_SAVE_PATH,
+        "rb",
+    ) as file:
 
-    print(f"[+] Evaluated samples: {len(y_test):,}")
+        label_encoder = pickle.load(
+            file
+        )
 
-    # 3. Model Inference
-    print("\n[*] Running inference on evaluation data...")
-    raw_preds = model.predict(X_test, batch_size=2048, verbose=1)
-    y_pred = np.argmax(raw_preds, axis=1)
 
-    # 4. Metrics & Classification Report
-    print("\n" + "=" * 60)
-    print("📊 CLASSIFICATION REPORT (NFR-001 BENCHMARK)")
-    print("=" * 60)
+    classes = list(
+        label_encoder.classes_
+    )
+
+
     print(
-        classification_report(
-            y_test,
-            y_pred,
-            target_names=classes,
-            digits=4,
-            zero_division=0,
+        f"\n[+] Classes ({len(classes)}):"
+    )
+
+    for index, class_name in enumerate(
+        classes
+    ):
+
+        print(
+            f"    {index}: "
+            f"{class_name}"
+        )
+
+
+    # ========================================================
+    # 4. LOAD EXACT HELD-OUT TEST SET
+    # ========================================================
+
+    print(
+        "\n[*] Loading unseen test set..."
+    )
+
+
+    X_test = np.load(
+        config.X_TEST_SAVE_PATH,
+        mmap_mode="r",
+    )
+
+
+    y_test = np.load(
+        config.Y_TEST_SAVE_PATH,
+    )
+
+
+    print(
+        f"[+] Test samples : "
+        f"{len(y_test):,}"
+    )
+
+    print(
+        f"[+] Input shape  : "
+        f"{X_test.shape}"
+    )
+
+
+    # ========================================================
+    # 5. MODEL INFERENCE
+    # ========================================================
+
+    print(
+        "\n[*] Running inference..."
+    )
+
+
+    probabilities = model.predict(
+        X_test,
+        batch_size=config.BATCH_SIZE,
+        verbose=1,
+    )
+
+
+    y_pred = np.argmax(
+        probabilities,
+        axis=1,
+    )
+
+
+    # ========================================================
+    # 6. ACCURACY
+    # ========================================================
+
+    accuracy = accuracy_score(
+        y_test,
+        y_pred,
+    )
+
+
+    # ========================================================
+    # 7. MACRO METRICS
+    # ========================================================
+
+    (
+        macro_precision,
+        macro_recall,
+        macro_f1,
+        _,
+    ) = precision_recall_fscore_support(
+        y_test,
+        y_pred,
+        average="macro",
+        zero_division=0,
+    )
+
+
+    # ========================================================
+    # 8. WEIGHTED METRICS
+    # ========================================================
+
+    (
+        weighted_precision,
+        weighted_recall,
+        weighted_f1,
+        _,
+    ) = precision_recall_fscore_support(
+        y_test,
+        y_pred,
+        average="weighted",
+        zero_division=0,
+    )
+
+
+    # ========================================================
+    # 9. OVERALL RESULTS
+    # ========================================================
+
+    print("\n" + "=" * 70)
+    print("OVERALL TEST RESULTS")
+    print("=" * 70)
+
+
+    print(
+        f"Accuracy           : "
+        f"{accuracy:.4f}"
+    )
+
+    print()
+
+    print(
+        f"Macro Precision    : "
+        f"{macro_precision:.4f}"
+    )
+
+    print(
+        f"Macro Recall       : "
+        f"{macro_recall:.4f}"
+    )
+
+    print(
+        f"Macro F1           : "
+        f"{macro_f1:.4f}"
+    )
+
+    print()
+
+    print(
+        f"Weighted Precision : "
+        f"{weighted_precision:.4f}"
+    )
+
+    print(
+        f"Weighted Recall    : "
+        f"{weighted_recall:.4f}"
+    )
+
+    print(
+        f"Weighted F1        : "
+        f"{weighted_f1:.4f}"
+    )
+
+
+    # ========================================================
+    # 10. CLASSIFICATION REPORT
+    # ========================================================
+
+    print("\n" + "=" * 70)
+    print("PER-CLASS CLASSIFICATION REPORT")
+    print("=" * 70)
+
+
+    report_text = classification_report(
+        y_test,
+        y_pred,
+        target_names=classes,
+        digits=4,
+        zero_division=0,
+    )
+
+
+    print(
+        report_text
+    )
+
+
+    # ========================================================
+    # 11. SAVE CLASSIFICATION REPORT
+    # ========================================================
+
+    report_dict = classification_report(
+        y_test,
+        y_pred,
+        target_names=classes,
+        output_dict=True,
+        zero_division=0,
+    )
+
+
+    report_path = os.path.join(
+        config.SAVED_MODEL_DIR,
+        "classification_report.json",
+    )
+
+
+    with open(
+        report_path,
+        "w",
+    ) as file:
+
+        json.dump(
+            report_dict,
+            file,
+            indent=4,
+        )
+
+
+    # ========================================================
+    # 12. CONFUSION MATRIX
+    # ========================================================
+
+    cm = confusion_matrix(
+        y_test,
+        y_pred,
+    )
+
+
+    figure, axis = plt.subplots(
+        figsize=(12, 10)
+    )
+
+
+    image = axis.imshow(
+        cm,
+        interpolation="nearest",
+    )
+
+
+    figure.colorbar(
+        image,
+        ax=axis,
+    )
+
+
+    axis.set(
+        xticks=np.arange(
+            len(classes)
+        ),
+        yticks=np.arange(
+            len(classes)
+        ),
+        xticklabels=classes,
+        yticklabels=classes,
+        ylabel="True Class",
+        xlabel="Predicted Class",
+        title=(
+            "Confusion Matrix - "
+            "1D CNN NIDS"
+        ),
+    )
+
+
+    plt.setp(
+        axis.get_xticklabels(),
+        rotation=45,
+        ha="right",
+        rotation_mode="anchor",
+    )
+
+
+    # Add values inside matrix
+    threshold = (
+        cm.max() / 2
+        if cm.size
+        else 0
+    )
+
+
+    for row in range(
+        cm.shape[0]
+    ):
+
+        for column in range(
+            cm.shape[1]
+        ):
+
+            value = cm[
+                row,
+                column
+            ]
+
+            axis.text(
+                column,
+                row,
+                f"{value:,}",
+                ha="center",
+                va="center",
+            )
+
+
+    figure.tight_layout()
+
+
+    confusion_matrix_path = (
+        os.path.join(
+            config.SAVED_MODEL_DIR,
+            "confusion_matrix.png",
         )
     )
 
-    # 5. Confusion Matrix Plot
-    cm = confusion_matrix(y_test, y_pred)
-    plt.figure(figsize=(10, 8))
-    sns.heatmap(
-        cm,
-        annot=True,
-        fmt="d",
-        xticklabels=classes,
-        yticklabels=classes,
-        cmap="Blues",
-    )
-    plt.title("Confusion Matrix - SentinelFlow 1D-CNN NIDS")
-    plt.ylabel("True Label")
-    plt.xlabel("Predicted Label")
-    plt.xticks(rotation=45, ha="right")
-    plt.tight_layout()
 
-    cm_output_path = os.path.join(os.path.dirname(__file__), "confusion_matrix.png")
-    plt.savefig(cm_output_path, dpi=150)
-    print(f"[+] Confusion matrix plot saved -> {cm_output_path}")
-    print("=" * 60)
+    figure.savefig(
+        confusion_matrix_path,
+        dpi=200,
+        bbox_inches="tight",
+    )
+
+
+    plt.close(
+        figure
+    )
+
+
+    # ========================================================
+    # 13. SAVE SUMMARY METRICS
+    # ========================================================
+
+    metrics = {
+        "accuracy": float(
+            accuracy
+        ),
+        "macro_precision": float(
+            macro_precision
+        ),
+        "macro_recall": float(
+            macro_recall
+        ),
+        "macro_f1": float(
+            macro_f1
+        ),
+        "weighted_precision": float(
+            weighted_precision
+        ),
+        "weighted_recall": float(
+            weighted_recall
+        ),
+        "weighted_f1": float(
+            weighted_f1
+        ),
+        "test_samples": int(
+            len(y_test)
+        ),
+    }
+
+
+    metrics_path = os.path.join(
+        config.SAVED_MODEL_DIR,
+        "evaluation_metrics.json",
+    )
+
+
+    with open(
+        metrics_path,
+        "w",
+    ) as file:
+
+        json.dump(
+            metrics,
+            file,
+            indent=4,
+        )
+
+
+    # ========================================================
+    # 14. OUTPUT LOCATIONS
+    # ========================================================
+
+    print("\n" + "=" * 70)
+    print("FILES SAVED")
+    print("=" * 70)
+
+
+    print(
+        f"Classification report -> "
+        f"{report_path}"
+    )
+
+    print(
+        f"Evaluation metrics     -> "
+        f"{metrics_path}"
+    )
+
+    print(
+        f"Confusion matrix       -> "
+        f"{confusion_matrix_path}"
+    )
+
+
+    print("=" * 70)
+
+
+    return metrics
 
 
 if __name__ == "__main__":
