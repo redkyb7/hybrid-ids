@@ -1,3 +1,11 @@
 streamlit
 pandas
 plotly
+scapy
+requests
+numpy
+scikit-learn
+xgboost
+joblib
+tensorflow
+imbalanced-learn

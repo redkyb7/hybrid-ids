@@ -1,3 +1,35 @@
+# Python & Virtual Env
 venv/
+.venv/
+env/
 *.pyc
 __pycache__/
+.ipynb_checkpoints/
+
+# Large Datasets & Databases (GitHub 100MB file limit)
+*.csv
+*.arff
+*.db
+*.db-journal
+
+# Checkpoints, Logs & Outputs
+logs/
+*.log
+output/
+
+# Proposal PDFs & Personal Analysis Docs (Keep team READMEs only)
+*.pdf
+*ANALYSIS*.md
+*PLAN*.md
+!LIVE_PACKET_CAPTURE_IMPLEMENTATION_PLAN.md
+readable_proposal.md
+*.txt.bak
+
+# IDE & Tooling Metadata
+.vscode/
+.idea/
+.agents/
+.claude/
+.codex-plugin/
+.DS_Store
+Thumbs.db
