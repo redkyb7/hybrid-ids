@@ -69,16 +69,21 @@ class Flow:
         # Flow State
         self.is_terminated = False
         self.emitted_count = 0
+        self.payload_sample = b""
 
     def add_packet(self, pkt_len: int, timestamp: float, is_forward: bool,
                    tcp_flags: Optional[Dict[str, bool]] = None,
-                   header_len: int = 20, win_size: int = 0, payload_len: int = 0):
+                   header_len: int = 20, win_size: int = 0, payload_len: int = 0,
+                   raw_payload: Optional[bytes] = None):
         """
         Ingests a single packet and updates running flow statistics.
         """
         self.last_seen = timestamp
         self.all_timestamps.append(timestamp)
         self.all_packet_lengths.append(pkt_len)
+
+        if raw_payload and len(self.payload_sample) < 512:
+            self.payload_sample += raw_payload[:512 - len(self.payload_sample)]
 
         if is_forward:
             self.fwd_packets += 1
@@ -174,9 +179,9 @@ class Flow:
         avg_pkt_size = total_bytes / total_packets if total_packets > 0 else 0.0
 
         # Active / Idle Times (CICFlowMeter defaults for short streaming bursts)
-        active_mean = flow_duration_us
-        active_max = flow_duration_us
-        active_min = flow_duration_us
+        active_mean = 0.0
+        active_max = 0.0
+        active_min = 0.0
         idle_mean = 0.0
         idle_max = 0.0
         idle_min = 0.0
@@ -240,6 +245,7 @@ class Flow:
             "Idle Mean": float(idle_mean),
             "Idle Max": float(idle_max),
             "Idle Min": float(idle_min),
+            "payload_sample": self.payload_sample.decode('latin1', errors='replace'),
         }
         return features
 
@@ -272,7 +278,8 @@ class FlowAggregator:
     def process_raw_packet(self, src_ip: str, dst_ip: str, src_port: int, dst_port: int,
                            protocol: str, pkt_len: int, timestamp: Optional[float] = None,
                            tcp_flags: Optional[Dict[str, bool]] = None,
-                           header_len: int = 20, win_size: int = 0, payload_len: int = 0) -> Optional[Dict[str, Any]]:
+                           header_len: int = 20, win_size: int = 0, payload_len: int = 0,
+                           raw_payload: Optional[bytes] = None) -> Optional[Dict[str, Any]]:
         """
         Processes a raw packet tuple. If a flow completes or hits a micro-batch threshold, returns the extracted feature vector.
         """
@@ -301,7 +308,8 @@ class FlowAggregator:
                 tcp_flags=tcp_flags,
                 header_len=header_len,
                 win_size=win_size,
-                payload_len=payload_len
+                payload_len=payload_len,
+                raw_payload=raw_payload
             )
 
             # Check emission triggers:
@@ -328,7 +336,7 @@ class FlowAggregator:
 
     def process_scapy_packet(self, pkt) -> Optional[Dict[str, Any]]:
         """
-        Helper method to parse and ingest Scapy packet objects directly.
+        Extracts 5-tuple, TCP/UDP headers, flags, and payload lengths from a raw Scapy packet.
         """
         try:
             # Check for IP layer (IPv4 or IPv6)
@@ -338,25 +346,26 @@ class FlowAggregator:
             ip_layer = pkt["IP"]
             src_ip = ip_layer.src
             dst_ip = ip_layer.dst
-            pkt_len = len(pkt)
             timestamp = float(getattr(pkt, "time", time.time()))
 
-            protocol = "TCP"
+            protocol = "OTHER"
             src_port = 0
             dst_port = 0
             tcp_flags = None
             header_len = 20
             win_size = 0
             payload_len = 0
+            raw_payload_bytes = None
 
             if pkt.haslayer("TCP"):
                 protocol = "TCP"
                 tcp_layer = pkt["TCP"]
-                src_port = int(tcp_layer.sport)
-                dst_port = int(tcp_layer.dport)
-                win_size = int(tcp_layer.window)
-                header_len = int(tcp_layer.dataofs * 4) if hasattr(tcp_layer, "dataofs") else 20
-                flags = int(tcp_layer.flags)
+                src_port = int(tcp_layer.sport) if getattr(tcp_layer, "sport", None) is not None else 0
+                dst_port = int(tcp_layer.dport) if getattr(tcp_layer, "dport", None) is not None else 0
+                win_size = int(tcp_layer.window) if getattr(tcp_layer, "window", None) is not None else 0
+                dataofs = getattr(tcp_layer, "dataofs", None)
+                header_len = int(dataofs * 4) if dataofs is not None else 20
+                flags = int(tcp_layer.flags) if getattr(tcp_layer, "flags", None) is not None else 0
                 tcp_flags = {
                     "F": bool(flags & 0x01),
                     "S": bool(flags & 0x02),
@@ -365,21 +374,31 @@ class FlowAggregator:
                     "A": bool(flags & 0x10),
                     "U": bool(flags & 0x20),
                 }
-                payload_len = len(tcp_layer.payload) if hasattr(tcp_layer, "payload") else 0
+                if hasattr(tcp_layer, "payload") and tcp_layer.payload:
+                    try:
+                        raw_payload_bytes = bytes(tcp_layer.payload)
+                        payload_len = len(raw_payload_bytes)
+                    except Exception:
+                        raw_payload_bytes = None
+                        payload_len = 0
 
             elif pkt.haslayer("UDP"):
                 protocol = "UDP"
                 udp_layer = pkt["UDP"]
-                src_port = int(udp_layer.sport)
-                dst_port = int(udp_layer.dport)
+                src_port = int(udp_layer.sport) if getattr(udp_layer, "sport", None) is not None else 0
+                dst_port = int(udp_layer.dport) if getattr(udp_layer, "dport", None) is not None else 0
                 header_len = 8
-                payload_len = len(udp_layer.payload) if hasattr(udp_layer, "payload") else 0
+                if hasattr(udp_layer, "payload") and udp_layer.payload:
+                    try:
+                        raw_payload_bytes = bytes(udp_layer.payload)
+                        payload_len = len(raw_payload_bytes)
+                    except Exception:
+                        raw_payload_bytes = None
+                        payload_len = 0
 
-            elif pkt.haslayer("ICMP"):
-                protocol = "ICMP"
-                src_port = 0
-                dst_port = 0
-                header_len = 8
+            # In CICFlowMeter / CICIDS2017 specification:
+            # Packet Length statistics measure the Transport Layer payload length (0 for TCP control packets).
+            flow_pkt_len = payload_len
 
             return self.process_raw_packet(
                 src_ip=src_ip,
@@ -387,12 +406,13 @@ class FlowAggregator:
                 src_port=src_port,
                 dst_port=dst_port,
                 protocol=protocol,
-                pkt_len=pkt_len,
+                pkt_len=flow_pkt_len,
                 timestamp=timestamp,
                 tcp_flags=tcp_flags,
                 header_len=header_len,
                 win_size=win_size,
-                payload_len=payload_len
+                payload_len=payload_len,
+                raw_payload=raw_payload_bytes
             )
         except Exception:
             return None

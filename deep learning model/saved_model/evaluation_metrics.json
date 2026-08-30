@@ -1,10 +1,10 @@
 {
-    "accuracy": 0.9735159237690221,
-    "macro_precision": 0.8237341932017933,
-    "macro_recall": 0.7613273484732062,
-    "macro_f1": 0.7688729762092965,
-    "weighted_precision": 0.9763877705971474,
-    "weighted_recall": 0.9735159237690221,
-    "weighted_f1": 0.9737630663693553,
+    "accuracy": 0.9414263952141417,
+    "macro_precision": 0.7448604557934104,
+    "macro_recall": 0.5044925739703915,
+    "macro_f1": 0.5393388787013917,
+    "weighted_precision": 0.9378110106856271,
+    "weighted_recall": 0.9414263952141417,
+    "weighted_f1": 0.9236397984257679,
     "test_samples": 252076
 }

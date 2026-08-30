@@ -72,11 +72,12 @@ def load_and_preprocess(
         .fillna(labels)
     )
 
-    # All columns except target are features
+    # All columns except target and excluded leakage columns are features
+    exclude_list = getattr(config, "EXCLUDE_FEATURES", [])
     feature_cols = [
         column
         for column in df.columns
-        if column != config.LABEL_COLUMN
+        if column != config.LABEL_COLUMN and column not in exclude_list
     ]
 
     # Convert feature columns to numeric

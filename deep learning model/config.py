@@ -102,6 +102,13 @@ LABEL_MAP = {
     "Botnet": "Botnet",
 }
 
+# Features excluded to prevent port overfitting and OS fingerprint leakage
+EXCLUDE_FEATURES = [
+    "Destination Port",
+    "Init_Win_bytes_forward",
+    "Init_Win_bytes_backward",
+]
+
 
 # ============================================================
 # DATA SPLITTING
