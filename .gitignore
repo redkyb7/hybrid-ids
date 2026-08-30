@@ -21,6 +21,7 @@ output/
 *.pdf
 *ANALYSIS*.md
 *PLAN*.md
+!LIVE_PACKET_CAPTURE_IMPLEMENTATION_PLAN.md
 readable_proposal.md
 *.txt.bak
 
