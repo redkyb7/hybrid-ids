@@ -191,6 +191,7 @@ class Flow:
             "source_ip": self.src_ip,
             "destination_ip": self.dst_ip,
             "protocol": self.protocol,
+            "Source Port": int(self.src_port),
             "Destination Port": int(self.dst_port),
 
             # 52 Standardized Model Features

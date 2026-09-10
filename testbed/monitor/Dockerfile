@@ -11,7 +11,7 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     iputils-ping \
     && rm -rf /var/lib/apt/lists/*
 
-# Install ML, DL, and network sniffing dependencies
+# Install CPU ML/DL and network sniffing dependencies
 RUN pip install --no-cache-dir \
     scapy \
     numpy \
@@ -19,7 +19,7 @@ RUN pip install --no-cache-dir \
     scikit-learn \
     xgboost \
     joblib \
-    tensorflow \
+    tensorflow-cpu \
     colorama \
     requests
 

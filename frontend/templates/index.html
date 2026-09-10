@@ -1,0 +1,646 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>SentinelFlow | Security Operations Center</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
+    <style>
+      :root {
+        color-scheme: dark;
+      }
+      body {
+        font-family:
+          Inter,
+          ui-sans-serif,
+          system-ui,
+          -apple-system,
+          BlinkMacSystemFont,
+          "Segoe UI",
+          sans-serif;
+      }
+      .toggle-track {
+        transition:
+          background-color 0.2s,
+          border-color 0.2s;
+      }
+      .toggle-thumb {
+        transition:
+          transform 0.2s,
+          background-color 0.2s;
+      }
+      input:checked + .toggle-track {
+        background: #34d399;
+        border-color: #34d399;
+      }
+      input:checked + .toggle-track .toggle-thumb {
+        transform: translateX(1rem);
+        background: #000;
+      }
+      .table-scroll {
+        scrollbar-color: #3f3f46 transparent;
+        scrollbar-width: thin;
+      }
+      .log-row:focus-visible {
+        outline: 1px solid #60a5fa;
+        outline-offset: -1px;
+      }
+      #status {
+        flex: 0 0 3.5rem;
+        width: 3.5rem;
+      }
+      .alert-copy {
+        min-width: 0;
+      }
+    </style>
+  </head>
+  <body class="min-h-screen bg-black text-zinc-100 antialiased">
+    <main class="mx-auto max-w-[1440px] px-5 py-6 sm:px-8 lg:px-10 lg:py-9">
+      <header
+        class="flex flex-col gap-6 border-b border-zinc-800 pb-7 sm:flex-row sm:items-end sm:justify-between"
+      >
+        <div>
+          <p
+            class="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500"
+          >
+            SentinelFlow / Hybrid IDS
+          </p>
+          <h1
+            class="text-2xl font-medium tracking-tight text-white sm:text-3xl"
+          >
+            Security Operations Center
+          </h1>
+          <p class="mt-2 text-sm text-zinc-500">
+            Real-time packet inspection, flow aggregation, and threat
+            classification.
+          </p>
+        </div>
+        <div class="flex items-center gap-5 text-xs text-zinc-400">
+          <label class="flex h-8 shrink-0 items-center gap-2 whitespace-nowrap">
+            <span class="text-zinc-600">Refresh</span>
+            <select
+              id="refreshRate"
+              class="h-8 w-[72px] border border-zinc-800 bg-black px-2 text-xs text-zinc-300 outline-none focus:border-zinc-600"
+            >
+              <option value="2">2 sec</option>
+              <option value="5" selected>5 sec</option>
+              <option value="10">10 sec</option>
+              <option value="30">30 sec</option>
+            </select>
+          </label>
+          <label
+            class="flex w-[124px] shrink-0 cursor-pointer items-center justify-start gap-2 whitespace-nowrap"
+          >
+            <input id="liveToggle" type="checkbox" checked class="sr-only" />
+            <span
+              class="toggle-track flex h-5 w-9 shrink-0 items-center rounded-full border border-zinc-700 bg-zinc-800 p-0.5"
+            >
+              <span
+                class="toggle-thumb h-3.5 w-3.5 rounded-full bg-zinc-500"
+              ></span>
+            </span>
+            <span id="toggleLabel" class="w-[82px]">Live refresh</span>
+          </label>
+          <span
+            id="status"
+            class="w-14 border-l border-zinc-800 pl-5 text-center font-medium text-emerald-400"
+            >LIVE</span
+          >
+        </div>
+      </header>
+
+      <section
+        id="alert"
+        class="my-7 flex min-h-14 items-center gap-4 border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm"
+        aria-live="polite"
+      >
+        <span
+          id="alertLabel"
+          class="shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-400"
+          >Status</span
+        >
+        <span id="alertCopy" class="alert-copy text-zinc-400"
+          >Waiting for telemetry...</span
+        >
+      </section>
+
+      <section
+        class="grid grid-cols-2 divide-x divide-zinc-800 border-y border-zinc-800 lg:grid-cols-4"
+        aria-label="System metrics"
+      >
+        <article class="px-4 py-5 first:pl-0 sm:px-6 lg:py-7">
+          <p
+            class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
+          >
+            Pipeline latency
+          </p>
+          <p
+            id="latency"
+            class="mt-4 text-3xl font-light tracking-tight text-white"
+          >
+            -- <span class="text-sm text-zinc-500">ms</span>
+          </p>
+          <p id="latencyNote" class="mt-2 text-xs text-zinc-600">
+            Waiting for flows
+          </p>
+        </article>
+        <article class="px-4 py-5 sm:px-6 lg:py-7">
+          <p
+            class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
+          >
+            System macro F1
+          </p>
+          <p id="f1" class="mt-4 text-3xl font-light tracking-tight text-white">
+            --
+          </p>
+          <p id="f1Note" class="mt-2 text-xs text-zinc-600">
+            Saved evaluation metric
+          </p>
+        </article>
+        <article class="px-4 py-5 sm:px-6 lg:py-7">
+          <p
+            class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
+          >
+            Threats flagged
+          </p>
+          <p
+            id="attacks"
+            class="mt-4 text-3xl font-light tracking-tight text-white"
+          >
+            --
+          </p>
+          <p class="mt-2 text-xs text-zinc-600">Historical database total</p>
+        </article>
+        <article class="px-4 py-5 last:pr-0 sm:px-6 lg:py-7">
+          <p
+            class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
+          >
+            Total flows
+          </p>
+          <p
+            id="flows"
+            class="mt-4 text-3xl font-light tracking-tight text-white"
+          >
+            --
+          </p>
+          <p class="mt-2 text-xs text-zinc-600">Historical database total</p>
+        </article>
+      </section>
+
+      <section class="mt-8 grid gap-8 lg:grid-cols-[1.4fr_0.8fr]">
+        <article class="min-w-0 border-t border-zinc-800 pt-5">
+          <div class="mb-5 flex items-baseline justify-between gap-4">
+            <h2 class="text-sm font-medium text-zinc-200">
+              Flow latency by sequence
+            </h2>
+            <span class="text-[11px] text-zinc-600"
+              >x: flow ID / y: latency (ms)</span
+            >
+          </div>
+          <div class="relative h-72"><canvas id="latencyChart"></canvas></div>
+        </article>
+        <article class="min-w-0 border-t border-zinc-800 pt-5">
+          <div class="mb-5 flex items-baseline justify-between gap-4">
+            <h2 class="text-sm font-medium text-zinc-200">
+              Threat classification
+            </h2>
+            <span id="threatTotal" class="text-[11px] text-zinc-600"
+              >0 events</span
+            >
+          </div>
+          <div class="relative h-72">
+            <canvas id="threatChart"></canvas>
+            <div
+              id="threatPercent"
+              class="pointer-events-none absolute inset-0 flex items-center justify-center text-2xl font-light text-zinc-300"
+            >
+              --
+            </div>
+          </div>
+        </article>
+      </section>
+
+      <section class="mt-10 border-t border-zinc-800 pt-5">
+        <div class="mb-5 flex items-baseline justify-between gap-4">
+          <h2 class="text-sm font-medium text-zinc-200">Detection log</h2>
+          <span class="text-[11px] uppercase tracking-[0.12em] text-zinc-600"
+            >Latest records</span
+          >
+        </div>
+        <div class="table-scroll overflow-x-auto">
+          <table class="w-full min-w-[720px] border-collapse text-left text-xs">
+            <thead>
+              <tr class="text-[10px] uppercase tracking-[0.12em] text-zinc-600">
+                <th class="pb-3 pr-5 font-medium">Time</th>
+                <th class="pb-3 pr-5 font-medium">Source</th>
+                <th class="pb-3 pr-5 font-medium">Target</th>
+                <th class="pb-3 pr-5 font-medium">Protocol</th>
+                <th class="pb-3 pr-5 font-medium">Classification</th>
+                <th class="pb-3 text-right font-medium">Latency</th>
+                <th class="pb-3 text-right font-medium">Details</th>
+              </tr>
+            </thead>
+            <tbody id="logBody" class="text-zinc-400"></tbody>
+          </table>
+          <div
+            id="empty"
+            class="hidden py-12 text-center text-xs text-zinc-600"
+          >
+            No telemetry recorded yet.
+          </div>
+        </div>
+      </section>
+      <footer
+        id="footer"
+        class="mt-8 border-t border-zinc-900 pt-4 text-[11px] text-zinc-600"
+      >
+        API connected / awaiting telemetry
+      </footer>
+    </main>
+
+    <script>
+      const normalLabels = new Set(["Normal Traffic", "Normal"]);
+      const colors = {
+        "Normal Traffic": "#34d399",
+        Normal: "#34d399",
+        "Port Scan": "#f59e0b",
+        DoS: "#ef4444",
+        DDoS: "#be123c",
+        "Brute Force": "#f97316",
+        "Web Attack": "#a855f7",
+        Botnet: "#06b6d4",
+      };
+      const axis = {
+        display: true,
+        grid: { color: "rgba(63,63,70,.42)", drawTicks: false },
+        border: { display: false },
+        ticks: {
+          color: "#71717a",
+          font: { size: 10 },
+          padding: 8,
+          maxTicksLimit: 8,
+        },
+      };
+      const latencyChart = new Chart(document.getElementById("latencyChart"), {
+        type: "line",
+        data: {
+          labels: [],
+          datasets: [
+            {
+              data: [],
+              label: "Pipeline latency",
+              borderColor: "#60a5fa",
+              backgroundColor: "rgba(96,165,250,.08)",
+              borderWidth: 1.5,
+              fill: true,
+              tension: 0.28,
+              pointRadius: 0,
+              pointHoverRadius: 3,
+            },
+            {
+              data: [],
+              label: "250 ms limit",
+              borderColor: "#ef4444",
+              borderDash: [5, 5],
+              borderWidth: 1.5,
+              pointRadius: 0,
+              pointHoverRadius: 0,
+              fill: false,
+              tension: 0,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          interaction: { intersect: false, mode: "index" },
+          plugins: {
+            legend: {
+              display: true,
+              labels: {
+                color: "#a1a1aa",
+                boxWidth: 18,
+                padding: 14,
+                font: { size: 10 },
+              },
+            },
+            tooltip: {
+              backgroundColor: "#18181b",
+              borderColor: "#3f3f46",
+              borderWidth: 1,
+              titleColor: "#a1a1aa",
+              bodyColor: "#f4f4f5",
+              padding: 10,
+              displayColors: false,
+            },
+          },
+          scales: {
+            x: {
+              ...axis,
+              title: {
+                display: true,
+                text: "Flow sequence ID",
+                color: "#71717a",
+                font: { size: 10, weight: "400" },
+              },
+            },
+            y: {
+              ...axis,
+              beginAtZero: true,
+              title: {
+                display: true,
+                text: "Latency (ms)",
+                color: "#71717a",
+                font: { size: 10, weight: "400" },
+              },
+            },
+          },
+        },
+      });
+      const threatChart = new Chart(document.getElementById("threatChart"), {
+        type: "doughnut",
+        data: {
+          labels: [],
+          datasets: [
+            {
+              data: [],
+              backgroundColor: [],
+              borderColor: "#000",
+              borderWidth: 3,
+              hoverOffset: 3,
+            },
+          ],
+        },
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          cutout: "76%",
+          plugins: {
+            legend: {
+              position: "bottom",
+              labels: {
+                color: "#d4d4d8",
+                boxWidth: 8,
+                boxHeight: 8,
+                padding: 14,
+                font: { size: 10 },
+                generateLabels: (chart) => {
+                  const values = chart.data.datasets[0].data;
+                  const total = values.reduce((sum, value) => sum + value, 0);
+                  return chart.data.labels.map((label, index) => ({
+                    text: `${label} ${total ? ((values[index] / total) * 100).toFixed(1) : "0.0"}%`,
+                    fillStyle: chart.data.datasets[0].backgroundColor[index],
+                    strokeStyle: "transparent",
+                    lineWidth: 0,
+                    hidden: false,
+                    index,
+                    fontColor: "#d4d4d8",
+                  }));
+                },
+              },
+            },
+            tooltip: {
+              backgroundColor: "#18181b",
+              borderColor: "#3f3f46",
+              borderWidth: 1,
+              padding: 10,
+              callbacks: {
+                label: (context) => {
+                  const total = context.dataset.data.reduce(
+                    (sum, value) => sum + value,
+                    0,
+                  );
+                  const percent = total
+                    ? ((context.raw / total) * 100).toFixed(1)
+                    : "0.0";
+                  return ` ${context.label}: ${percent}%`;
+                },
+              },
+            },
+          },
+        },
+      });
+      let pollTimer;
+      let refreshSeconds = 5;
+      let expandedLogId = null;
+      let expandedLogSnapshot = null;
+      const $ = (id) => document.getElementById(id);
+      const score = (value) =>
+        value == null ? "--" : Number(value).toFixed(3);
+
+      function updateDashboard(data) {
+        if (data.error) {
+          $("alertLabel").textContent = "Error";
+          $("alertLabel").className =
+            "shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-red-400";
+          $("alertCopy").textContent = data.error;
+          $("alertCopy").className = "alert-copy text-red-300";
+          $("alert").className =
+            "my-7 flex min-h-14 items-center gap-4 border border-red-900/70 bg-red-950/20 px-4 py-3 text-sm";
+          return;
+        }
+        const kpi = data.kpis;
+        $("latency").innerHTML =
+          `${kpi.avg_latency} <span class="text-sm text-zinc-500">ms</span>`;
+        $("latencyNote").textContent =
+          kpi.avg_latency < 250 ? "Under 250ms target" : "Above 250ms target";
+        $("latencyNote").className =
+          `mt-2 text-xs ${kpi.avg_latency < 250 ? "text-emerald-400" : "text-red-400"}`;
+        $("f1").textContent = score(kpi.current_f1);
+        $("f1Note").textContent =
+          kpi.f1_improvement == null
+            ? "Saved evaluation metric"
+            : `${kpi.f1_improvement >= 0 ? "+" : ""}${kpi.f1_improvement}% vs 0.700 target`;
+        $("f1Note").className =
+          `mt-2 text-xs ${kpi.current_f1 != null && kpi.current_f1 >= kpi.f1_target ? "text-emerald-400" : "text-red-400"}`;
+        $("f1").className =
+          `mt-4 text-3xl font-light tracking-tight ${kpi.current_f1 != null && kpi.current_f1 >= kpi.f1_target ? "text-emerald-400" : "text-red-400"}`;
+        $("attacks").textContent = Number(kpi.total_attacks).toLocaleString();
+        $("flows").textContent = Number(kpi.total_flows).toLocaleString();
+        const alert = data.latest_alert;
+        $("alertLabel").textContent = alert
+          ? `Alert / ${alert.attack_type}`
+          : "Network clear";
+        $("alertLabel").className = alert
+          ? "shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-red-400"
+          : "shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-400";
+        $("alertCopy").textContent = alert
+          ? `${alert.source_ip}  →  ${alert.destination_ip}  /  ${alert.protocol}  /  ${alert.timestamp}`
+          : "No malicious flows in the current telemetry window.";
+        $("alertCopy").className = alert
+          ? "alert-copy font-medium text-red-200"
+          : "alert-copy text-zinc-400";
+        $("alert").className = alert
+          ? "my-7 flex min-h-14 items-center gap-4 border border-red-900/70 bg-red-950/20 px-4 py-3 text-sm"
+          : "my-7 flex min-h-14 items-center gap-4 border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm";
+        const logs = [...data.logs].reverse();
+        latencyChart.data.labels = logs.map((log) => log.id);
+        latencyChart.data.datasets[0].data = logs.map((log) => log.latency_ms);
+        latencyChart.data.datasets[1].data = logs.map(() => 250);
+        latencyChart.update("none");
+        const labels = Object.keys(data.threat_mix);
+        const values = labels.map((label) => data.threat_mix[label]);
+        const total = values.reduce((sum, value) => sum + value, 0);
+        threatChart.data.labels = labels;
+        threatChart.data.datasets[0].data = values;
+        threatChart.data.datasets[0].backgroundColor = labels.map(
+          (label) => colors[label] || "#71717a",
+        );
+        threatChart.update("none");
+        $("threatTotal").textContent = `${total.toLocaleString()} events`;
+        $("threatPercent").textContent = total
+          ? `${((values.filter((value, index) => !normalLabels.has(labels[index])).reduce((sum, value) => sum + value, 0) / total) * 100).toFixed(1)}% threat`
+          : "--";
+        $("logBody").replaceChildren();
+        $("empty").classList.toggle("hidden", logs.length > 0);
+        const visibleLogs = logs.slice(-25);
+        if (
+          expandedLogId !== null &&
+          !visibleLogs.some((log) => log.id === expandedLogId) &&
+          expandedLogSnapshot
+        ) {
+          visibleLogs.push(expandedLogSnapshot);
+        }
+        visibleLogs.reverse();
+        if (expandedLogId !== null) {
+          const expandedIndex = visibleLogs.findIndex(
+            (log) => log.id === expandedLogId,
+          );
+          if (expandedIndex >= 0) {
+            const [expandedLog] = visibleLogs.splice(expandedIndex, 1);
+            visibleLogs.unshift(expandedLog);
+          }
+        }
+        visibleLogs.forEach((log) => {
+          const row = document.createElement("tr");
+          row.className =
+            "log-row cursor-pointer transition-colors hover:bg-zinc-900/70";
+          row.tabIndex = 0;
+          row.setAttribute("aria-expanded", "false");
+          const threat = !normalLabels.has(log.attack_type);
+          [
+            log.timestamp,
+            log.source_ip,
+            log.destination_ip,
+            log.protocol,
+            log.attack_type,
+            `${log.latency_ms} ms`,
+          ].forEach((value, index) => {
+            const cell = document.createElement("td");
+            cell.textContent = value;
+            cell.className = `py-3 pr-5 ${index === 5 ? "text-right" : ""} ${index === 4 ? (threat ? "font-medium text-red-400" : "text-emerald-400") : ""}`;
+            row.appendChild(cell);
+          });
+          const detailsCell = document.createElement("td");
+          detailsCell.textContent = "View";
+          detailsCell.className = "py-3 text-right text-[11px] text-blue-400";
+          row.appendChild(detailsCell);
+
+          const detailRow = document.createElement("tr");
+          detailRow.className = "hidden bg-zinc-950";
+          const detailCell = document.createElement("td");
+          detailCell.colSpan = 7;
+          detailCell.className = "border-l border-blue-400 px-4 py-4";
+          const detailGrid = document.createElement("div");
+          detailGrid.className =
+            "grid gap-x-8 gap-y-3 text-xs sm:grid-cols-2 lg:grid-cols-4";
+          const detailValues = [
+            ["Timestamp", log.timestamp],
+            ["Source", `${log.source_ip}:${log.source_port ?? "not recorded"}`],
+            [
+              "Destination",
+              `${log.destination_ip}:${log.destination_port ?? "not recorded"}`,
+            ],
+            ["Protocol", log.protocol],
+            ["Classification", log.attack_type],
+            [
+              "Confidence",
+              log.confidence == null
+                ? "not recorded"
+                : `${(Number(log.confidence) * 100).toFixed(1)}%`,
+            ],
+            ["Latency", `${log.latency_ms} ms`],
+          ];
+          detailValues.forEach(([label, value]) => {
+            const item = document.createElement("div");
+            const itemLabel = document.createElement("span");
+            itemLabel.className = "mr-2 text-zinc-600";
+            itemLabel.textContent = `${label}:`;
+            const itemValue = document.createElement("span");
+            itemValue.className = "text-zinc-300";
+            itemValue.textContent = value;
+            item.append(itemLabel, itemValue);
+            detailGrid.appendChild(item);
+          });
+          detailCell.appendChild(detailGrid);
+          detailRow.appendChild(detailCell);
+          const toggleDetails = () => {
+            const expanded = !detailRow.classList.contains("hidden");
+            detailRow.classList.toggle("hidden", expanded);
+            row.setAttribute("aria-expanded", String(!expanded));
+            detailsCell.textContent = expanded ? "View" : "Hide";
+            expandedLogId = expanded ? null : log.id;
+            expandedLogSnapshot = expanded ? null : { ...log };
+          };
+          if (expandedLogId === log.id) {
+            detailRow.classList.remove("hidden");
+            row.setAttribute("aria-expanded", "true");
+            detailsCell.textContent = "Hide";
+          }
+          row.addEventListener("click", toggleDetails);
+          row.addEventListener("keydown", (event) => {
+            if (event.key === "Enter" || event.key === " ") {
+              event.preventDefault();
+              toggleDetails();
+            }
+          });
+          $("logBody").appendChild(row);
+          $("logBody").appendChild(detailRow);
+        });
+        $("footer").textContent =
+          `API connected / ${kpi.window_size} flows in view / model accuracy ${kpi.model_accuracy == null ? "--" : `${(kpi.model_accuracy * 100).toFixed(1)}%`}`;
+      }
+      async function fetchTelemetry() {
+        try {
+          const response = await fetch("/api/telemetry?limit=500", {
+            cache: "no-store",
+          });
+          updateDashboard(await response.json());
+        } catch {
+          $("alertLabel").textContent = "Offline";
+          $("alertLabel").className =
+            "shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-red-400";
+          $("alertCopy").textContent =
+            "API unavailable / waiting for backend connection.";
+          $("alertCopy").className = "alert-copy text-red-300";
+          $("alert").className =
+            "my-7 flex min-h-14 items-center gap-4 border border-red-900/70 bg-red-950/20 px-4 py-3 text-sm";
+        }
+      }
+      function setLive(enabled) {
+        $("toggleLabel").textContent = enabled
+          ? "Live refresh"
+          : "Refresh paused";
+        $("status").textContent = enabled ? "LIVE" : "PAUSED";
+        $("status").className =
+          `w-14 border-l border-zinc-800 pl-5 text-center font-medium ${enabled ? "text-emerald-400" : "text-zinc-500"}`;
+        clearInterval(pollTimer);
+        if (enabled) {
+          fetchTelemetry();
+          pollTimer = setInterval(fetchTelemetry, refreshSeconds * 1000);
+        }
+      }
+      $("liveToggle").addEventListener("change", (event) =>
+        setLive(event.target.checked),
+      );
+      $("refreshRate").addEventListener("change", (event) => {
+        refreshSeconds = Number(event.target.value);
+        if ($("liveToggle").checked) {
+          setLive(true);
+        }
+      });
+      setLive(true);
+    </script>
+  </body>
+</html>
