@@ -107,9 +107,20 @@ class LiveCaptureDaemon:
                 destination_ip TEXT,
                 protocol TEXT,
                 attack_type TEXT,
-                latency_ms INTEGER
+                latency_ms INTEGER,
+                source_port INTEGER,
+                destination_port INTEGER,
+                confidence REAL
             )
         ''')
+        columns = {row[1] for row in self.db_conn.execute("PRAGMA table_info(logs)")}
+        for column, definition in {
+            "source_port": "INTEGER",
+            "destination_port": "INTEGER",
+            "confidence": "REAL",
+        }.items():
+            if column not in columns:
+                self.db_conn.execute(f"ALTER TABLE logs ADD COLUMN {column} {definition}")
 
     def _record_flow_verdict(self, flow_dict: Dict[str, Any]):
         """Passes flow through Hybrid ML/DL engine and commits verdict to database."""
@@ -126,6 +137,7 @@ class LiveCaptureDaemon:
 
         src_ip = str(flow_dict.get("source_ip", "0.0.0.0"))
         dst_ip = str(flow_dict.get("destination_ip", "0.0.0.0"))
+        sport = int(flow_dict.get("Source Port", 0))
         dport = int(flow_dict.get("Destination Port", 0))
         proto = str(flow_dict.get("protocol", "TCP"))
 
@@ -133,9 +145,11 @@ class LiveCaptureDaemon:
         with self.db_lock:
             try:
                 self.db_conn.execute('''
-                    INSERT INTO logs (timestamp, source_ip, destination_ip, protocol, attack_type, latency_ms)
-                    VALUES (?, ?, ?, ?, ?, ?)
-                ''', (now, src_ip, dst_ip, proto, attack_type, latency_ms))
+                    INSERT INTO logs (
+                        timestamp, source_ip, destination_ip, protocol, attack_type,
+                        latency_ms, source_port, destination_port, confidence
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ''', (now, src_ip, dst_ip, proto, attack_type, latency_ms, sport, dport, confidence))
             except Exception as e:
                 print(f"[DB ERROR] {e}")
 

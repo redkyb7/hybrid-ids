@@ -1,13 +1,69 @@
-Installation:
-pip install tensorflow scikit-learn imbalanced-learn pandas numpy \
-            matplotlib seaborn
+INSTALLATION
+============
 
-Running:
-# Train + save model
-python train.py
+Activate virtual environment first (ONLY IF YOU WANT, NOT A MUST):
 
-# Full evaluation with plots
-python evaluate.py
+source .venv/bin/activate
 
-# Test inference (smoke test)
-python predict.py
+
+Install dependencies:
+
+pip install tensorflow scikit-learn pandas numpy matplotlib
+
+
+TRAINING
+========
+
+Run:
+
+python3 train.py
+
+
+Training will:
+
+1. Load the CICIDS2017 cleaned dataset
+2. Clean invalid values
+3. Encode attack labels
+4. Split data:
+      80% training
+      10% validation
+      10% testing
+5. Scale features using training data only
+6. Save preprocessing artifacts
+7. Train the 1D CNN using class weighting
+8. Use early stopping
+9. Save the model with the best validation loss
+10. Evaluate briefly on the unseen test set
+
+
+FULL EVALUATION
+===============
+
+Run:
+
+python3 evaluate.py
+
+
+This produces:
+
+saved_model/classification_report.json
+saved_model/evaluation_metrics.json
+saved_model/confusion_matrix.png
+
+
+INFERENCE TEST
+==============
+
+Run:
+
+python3 predict.py
+
+
+IMPORTANT
+=========
+
+Do not use RandomOverSampler.
+
+The model handles class imbalance using class weights.
+
+The test set must not be used during training or model selection.
