@@ -1,0 +1,5 @@
+{
+    "global_threshold": 0.9,
+    "metric": "binary_attack_f1",
+    "validation_score": 0.9655988308705838
+}

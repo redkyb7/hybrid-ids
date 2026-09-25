@@ -355,8 +355,7 @@ HANDLERS = {
 ALIASES = {"dos": ["dos_http"], "bruteforce": ["ssh_bruteforce"],
            "web": ["web_sqli", "web_xss", "web_login"]}
 ALL_LOCAL_MODES = [
-    "scan", "botnet", "ssh_bruteforce", "dos_http", "infiltration",
-    "web_sqli", "web_xss", "web_login",
+    "scan", "botnet", "ssh_bruteforce", "dos_http",
 ]
 
 

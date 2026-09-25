@@ -57,7 +57,7 @@ def _validate_dataset_schema(
     )
 
     expected_classes = sorted(
-        config.EXPECTED_CLASSES
+        config.SOURCE_CLASSES
     )
 
     unexpected_classes = sorted(
@@ -84,7 +84,7 @@ def _validate_dataset_schema(
         if config.STRICT_CLASS_VALIDATION:
             raise ValueError(
                 message
-                + "\n\nUpdate EXPECTED_CLASSES in "
+                + "\n\nUpdate SOURCE_CLASSES in "
                 "config.py if these are intentional."
             )
 
@@ -103,6 +103,16 @@ def _validate_dataset_schema(
                 in missing_expected_classes
             )
         )
+
+
+def _remap_training_labels(labels: pd.Series) -> pd.Series:
+    """Keep five named attacks and group all other source attacks together."""
+    in_scope = {"Benign", *config.FOCUS_ATTACK_CLASSES}
+    remapped = labels.where(labels.isin(in_scope), config.OTHER_ATTACK_CLASS)
+    actual_classes = set(remapped.unique())
+    if actual_classes != set(config.EXPECTED_CLASSES):
+        raise ValueError(f"Unexpected remapped classes: {sorted(actual_classes)}")
+    return remapped
 
 
 def _get_feature_columns(
@@ -297,6 +307,17 @@ def load_and_preprocess(
     _validate_dataset_schema(
         df
     )
+
+    # Preserve every attack row while limiting named DL outputs to the
+    # five selected classes. This happens before split and encoding.
+    out_of_scope = ~df[config.LABEL_COLUMN].isin(
+        ["Benign", *config.FOCUS_ATTACK_CLASSES]
+    )
+    print(
+        f"      Mapped {int(out_of_scope.sum()):,} rows "
+        f"to {config.OTHER_ATTACK_CLASS}."
+    )
+    df[config.LABEL_COLUMN] = _remap_training_labels(df[config.LABEL_COLUMN])
 
     feature_cols = _get_feature_columns(
         df
@@ -608,6 +629,10 @@ def load_and_preprocess(
             config.EXCLUDE_FEATURES
         ),
         "classes": label_encoder.classes_.tolist(),
+        "focus_attack_classes": list(config.FOCUS_ATTACK_CLASSES),
+        "other_attack_source_classes": sorted(
+            set(config.SOURCE_CLASSES) - {"Benign", *config.FOCUS_ATTACK_CLASSES}
+        ),
         "num_classes": int(
             len(label_encoder.classes_)
         ),

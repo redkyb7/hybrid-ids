@@ -120,7 +120,7 @@ services:
     network_mode: "service:victim"
     environment:
       - PYTHONUNBUFFERED=1
-      - IDS_ARTIFACT_ROOT=${IDS_ARTIFACT_ROOT:-/app/updated_models/extracted}
+      - IDS_ARTIFACT_ROOT=${IDS_ARTIFACT_ROOT:-/app/updated_models/five_attack}
       - IDS_STAGE1_THRESHOLD
       - IDS_LOG_FEATURES=${IDS_LOG_FEATURES:-0}
     depends_on:
@@ -144,7 +144,7 @@ services:
     container_name: ids-dashboard
     environment:
       - PYTHONUNBUFFERED=1
-      - IDS_DL_METRICS_PATH=${IDS_ARTIFACT_ROOT:-/app/updated_models/extracted}/dl/evaluation_metrics.json
+      - IDS_DL_METRICS_PATH=${IDS_ARTIFACT_ROOT:-/app/updated_models/five_attack}/dl/evaluation_metrics.json
     ports:
       - "127.0.0.1:8000:8000"
     volumes:

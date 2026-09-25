@@ -8,7 +8,8 @@ The binary target is created from ClassLabel:
     0 = Benign
     1 = Attack
 
-This filters benign network flows before Deep Learning.
+This filters benign network flows before Deep Learning. All source attack
+types remain positive even when Stage 2 focuses on five named attack types.
 """
 
 import argparse

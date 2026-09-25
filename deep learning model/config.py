@@ -96,7 +96,7 @@ NORMALIZED_CONFUSION_MATRIX_SAVE_PATH = os.path.join(
 # Your Parquet dataset has:
 #
 # - Label: 33 fine-grained attack labels
-# - ClassLabel: 8 canonical attack categories
+# - ClassLabel: 8 source categories; two are folded into Other Attack
 #
 # We train on the already curated ClassLabel target.
 LABEL_COLUMN = "ClassLabel"
@@ -111,8 +111,8 @@ LEAKAGE_COLUMNS = [
 # categorical label columns. No extra feature exclusion is needed.
 EXCLUDE_FEATURES = LEAKAGE_COLUMNS
 
-# These are the exact expected target categories in your data.
-EXPECTED_CLASSES = [
+# Validate the raw dataset before remapping labels.
+SOURCE_CLASSES = [
     "Benign",
     "Botnet",
     "Bruteforce",
@@ -122,6 +122,12 @@ EXPECTED_CLASSES = [
     "Portscan",
     "Webattack",
 ]
+
+# Five named attacks are in scope for Stage 2. The two remaining source
+# attacks stay in the training set as Other Attack, not Benign.
+FOCUS_ATTACK_CLASSES = ["Botnet", "Bruteforce", "DDoS", "DoS", "Portscan"]
+OTHER_ATTACK_CLASS = "Other Attack"
+EXPECTED_CLASSES = ["Benign", *FOCUS_ATTACK_CLASSES, OTHER_ATTACK_CLASS]
 
 # Retain strict validation so accidental target/schema changes are detected.
 STRICT_CLASS_VALIDATION = True

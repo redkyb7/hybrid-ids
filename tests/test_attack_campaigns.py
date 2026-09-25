@@ -28,6 +28,10 @@ class TestAttackCampaigns(unittest.TestCase):
         self.assertEqual(profiles["ssh_bruteforce"].reference_label, "Bruteforce-SSH")
         self.assertEqual(profiles["web_login"].reference_label, "Webattack-bruteforce")
         self.assertNotIn("password123", attack_campaigns.INVALID_PASSWORDS)
+        self.assertEqual(
+            {profiles[mode].class_label for mode in attack_campaigns.ALL_LOCAL_MODES},
+            {"Botnet", "Bruteforce", "DoS", "Portscan"},
+        )
 
     def test_profile_rejects_zero_or_negative_action_parameters(self):
         source = json.loads((ROOT / "testbed/attacker/profiles.json").read_text(encoding="utf-8"))

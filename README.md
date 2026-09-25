@@ -34,11 +34,11 @@ Press `Ctrl+C` to stop following logs; the containers continue running. To inspe
 
 ## Models used by Docker
 
-The monitor defaults to the earlier uploaded XGBoost ML and residual-MLP DL
-models in `updated_models/extracted/{ml,dl}`. Stage 1 uses the engine's 0.10
+The monitor defaults to the five-attack XGBoost ML and residual-MLP DL
+models in `updated_models/five_attack/{ml,dl}`. Stage 1 uses the engine's 0.10
 attack threshold because this ML bundle has no saved threshold file. Stage 2
-uses its saved 0.70 confidence threshold. The 0.10 Stage 1 threshold was not
-evaluated in the original Colab report. A flow below that threshold stops at
+uses its saved 0.90 confidence threshold. The 0.10 Stage 1 threshold was not
+evaluated for this new pairing. A flow below that threshold stops at
 Stage 1 as benign. An attack candidate reaches Stage 2, where DL assigns the
 class or can return benign. If an artifact is missing or has the wrong schema,
 the monitor exits and reports the error in
@@ -49,10 +49,34 @@ pandas dependencies needed by these models.
 
 The deployed ML and DL models were evaluated on different test splits, so
 there is no measured combined attack F1 for this pairing. The dashboard shows
-the DL model's standalone classification macro F1 (`0.7737`) from
-`updated_models/extracted/dl/evaluation_metrics.json`. This is an offline
-eight-class test-set result, not a combined pipeline or live-traffic score.
+the DL model's standalone classification macro F1 (`0.8328`) from
+`updated_models/five_attack/dl/evaluation_metrics.json`. This is an offline
+seven-class test-set result, not a combined pipeline or live-traffic score.
 Their standalone scores cannot be combined into one pipeline score.
+
+## Retrain for five named attack types
+
+The training scope is now DDoS, DoS, Portscan, Bruteforce, and Botnet.
+Stage 1 remains binary across **all** attack rows. Stage 2 keeps Benign and
+these five attack labels, and combines the source Infiltration and Webattack
+rows into `Other Attack`. Build the self-contained Colab upload archive with
+`python scripts/build_five_attack_colab_zip.py`, then follow
+[the Colab retraining guide](colab_five_attack_retrain/README.md). The archive
+includes the Parquet dataset and excludes old model artifacts.
+
+Evaluate the combined pipeline before reporting a new hybrid score. The
+automatic single-source attacker rotation now covers the
+five selected types through four local scenarios; DDoS requires the separate
+two-worker campaign described in the testbed guide. Out-of-scope manual
+campaigns remain available to check `Other Attack` behavior.
+
+In the first bounded live check of the five-attack bundle, a 12-port Nmap
+campaign produced 12 captured connections, 10 Stage 2 connections, one
+`Unknown Attack` alert, and zero `Port Scan` predictions. A separate
+two-source UDP DDoS campaign produced 20 captured connections and 20 correct
+`DDoS` model alerts. These are lab scenarios, not a combined pipeline F1.
+The new DL report also shows `Portscan` F1 of 0.7135 on 225 offline test
+examples and `Other Attack` F1 of 0.1752 on 9,785 examples.
 
 The attacker evaluation records a historical 13-scenario rule-assisted baseline
 and two model-only follow-up campaigns. The scan had no model alerts, while the

@@ -1,6 +1,6 @@
 # Stage 1 ML Colab run record
 
-Source: console output pasted by the user after the Colab run. This record preserves the reported values. The original `models.zip` contained the selected model and feature list but no evaluation file; the archive was removed after extraction to `updated_models/extracted/ml`. Metrics were printed to four decimal places, so more precise values cannot be recovered from this record.
+Source: console output pasted by the user after the Colab run. This record preserves the reported values. The original `models.zip` contained the selected model and feature list but no evaluation file; the archive was removed after extraction. Metrics were printed to four decimal places, so more precise values cannot be recovered from this record.
 
 - Dataset: `/content/hybrid-ids/clean_data/cic-collection.parquet`, full 9,167,581 rows and 59 columns.
 - Raw binary class shares: Benign 0.7838697034692139; Attack 0.21613029653078603.
@@ -27,4 +27,4 @@ Source: console output pasted by the user after the Colab run. This record prese
 The script reported `SELECTED STAGE 1 MODEL: XGBoost (F1: 0.9564)` and saved `backend/models/stage1_binary_filter.joblib` and `backend/models/stage1_feature_list.joblib` in Colab. Its selection used the test set. The output did not include metrics at the live IDS's 0.10 attack threshold or per-attack-category recall.
 
 Those are the paths printed in the Colab run. The deployed XGBoost files in
-this repository are the later uploaded export under `updated_models/extracted/ml`.
+this repository are the later uploaded export under `updated_models/five_attack/ml`.

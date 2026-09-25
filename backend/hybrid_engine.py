@@ -23,6 +23,7 @@ class HybridIDSEngine:
         "Bruteforce": "Brute Force",
         "DDoS": "DDoS",
         "DoS": "DoS",
+        "Other Attack": "Other Attack",
         "Infiltration": "Infiltration",
         "Portscan": "Port Scan",
         "Webattack": "Web Attack",
@@ -34,7 +35,7 @@ class HybridIDSEngine:
         if artifact_root is None:
             artifact_root = os.environ.get(
                 "IDS_ARTIFACT_ROOT",
-                project_root / "updated_models" / "extracted",
+                project_root / "updated_models" / "five_attack",
             )
         artifact_root = Path(artifact_root)
         self.artifact_root = artifact_root
@@ -83,8 +84,11 @@ class HybridIDSEngine:
             thresholds_path=str(dl_dir / "thresholds.json"),
         )
         self.stage2_features = list(self.stage2_classifier.feature_order)
-        if set(self.stage2_classifier.label_encoder.classes_) != set(self.LABELS):
-            raise ValueError("Stage 2 labels differ from the runtime label map")
+        stage2_labels = set(self.stage2_classifier.label_encoder.classes_)
+        focused_labels = set(self.LABELS) - {"Infiltration", "Webattack"}
+        legacy_labels = set(self.LABELS) - {"Other Attack"}
+        if stage2_labels not in (focused_labels, legacy_labels):
+            raise ValueError("Stage 2 labels differ from supported 7-class or 8-class schemas")
 
     def _validated_features(self, raw_flow_dict: Dict[str, Any]) -> Dict[str, float]:
         required = set(self.stage1_features) | set(self.stage2_features)

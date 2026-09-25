@@ -1,8 +1,8 @@
 DEEP LEARNING SOURCE
 ====================
 
-The current Docker runtime loads the uploaded DL artifact from
-updated_models/extracted/dl and passes its paths to predict.NIDSClassifier.
+The Docker runtime loads the selected DL artifact from
+updated_models/five_attack/dl and passes its paths to predict.NIDSClassifier.
 The saved_model/ directory beside this source is a local training output and
 is excluded from Git.
 
@@ -13,3 +13,9 @@ to this directory's saved_model/. The ML training script is
 ml-model-updated.py at the repository root. These independent runs do not
 measure the combined ML-to-DL decision rule. Validate the feature schema and
 full pipeline before replacing the deployed artifacts.
+
+The retraining target has five named attacks: Botnet, Bruteforce, DDoS,
+DoS, and Portscan, plus Benign and Other Attack. Infiltration and Webattack
+source rows become Other Attack before the train/validation/test split.
+The selected Docker artifact is the seven-class five-attack model.
+See ../colab_five_attack_retrain/README.md for retraining.

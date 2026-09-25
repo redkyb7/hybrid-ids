@@ -18,7 +18,7 @@ from flow_aggregator import Flow, FlowAggregator
 class TestUpdatedFeatureContract(unittest.TestCase):
     @classmethod
     def setUpClass(cls):
-        artifact_dir = ROOT / "updated_models" / "extracted"
+        artifact_dir = ROOT / "updated_models" / "five_attack"
         cls.ml_features = joblib.load(
             artifact_dir / "ml" / "stage1_feature_list.joblib"
         )

@@ -1,0 +1,21 @@
+{
+    "accuracy": 0.9827599183645865,
+    "macro_precision": 0.8252208839220698,
+    "macro_recall": 0.854083371781425,
+    "macro_f1": 0.8328299359023045,
+    "weighted_precision": 0.9790767313862166,
+    "weighted_recall": 0.9827599183645865,
+    "weighted_f1": 0.9806640630243543,
+    "test_samples": 916759,
+    "inference_seconds": 12.618661900000006,
+    "throughput_flows_per_second": 72651.04709715692,
+    "mean_prediction_confidence": 0.9310445785522461,
+    "binary_attack_vs_benign": {
+        "attack_precision": 0.9665799254605038,
+        "attack_recall": 0.9541940042394267,
+        "attack_f1": 0.9603470301543401,
+        "false_positive_count": 6537,
+        "benign_samples": 718619,
+        "false_positive_rate": 0.0090966144786041
+    }
+}
