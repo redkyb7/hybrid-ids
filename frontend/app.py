@@ -8,16 +8,16 @@ import uvicorn
 from fastapi import FastAPI, Query, Request
 from fastapi.responses import HTMLResponse
 from fastapi.templating import Jinja2Templates
-from frontend.metrics import load_model_metrics
+from frontend.metrics import load_dl_metrics
 
 
 FRONTEND_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = FRONTEND_DIR.parent
 DATABASE_PATH = PROJECT_ROOT / "data" / "ids_logs.db"
-# Set this only for a combined evaluation report matching the deployed bundle.
-METRICS_PATH = (
-    Path(os.environ["IDS_EVALUATION_PATH"])
-    if os.environ.get("IDS_EVALUATION_PATH") else None
+# Point to the evaluation metrics for the selected DL artifact.
+DL_METRICS_PATH = (
+    Path(os.environ["IDS_DL_METRICS_PATH"])
+    if os.environ.get("IDS_DL_METRICS_PATH") else None
 )
 NORMAL_LABELS = {"Normal Traffic", "Normal"}
 
@@ -71,8 +71,8 @@ def read_telemetry(limit: int) -> dict[str, Any]:
         threat_mix = dict(Counter(log["attack_type"] for log in logs))
         attacks = [log for log in logs if log["attack_type"] not in NORMAL_LABELS]
         latencies = [log["latency_ms"] for log in logs if log["latency_ms"] is not None]
-        metrics = load_model_metrics(METRICS_PATH)
-        current_f1 = metrics.get("combined_attack_f1")
+        metrics = load_dl_metrics(DL_METRICS_PATH)
+        dl_macro_f1 = metrics.get("dl_macro_f1")
         total_flows = sum(historical_mix.values())
         average_latency = round(sum(latencies) / len(latencies)) if latencies else 0
 
@@ -80,10 +80,10 @@ def read_telemetry(limit: int) -> dict[str, Any]:
             "logs": logs,
             "kpis": {
                 "avg_latency": average_latency,
-                "current_f1": current_f1,
+                "dl_macro_f1": dl_macro_f1,
                 "evaluation_status": (
-                    "Offline ML/DL holdout; live rules excluded" if current_f1 is not None
-                    else "No combined evaluation for selected models"
+                    "Offline DL test set; standalone model" if dl_macro_f1 is not None
+                    else "DL evaluation unavailable for selected model"
                 ),
                 "total_attacks": sum(
                     count for label, count in historical_mix.items() if label not in NORMAL_LABELS

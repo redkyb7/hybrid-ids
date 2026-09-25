@@ -48,8 +48,10 @@ pandas dependencies needed by these models.
 
 The deployed ML and DL models were evaluated on different test splits, so
 there is no measured combined attack F1 for this pairing. The dashboard shows
-`--` for that score. Their standalone scores cannot be combined into one
-pipeline score.
+the DL model's standalone classification macro F1 (`0.7737`) from
+`updated_models/extracted/dl/evaluation_metrics.json`. This is an offline
+eight-class test-set result, not a combined pipeline or live-traffic score.
+Their standalone scores cannot be combined into one pipeline score.
 
 The current attacker evaluation covers 13 bounded scenarios across seven
 attack classes using the deployed bundle. It records Stage 2 reach, model
@@ -58,8 +60,8 @@ classifications, rule alerts, and feature comparisons with CIC data. See
 for the measured results and limitations.
 
 Rule alerts are labeled separately from ML/DL verdicts in the dashboard's log
-details. A displayed combined F1 covers only an offline holdout for the
-selected bundle; it does not measure the supplemental checks. Set
+details. The displayed DL macro F1 does not measure Stage 1 gating or the
+supplemental checks. Set
 `IDS_SUPPLEMENTAL_RULES=0` before
 recreating the monitor to disable those checks. Set `IDS_LOG_FEATURES=1` to
 store the numeric Stage 1 and Stage 2 flow features per snapshot for a
@@ -69,16 +71,16 @@ changing either setting with `docker compose up -d --no-deps monitor`.
 
 Set `IDS_ARTIFACT_ROOT` before running Compose to select another complete
 bundle mounted inside the monitor and dashboard containers. The dashboard
-displays `--` unless that bundle has a matching `combined_evaluation.json`
-holdout report.
+displays `--` unless that bundle has a matching
+`dl/evaluation_metrics.json` report.
 Clear any `IDS_STAGE1_THRESHOLD` override to use the threshold belonging to
 the selected bundle.
 
 ## Open the dashboard
 
 The dashboard starts with `docker compose up -d --build`; no host Python setup
-is needed. Open <http://localhost:8000>. It displays live detections and an
-offline combined F1 only when the selected bundle has a matching report.
+is needed. Open <http://localhost:8000>. It displays live detections and the
+selected DL model's offline classification macro F1 when its report is present.
 Threat and flow totals include historical
 rows already in `data/ids_logs.db`; the classification chart uses the latest
 500 snapshots so new detections are visible without historical dilution.

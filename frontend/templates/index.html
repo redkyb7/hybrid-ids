@@ -149,13 +149,13 @@
           <p
             class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
           >
-            Combined attack F1
+            DL classification macro F1
           </p>
           <p id="f1" class="mt-4 text-3xl font-light tracking-tight text-white">
             --
           </p>
           <p id="f1Note" class="mt-2 text-xs text-zinc-600">
-            No combined evaluation for selected models
+            DL evaluation unavailable for selected model
           </p>
         </article>
         <article class="px-4 py-5 sm:px-6 lg:py-7">
@@ -427,7 +427,7 @@
       let expandedLogSnapshot = null;
       const $ = (id) => document.getElementById(id);
       const score = (value) =>
-        value == null ? "--" : Number(value).toFixed(3);
+        value == null ? "--" : Number(value).toFixed(4);
       const detector = (source) => ({
         rule: "Supplemental rule",
         model: "ML / DL model",
@@ -452,7 +452,7 @@
           kpi.avg_latency < 250 ? "Under 250ms target" : "Above 250ms target";
         $("latencyNote").className =
           `mt-2 text-xs ${kpi.avg_latency < 250 ? "text-emerald-400" : "text-red-400"}`;
-        $("f1").textContent = score(kpi.current_f1);
+        $("f1").textContent = score(kpi.dl_macro_f1);
         $("f1Note").textContent = kpi.evaluation_status;
         $("f1Note").className = "mt-2 text-xs text-zinc-600";
         $("f1").className = "mt-4 text-3xl font-light tracking-tight text-white";
