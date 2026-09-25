@@ -4,7 +4,7 @@ SentinelFlow IDS - Unit & Benchmark Tests for FlowAggregator
 Comprehensive test suite verifying:
   1. Bidirectional 5-tuple matching (Forward & Backward traffic)
   2. Incremental metric accuracy (Lengths, IATs, TCP Flags, Window sizes)
-  3. Strict 52-feature schema compatibility with Stage 1 & Stage 2 models
+  3. Saved 20-feature ML and 57-feature DL schema compatibility
   4. Micro-batch early emission (150ms timeout)
   5. Inactivity timeout purging & garbage collection
   6. Two-Stage HybridIDSEngine integration & latency benchmarking (NFR-002 < 250ms)
@@ -19,16 +19,11 @@ import numpy as np
 # Ensure backend and models are on path
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BACKEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "backend"))
-DL_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "deep learning model"))
 if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
-if DL_DIR not in sys.path:
-    sys.path.insert(0, DL_DIR)
 
 from flow_aggregator import Flow, FlowAggregator
 from hybrid_engine import HybridIDSEngine
-import predict as dl_predict
-
 
 class TestFlowAggregator(unittest.TestCase):
 
@@ -101,21 +96,19 @@ class TestFlowAggregator(unittest.TestCase):
         self.assertEqual(flow_features["ACK Flag Count"], 5)
 
     def test_schema_compatibility_with_models(self):
-        """Asserts extracted features contain all 52 features expected by Stage 2 and all 40 features for Stage 1."""
+        """Asserts extracted features cover both saved model schemas."""
         flow = Flow("10.0.0.1", "10.0.0.2", 1234, 80, "TCP", time.time())
         flow.add_packet(100, time.time(), is_forward=True, tcp_flags={"S": True}, header_len=32, win_size=5840)
         flow.add_packet(200, time.time() + 0.01, is_forward=False, tcp_flags={"A": True}, header_len=20, win_size=5840)
         features = flow.extract_features()
 
-        # Check all 52 Stage 2 features exist
-        for col in dl_predict.FEATURE_ORDER:
+        # Check all Stage 2 features exist.
+        for col in self.engine.stage2_features:
             self.assertIn(col, features, f"Missing expected Stage 2 feature: {col}")
             self.assertIsInstance(features[col], (int, float), f"Feature {col} must be numeric")
 
-        # Check all Stage 1 features exist
-        if self.engine.stage1_features:
-            for col in self.engine.stage1_features:
-                self.assertIn(col, features, f"Missing expected Stage 1 feature: {col}")
+        for col in self.engine.stage1_features:
+            self.assertIn(col, features, f"Missing expected Stage 1 feature: {col}")
 
     def test_micro_batch_early_emission(self):
         """Verifies active flows emit early when exceeding 150ms timeout without waiting for connection close."""

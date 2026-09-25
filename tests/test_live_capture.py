@@ -8,6 +8,7 @@ Verifies Phase 3 pipeline:
   4. Telemetry stats tracking and graceful shutdown
 """
 
+import json
 import os
 import sys
 import time
@@ -15,14 +16,11 @@ import sqlite3
 import tempfile
 import unittest
 
-# Ensure backend and deep learning model paths are configured
+# Ensure backend modules are on the import path.
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 BACKEND_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "backend"))
-DL_DIR = os.path.abspath(os.path.join(BASE_DIR, "..", "deep learning model"))
 if BACKEND_DIR not in sys.path:
     sys.path.insert(0, BACKEND_DIR)
-if DL_DIR not in sys.path:
-    sys.path.insert(0, DL_DIR)
 
 import scapy.all as scapy
 from live_capture import LiveCaptureDaemon
@@ -35,12 +33,15 @@ class TestLiveCaptureDaemon(unittest.TestCase):
         self.tmp_dir = tempfile.mkdtemp()
         self.db_path = os.path.join(self.tmp_dir, "test_ids_logs.db")
         self.pcap_path = os.path.join(self.tmp_dir, "synthetic_traffic.pcap")
+        self.daemons = []
 
         # Generate synthetic PCAP with Scapy packets
         self._generate_synthetic_pcap()
 
     def tearDown(self):
         # Allow open database file handles to finalize
+        for daemon in self.daemons:
+            daemon.db_conn.close()
         time.sleep(0.2)
         for path in [self.pcap_path, self.db_path, f"{self.db_path}-wal", f"{self.db_path}-shm"]:
             if os.path.exists(path):
@@ -87,8 +88,10 @@ class TestLiveCaptureDaemon(unittest.TestCase):
         """Verifies daemon ingests PCAP packets, classifies them, and writes logs to SQLite."""
         daemon = LiveCaptureDaemon(
             pcap_file=self.pcap_path,
-            db_path=self.db_path
+            db_path=self.db_path,
+            log_features=True,
         )
+        self.daemons.append(daemon)
 
         # Run daemon in PCAP mode
         daemon.start(duration_sec=1)
@@ -102,9 +105,26 @@ class TestLiveCaptureDaemon(unittest.TestCase):
         cursor = conn.cursor()
         cursor.execute("SELECT id, timestamp, source_ip, destination_ip, protocol, attack_type, latency_ms FROM logs")
         rows = cursor.fetchall()
+        cursor.execute("""
+            SELECT detection_source, model_attack_type, model_verdict,
+                   stage1_attack_probability, stage1_features_json,
+                   flow_features_json, flow_start_epoch, flow_end_epoch
+            FROM logs LIMIT 1
+        """)
+        (detection_source, model_label, model_verdict, score, feature_json,
+         all_features_json, flow_start_epoch, flow_end_epoch) = cursor.fetchone()
         conn.close()
 
         self.assertGreaterEqual(len(rows), 2, "Database must have at least 2 logged flow verdicts")
+        self.assertIn(detection_source, {"model", "rule", "model+rule"})
+        self.assertIsNotNone(model_label)
+        self.assertIn(model_verdict, {"BENIGN", "MALICIOUS"})
+        self.assertGreaterEqual(score, 0)
+        self.assertEqual(len(json.loads(feature_json)), len(daemon.hybrid_engine.stage1_features))
+        self.assertEqual(len(json.loads(all_features_json)), len(daemon.hybrid_engine.stage2_features))
+        self.assertNotIn("payload_sample", feature_json)
+        self.assertNotIn("payload_sample", all_features_json)
+        self.assertLessEqual(flow_start_epoch, flow_end_epoch)
 
         for row in rows:
             row_id, timestamp, src_ip, dst_ip, proto, attack_type, latency_ms = row
@@ -115,7 +135,8 @@ class TestLiveCaptureDaemon(unittest.TestCase):
             self.assertIsInstance(latency_ms, int)
             self.assertGreaterEqual(latency_ms, 0)
             self.assertIn(attack_type, [
-                "Normal Traffic", "Port Scan", "DoS", "DDoS", "Brute Force", "Web Attack", "Botnet"
+                "Normal Traffic", "Port Scan", "DoS", "DDoS", "Brute Force",
+                "Web Attack", "Botnet", "Infiltration", "Unknown Attack"
             ])
 
         print(f"\n[TEST PASS] Successfully verified LiveCaptureDaemon SQLite persistence:")
@@ -129,6 +150,7 @@ class TestLiveCaptureDaemon(unittest.TestCase):
             pcap_file=self.pcap_path,
             db_path=self.db_path
         )
+        self.daemons.append(daemon)
 
         # Connect a concurrent reader before daemon starts
         reader_conn = sqlite3.connect(self.db_path)
@@ -142,6 +164,40 @@ class TestLiveCaptureDaemon(unittest.TestCase):
         reader_conn.close()
 
         self.assertGreaterEqual(count, 2, "Concurrent reader must successfully count rows without locking error")
+
+    def test_rule_alert_preserves_model_verdict_without_fake_confidence(self):
+        daemon = LiveCaptureDaemon(
+            db_path=self.db_path,
+            log_features=False,
+        )
+        self.daemons.append(daemon)
+        daemon.hybrid_engine.classify_flow = lambda _flow: {
+            "verdict": "BENIGN",
+            "attack_type": "Normal Traffic",
+            "confidence": 0.98,
+            "stage_reached": "Stage 1 (ML)",
+            "stage1_attack_probability": 0.02,
+        }
+        daemon._record_flow_verdict({
+            "source_ip": "192.168.100.66",
+            "destination_ip": "192.168.100.10",
+            "protocol": "TCP",
+            "Source Port": 51000,
+            "Destination Port": 80,
+            "flow_end_ts": time.time(),
+            "payload_sample": "GET /search?q=%3Cscript%3Ealert(1) HTTP/1.1\r\n",
+        })
+        with sqlite3.connect(self.db_path) as connection:
+            row = connection.execute("""
+                SELECT attack_type, verdict, confidence, detection_source,
+                       rule_id, model_attack_type, model_verdict,
+                       stage1_attack_probability
+                FROM logs
+            """).fetchone()
+        self.assertEqual(row, (
+            "Web Attack", "MALICIOUS", None, "rule", "http_probe",
+            "Normal Traffic", "BENIGN", 0.02,
+        ))
 
 
 if __name__ == "__main__":

@@ -149,13 +149,13 @@
           <p
             class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
           >
-            System macro F1
+            Combined attack F1
           </p>
           <p id="f1" class="mt-4 text-3xl font-light tracking-tight text-white">
             --
           </p>
           <p id="f1Note" class="mt-2 text-xs text-zinc-600">
-            Saved evaluation metric
+            No combined evaluation for selected models
           </p>
         </article>
         <article class="px-4 py-5 sm:px-6 lg:py-7">
@@ -206,7 +206,7 @@
               Threat classification
             </h2>
             <span id="threatTotal" class="text-[11px] text-zinc-600"
-              >0 events</span
+              >0 recent snapshots</span
             >
           </div>
           <div class="relative h-72">
@@ -428,6 +428,11 @@
       const $ = (id) => document.getElementById(id);
       const score = (value) =>
         value == null ? "--" : Number(value).toFixed(3);
+      const detector = (source) => ({
+        rule: "Supplemental rule",
+        model: "ML / DL model",
+        "model+rule": "Model and rule",
+      })[source] || "Historical record";
 
       function updateDashboard(data) {
         if (data.error) {
@@ -448,19 +453,14 @@
         $("latencyNote").className =
           `mt-2 text-xs ${kpi.avg_latency < 250 ? "text-emerald-400" : "text-red-400"}`;
         $("f1").textContent = score(kpi.current_f1);
-        $("f1Note").textContent =
-          kpi.f1_improvement == null
-            ? "Saved evaluation metric"
-            : `${kpi.f1_improvement >= 0 ? "+" : ""}${kpi.f1_improvement}% vs 0.700 target`;
-        $("f1Note").className =
-          `mt-2 text-xs ${kpi.current_f1 != null && kpi.current_f1 >= kpi.f1_target ? "text-emerald-400" : "text-red-400"}`;
-        $("f1").className =
-          `mt-4 text-3xl font-light tracking-tight ${kpi.current_f1 != null && kpi.current_f1 >= kpi.f1_target ? "text-emerald-400" : "text-red-400"}`;
+        $("f1Note").textContent = kpi.evaluation_status;
+        $("f1Note").className = "mt-2 text-xs text-zinc-600";
+        $("f1").className = "mt-4 text-3xl font-light tracking-tight text-white";
         $("attacks").textContent = Number(kpi.total_attacks).toLocaleString();
         $("flows").textContent = Number(kpi.total_flows).toLocaleString();
         const alert = data.latest_alert;
         $("alertLabel").textContent = alert
-          ? `Alert / ${alert.attack_type}`
+          ? `Alert / ${alert.attack_type} / ${detector(alert.detection_source)}`
           : "Network clear";
         $("alertLabel").className = alert
           ? "shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-red-400"
@@ -488,7 +488,7 @@
           (label) => colors[label] || "#71717a",
         );
         threatChart.update("none");
-        $("threatTotal").textContent = `${total.toLocaleString()} events`;
+        $("threatTotal").textContent = `${total.toLocaleString()} recent snapshots`;
         $("threatPercent").textContent = total
           ? `${((values.filter((value, index) => !normalLabels.has(labels[index])).reduce((sum, value) => sum + value, 0) / total) * 100).toFixed(1)}% threat`
           : "--";
@@ -554,10 +554,27 @@
             ],
             ["Protocol", log.protocol],
             ["Classification", log.attack_type],
+            ["Detection", detector(log.detection_source)],
+            ["Rule", log.rule_id || "none"],
+            ["Model result", log.model_attack_type || "not recorded"],
+            ["Model verdict", log.model_verdict || "not recorded"],
+            ["Model stage", log.stage_reached || "not recorded"],
+            [
+              "Model confidence",
+              log.model_confidence == null
+                ? "not recorded"
+                : `${(Number(log.model_confidence) * 100).toFixed(1)}%`,
+            ],
+            [
+              "Stage 1 attack score",
+              log.stage1_attack_probability == null
+                ? "not recorded"
+                : `${(Number(log.stage1_attack_probability) * 100).toFixed(1)}%`,
+            ],
             [
               "Confidence",
               log.confidence == null
-                ? "not recorded"
+                ? "not calibrated (rule)"
                 : `${(Number(log.confidence) * 100).toFixed(1)}%`,
             ],
             ["Latency", `${log.latency_ms} ms`],
@@ -599,7 +616,7 @@
           $("logBody").appendChild(detailRow);
         });
         $("footer").textContent =
-          `API connected / ${kpi.window_size} flows in view / model accuracy ${kpi.model_accuracy == null ? "--" : `${(kpi.model_accuracy * 100).toFixed(1)}%`}`;
+          `API connected / ${kpi.window_size} flows in view / ${kpi.evaluation_status.toLowerCase()}`;
       }
       async function fetchTelemetry() {
         try {

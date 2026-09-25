@@ -1,5 +1,5 @@
 # SentinelFlow Testbed - IDS Monitor Node Dockerfile
-FROM python:3.11-slim
+FROM python:3.13-slim
 
 WORKDIR /app
 
@@ -15,11 +15,11 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 RUN pip install --no-cache-dir \
     scapy \
     numpy \
-    pandas \
-    scikit-learn \
-    xgboost \
+    pandas==2.2.3 \
+    scikit-learn==1.6.1 \
+    xgboost==3.4.1 \
     joblib \
-    tensorflow-cpu \
+    tensorflow-cpu==2.20.0 \
     colorama \
     requests
 

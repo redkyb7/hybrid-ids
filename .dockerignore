@@ -1,0 +1,17 @@
+.git
+clean_data
+data
+updated_models
+deep learning model
+training
+tests
+frontend
+scripts
+graphify-out
+.codex
+.agents
+analysis
+*.zip
+*.npy
+*.npz
+*.md

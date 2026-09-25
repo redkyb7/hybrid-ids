@@ -2,8 +2,7 @@
 SentinelFlow IDS - Streaming Bidirectional Flow Aggregator
 ==========================================================
 High-performance in-memory network flow aggregator that converts raw streaming
-packets into 52-dimensional statistical feature vectors matching the CICFlowMeter
-and CICIDS2017 feature space for Stage 1 (ML) and Stage 2 (DL) inference.
+packets into the 57-feature contract used by the current ML/DL bundle.
 
 Key Features:
   1. Bidirectional 5-tuple tracking (Forward client->server & Backward server->client)
@@ -26,6 +25,8 @@ class Flow:
     Accumulates statistical metrics across forward and backward packets in real-time.
     """
 
+    ACTIVE_IDLE_TIMEOUT_SEC = 5.0
+
     def __init__(self, src_ip: str, dst_ip: str, src_port: int, dst_port: int, protocol: str, start_time: float):
         self.src_ip = src_ip
         self.dst_ip = dst_ip
@@ -43,8 +44,9 @@ class Flow:
         self.fwd_timestamps: List[float] = []
         self.fwd_header_bytes = 0
         self.init_win_bytes_fwd = 0
-        self.min_seg_size_fwd = 32
+        self.min_seg_size_fwd: Optional[int] = None
         self.act_data_pkt_fwd = 0
+        self.fwd_psh_count = 0
 
         # Backward Packet Trackers
         self.bwd_packets = 0
@@ -57,6 +59,10 @@ class Flow:
         # Global Flow Trackers
         self.all_packet_lengths: List[int] = []
         self.all_timestamps: List[float] = []
+        self.active_start_time = start_time
+        self.active_end_time = start_time
+        self.active_periods_us: List[float] = []
+        self.idle_periods_us: List[float] = []
 
         # TCP Flags Counters
         self.fin_count = 0
@@ -69,6 +75,8 @@ class Flow:
         # Flow State
         self.is_terminated = False
         self.emitted_count = 0
+        self.last_emitted_at: Optional[float] = None
+        self.last_emitted_packet_count = 0
         self.payload_sample = b""
 
     def add_packet(self, pkt_len: int, timestamp: float, is_forward: bool,
@@ -78,7 +86,14 @@ class Flow:
         """
         Ingests a single packet and updates running flow statistics.
         """
-        self.last_seen = timestamp
+        if timestamp - self.active_end_time > self.ACTIVE_IDLE_TIMEOUT_SEC:
+            active_us = (self.active_end_time - self.active_start_time) * 1e6
+            if active_us > 0:
+                self.active_periods_us.append(active_us)
+            self.idle_periods_us.append((timestamp - self.active_end_time) * 1e6)
+            self.active_start_time = timestamp
+        self.active_end_time = max(self.active_end_time, timestamp)
+        self.last_seen = max(self.last_seen, timestamp)
         self.all_timestamps.append(timestamp)
         self.all_packet_lengths.append(pkt_len)
 
@@ -93,9 +108,15 @@ class Flow:
             self.fwd_header_bytes += header_len
             if self.fwd_packets == 1:
                 self.init_win_bytes_fwd = win_size
-            self.min_seg_size_fwd = min(self.min_seg_size_fwd, header_len if header_len > 0 else 20)
+            segment_size = header_len if header_len > 0 else 20
+            if self.min_seg_size_fwd is None:
+                self.min_seg_size_fwd = segment_size
+            else:
+                self.min_seg_size_fwd = min(self.min_seg_size_fwd, segment_size)
             if payload_len > 0:
                 self.act_data_pkt_fwd += 1
+            if tcp_flags and tcp_flags.get("P", False):
+                self.fwd_psh_count += 1
         else:
             self.bwd_packets += 1
             self.bwd_bytes += pkt_len
@@ -151,16 +172,20 @@ class Flow:
         return float(iat_total), float(iat_mean), float(iat_std), float(iat_max), float(iat_min)
 
     def extract_features(self) -> Dict[str, Any]:
-        """
-        Extracts all 52 statistical features formatted precisely to match CICFlowMeter / CICIDS2017.
-        """
+        """Extract flow statistics for the deployed model contract."""
+
         duration_sec = max(self.last_seen - self.start_time, 1e-5)
         flow_duration_us = duration_sec * 1e6
 
         # Packet Length Statistics
         fwd_min, fwd_max, fwd_mean, fwd_std, _ = self._compute_stats(self.fwd_packet_lengths)
         bwd_min, bwd_max, bwd_mean, bwd_std, _ = self._compute_stats(self.bwd_packet_lengths)
-        all_min, all_max, all_mean, all_std, all_var = self._compute_stats(self.all_packet_lengths)
+        # In the uploaded Parquet data, the first packet contributes twice to
+        # the overall packet-length statistics.
+        packet_lengths = self.all_packet_lengths
+        if packet_lengths:
+            packet_lengths = [packet_lengths[0], *packet_lengths]
+        all_min, all_max, all_mean, all_std, all_var = self._compute_stats(packet_lengths)
 
         # Inter-Arrival Times (IAT) in microseconds (us)
         flow_iat_total, flow_iat_mean, flow_iat_std, flow_iat_max, flow_iat_min = self._compute_iats(self.all_timestamps)
@@ -178,19 +203,30 @@ class Flow:
 
         avg_pkt_size = total_bytes / total_packets if total_packets > 0 else 0.0
 
-        # Active / Idle Times (CICFlowMeter defaults for short streaming bursts)
+        # Active/idle periods use the CICFlowMeter activity timeout. A short
+        # snapshot generally has no completed idle period.
         active_mean = 0.0
+        active_std = 0.0
         active_max = 0.0
         active_min = 0.0
         idle_mean = 0.0
+        idle_std = 0.0
         idle_max = 0.0
         idle_min = 0.0
+        active_periods = list(self.active_periods_us)
+        final_active_us = (self.active_end_time - self.active_start_time) * 1e6
+        if final_active_us > 0:
+            active_periods.append(final_active_us)
+        active_min, active_max, active_mean, active_std, _ = self._compute_stats(active_periods)
+        idle_min, idle_max, idle_mean, idle_std, _ = self._compute_stats(self.idle_periods_us)
 
         features = {
             # Network Flow Context
             "source_ip": self.src_ip,
             "destination_ip": self.dst_ip,
             "protocol": self.protocol,
+            "flow_start_ts": float(self.start_time),
+            "flow_end_ts": float(self.last_seen),
             "Source Port": int(self.src_port),
             "Destination Port": int(self.dst_port),
 
@@ -239,7 +275,7 @@ class Flow:
             "Init_Win_bytes_forward": int(self.init_win_bytes_fwd),
             "Init_Win_bytes_backward": int(self.init_win_bytes_bwd),
             "act_data_pkt_fwd": int(self.act_data_pkt_fwd),
-            "min_seg_size_forward": int(self.min_seg_size_fwd),
+            "min_seg_size_forward": int(self.min_seg_size_fwd or 0),
             "Active Mean": float(active_mean),
             "Active Max": float(active_max),
             "Active Min": float(active_min),
@@ -248,6 +284,33 @@ class Flow:
             "Idle Min": float(idle_min),
             "payload_sample": self.payload_sample.decode('latin1', errors='replace'),
         }
+
+        # The uploaded Parquet rows show the four Subflow columns equal
+        # their corresponding flow totals and segment averages equal the
+        # directional packet-length means.
+        features.update({
+                "Total Backward Packets": int(self.bwd_packets),
+                "Fwd Packets Length Total": int(self.fwd_bytes),
+                "Bwd Packets Length Total": int(self.bwd_bytes),
+                "Fwd PSH Flags": int(self.fwd_psh_count),
+                "Bwd Packets/s": float(bwd_pkts_s),
+                "Packet Length Max": float(all_max),
+                "SYN Flag Count": int(self.syn_count),
+                "URG Flag Count": int(self.urg_count),
+                "Avg Packet Size": float(sum(packet_lengths) / total_packets) if total_packets else 0.0,
+                "Avg Fwd Segment Size": float(fwd_mean),
+                "Avg Bwd Segment Size": float(bwd_mean),
+                "Subflow Fwd Packets": int(self.fwd_packets),
+                "Subflow Fwd Bytes": int(self.fwd_bytes),
+                "Subflow Bwd Packets": int(self.bwd_packets),
+                "Subflow Bwd Bytes": int(self.bwd_bytes),
+                "Init Fwd Win Bytes": int(self.init_win_bytes_fwd),
+                "Init Bwd Win Bytes": int(self.init_win_bytes_bwd),
+                "Fwd Act Data Packets": int(self.act_data_pkt_fwd),
+                "Fwd Seg Size Min": int(self.min_seg_size_fwd or 0),
+                "Active Std": float(active_std),
+                "Idle Std": float(idle_std),
+        })
         return features
 
 
@@ -313,25 +376,32 @@ class FlowAggregator:
                 raw_payload=raw_payload
             )
 
-            # Check emission triggers:
-            # 1. TCP Teardown (FIN or RST flag)
-            # 2. Micro-batch packet count threshold
-            # 3. Active micro-batch duration threshold (150ms)
-            flow_duration = now - flow.start_time
+            # Emit a snapshot when a flow reaches a configured time or packet
+            # limit. A first FIN also produces a verdict; the flow remains
+            # tracked until the peer FIN, RST, or inactivity timeout.
             pkt_count = flow.fwd_packets + flow.bwd_packets
-
-            should_emit = (
-                flow.is_terminated or
-                (pkt_count >= self.max_pkts_micro_batch and flow.emitted_count == 0)
+            new_packets = pkt_count - flow.last_emitted_packet_count
+            since_emission = now - (
+                flow.last_emitted_at
+                if flow.last_emitted_at is not None
+                else flow.start_time
+            )
+            should_emit = new_packets > 0 and (
+                flow.is_terminated
+                or (flow.fin_count > 0 and flow.emitted_count == 0)
+                or new_packets >= self.max_pkts_micro_batch
+                or since_emission >= self.micro_batch_timeout
             )
 
             if should_emit:
                 emitted_feature_dict = flow.extract_features()
                 flow.emitted_count += 1
-                if flow.is_terminated:
-                    # Remove terminated flows cleanly from 5-tuple table
-                    self.flows.pop(fwd_key, None)
-                    self.flows.pop(bwd_key, None)
+                flow.last_emitted_at = now
+                flow.last_emitted_packet_count = pkt_count
+            if flow.is_terminated:
+                # Remove terminated flows cleanly from the 5-tuple table.
+                self.flows.pop(fwd_key, None)
+                self.flows.pop(bwd_key, None)
 
         return emitted_feature_dict
 
@@ -416,7 +486,7 @@ class FlowAggregator:
                 raw_payload=raw_payload_bytes
             )
         except Exception:
-            return None
+            raise
 
     def purge_inactive_flows(self, current_time: Optional[float] = None) -> List[Dict[str, Any]]:
         """
@@ -429,11 +499,25 @@ class FlowAggregator:
             keys_to_remove = []
             for key, flow in list(self.flows.items()):
                 if now - flow.last_seen > self.inactivity_timeout:
-                    # Emit final complete flow statistics
-                    expired_flows.append(flow.extract_features())
+                    # Avoid a duplicate verdict if the final packet was
+                    # already emitted as a snapshot.
+                    pkt_count = flow.fwd_packets + flow.bwd_packets
+                    if pkt_count > flow.last_emitted_packet_count:
+                        expired_flows.append(flow.extract_features())
                     keys_to_remove.append(key)
 
             for key in keys_to_remove:
                 self.flows.pop(key, None)
 
         return expired_flows
+
+    def flush_active_flows(self) -> List[Dict[str, Any]]:
+        """Emit pending snapshots and clear flows after an offline replay."""
+        with self.lock:
+            pending = [
+                flow.extract_features()
+                for flow in self.flows.values()
+                if flow.fwd_packets + flow.bwd_packets > flow.last_emitted_packet_count
+            ]
+            self.flows.clear()
+        return pending
