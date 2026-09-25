@@ -15,9 +15,6 @@ __pycache__/
 *.zip
 /deep learning model/saved_model/
 
-# Local Colab upload bundle, including a duplicate of the 1 GB dataset
-/colab_shared_eval/
-
 # Checkpoints & Tensorboard Logs
 logs/
 *.log

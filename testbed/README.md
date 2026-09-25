@@ -79,9 +79,7 @@ subtype's 10th to 90th percentile band. A snapshot is a model verdict, not a
 unique connection. A rule-only alert does not count as a model detection.
 
 See [`ATTACKER_IMPLEMENTATION_AND_EVALUATION.md`](../ATTACKER_IMPLEMENTATION_AND_EVALUATION.md)
-for the measured lab results and limitations, and
-[`ATTACK_DATASET_AND_ATTACKER_PLAN.md`](../ATTACK_DATASET_AND_ATTACKER_PLAN.md)
-for the source-dataset findings and original design.
+for the measured lab results and limitations.
 
 ## Inspect and stop
 

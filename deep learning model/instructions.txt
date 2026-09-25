@@ -6,13 +6,10 @@ updated_models/extracted/dl and passes its paths to predict.NIDSClassifier.
 The saved_model/ directory beside this source is a local training output and
 is excluded from Git.
 
-The recommended way to retrain the two-stage system is the common-split
-scripts/train_shared_models.py workflow. See SHARED_MODEL_EVALUATION.md at the
-repository root for the Colab commands and evaluation policy.
-
-For a separate DL experiment, install requirements.txt from this directory and
-run train.py from this directory. config.py reads
+To train the DL model, install requirements.txt from this directory and run
+train.py from this directory. config.py reads
 clean_data/cic-collection.parquet at the repository root and writes artifacts
-to this directory's saved_model/. This independent run does not validate the
-combined ML-to-DL decision rule. Do not copy its artifacts into the live
-bundle until the shared evaluation and runtime checks are complete.
+to this directory's saved_model/. The ML training script is
+ml-model-updated.py at the repository root. These independent runs do not
+measure the combined ML-to-DL decision rule. Validate the feature schema and
+full pipeline before replacing the deployed artifacts.

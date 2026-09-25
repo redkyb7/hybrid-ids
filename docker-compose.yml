@@ -145,7 +145,7 @@ services:
     container_name: ids-dashboard
     environment:
       - PYTHONUNBUFFERED=1
-      - IDS_EVALUATION_PATH=${IDS_ARTIFACT_ROOT:-/app/updated_models/extracted}/shared_evaluation.json
+      - IDS_EVALUATION_PATH=${IDS_ARTIFACT_ROOT:-/app/updated_models/extracted}/combined_evaluation.json
     ports:
       - "127.0.0.1:8000:8000"
     volumes:

@@ -1,5 +1,0 @@
-{
-  "global_threshold": 0.9,
-  "metric": "combined_validation_attack_f1",
-  "validation_score": 0.9673917169646585
-}

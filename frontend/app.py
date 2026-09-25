@@ -14,7 +14,7 @@ from frontend.metrics import load_model_metrics
 FRONTEND_DIR = Path(__file__).resolve().parent
 PROJECT_ROOT = FRONTEND_DIR.parent
 DATABASE_PATH = PROJECT_ROOT / "data" / "ids_logs.db"
-# Set this only for the shared evaluation report matching the deployed bundle.
+# Set this only for a combined evaluation report matching the deployed bundle.
 METRICS_PATH = (
     Path(os.environ["IDS_EVALUATION_PATH"])
     if os.environ.get("IDS_EVALUATION_PATH") else None

@@ -46,22 +46,16 @@ missing or has the wrong schema, the monitor exits and reports the error in
 The monitor image includes the Python, scikit-learn, TensorFlow, XGBoost, and
 pandas dependencies needed by these models.
 
-These earlier ML and DL models were evaluated on different test splits, so
+The deployed ML and DL models were evaluated on different test splits, so
 there is no measured combined attack F1 for this pairing. The dashboard shows
 `--` for that score. Their standalone scores cannot be combined into one
-pipeline score. The separate shared-split bundle in `updated_models/shared`
-has a historical offline combined attack F1 of 0.9675; see
-[SHARED_MODEL_EVALUATION.md](SHARED_MODEL_EVALUATION.md) for its limits.
+pipeline score.
 
-A controlled run on 24 September 2026 using the shared-split bundle showed
-that its model missed all five simulated attack campaigns. The monitor now
-adds explicit checks for scans,
-SYN bursts, repeated login attempts, and cleartext HTTP probes or beacon
-headers. A follow-up run alerted on all five campaign types with no alerts in
-a two-minute benign sample. The model alone still missed every attack snapshot.
-See [LIVE_TESTBED_EVALUATION.md](LIVE_TESTBED_EVALUATION.md) for the measured
-counts and [LIVE_TESTBED_FEATURE_COMPARISON.json](LIVE_TESTBED_FEATURE_COMPARISON.json)
-for the Stage 1 input comparison with CIC data.
+The current attacker evaluation covers 13 bounded scenarios across seven
+attack classes using the deployed bundle. It records Stage 2 reach, model
+classifications, rule alerts, and feature comparisons with CIC data. See
+[ATTACKER_IMPLEMENTATION_AND_EVALUATION.md](ATTACKER_IMPLEMENTATION_AND_EVALUATION.md)
+for the measured results and limitations.
 
 Rule alerts are labeled separately from ML/DL verdicts in the dashboard's log
 details. A displayed combined F1 covers only an offline holdout for the
@@ -73,12 +67,12 @@ diagnostic run; it is off by default and does not store packet payloads.
 Recreate the monitor after
 changing either setting with `docker compose up -d --no-deps monitor`.
 
-Set `IDS_ARTIFACT_ROOT` before running Compose to select a different complete
-bundle. For example, set it to `/app/updated_models/shared` to restore the
-shared-split models and their saved thresholds. The dashboard looks for
-`shared_evaluation.json` in that same bundle; it displays `--` if the selected
-bundle has no matching report. Clear any `IDS_STAGE1_THRESHOLD` override to
-use the threshold belonging to the selected bundle.
+Set `IDS_ARTIFACT_ROOT` before running Compose to select another complete
+bundle mounted inside the monitor and dashboard containers. The dashboard
+displays `--` unless that bundle has a matching `combined_evaluation.json`
+holdout report.
+Clear any `IDS_STAGE1_THRESHOLD` override to use the threshold belonging to
+the selected bundle.
 
 ## Open the dashboard
 

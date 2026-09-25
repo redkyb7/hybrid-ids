@@ -9,7 +9,7 @@ from frontend.metrics import load_model_metrics
 
 
 class TestDashboardMetrics(unittest.TestCase):
-    def test_only_shared_evaluation_supplies_combined_attack_f1(self):
+    def test_only_combined_evaluation_supplies_combined_attack_f1(self):
         self.assertEqual(load_model_metrics(None), {})
         with tempfile.TemporaryDirectory() as directory:
             path = Path(directory) / "evaluation.json"

@@ -1,4 +1,4 @@
-"""Read the shared holdout score used by the live dashboard."""
+"""Read a matching combined holdout score for the live dashboard."""
 
 import json
 from pathlib import Path
