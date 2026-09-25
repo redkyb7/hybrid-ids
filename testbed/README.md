@@ -1,79 +1,96 @@
-# SentinelFlow Isolated Virtual Testbed (Docker Compose)
+﻿# Isolated Docker testbed
 
-This testbed establishes an isolated virtual network (`192.168.100.0/24`) for live traffic generation, realistic attack execution, and packet capture benchmarking.
+The lab uses a private `192.168.100.0/24` bridge. Its victim is
+`192.168.100.10`; the normal client is `.101`, the main attacker is `.66`, and
+the two optional DDoS workers are `.67` and `.68`. The monitor captures traffic
+in the victim's network namespace and runs the deployed ML → DL pipeline,
+followed by supplemental rules. The victim exposes HTTP on host
+`127.0.0.1:8080` and SSH on `127.0.0.1:2222`. The UDP sink is reachable only
+inside the bridge.
 
----
+## Start
 
-## 1. Network Topology
+From the repository root, with Docker Desktop running:
 
-| Container Name | Role | IP Address | Services / Tools |
-| :--- | :--- | :--- | :--- |
-| **`ids-victim`** | Target Server | `192.168.100.10` | Nginx/Flask (Port 80), OpenSSH (Port 22, user `admin:password123`), SQLi search endpoint |
-| **`ids-benign-client`** | Normal Client | `192.168.100.101` | Automated HTTP/API requests generating legitimate background traffic |
-| **`ids-attacker`** | Attacker Suite | `192.168.100.66` | `nmap` (Port Scans), `hping3` (DoS SYN Flood), `hydra` (Brute Force), Web attack automation |
-
----
-
-## 2. Quick Start & Execution
-
-### Prerequisites
-Make sure **Docker Desktop** is running on your machine.
-
-### Start the Testbed
-From the `hybrid-ids/` directory:
-
-```bash
-# Build and start all three nodes in background
+```powershell
+# Turn on numeric flow-vector logging for feature comparisons.
+$env:IDS_LOG_FEATURES = '1'
 docker compose up -d --build
-```
-
-### Check Running Containers
-```bash
 docker compose ps
+docker compose logs --tail 30 monitor
 ```
 
-### View Live Attack & Traffic Logs
-```bash
-# Follow logs from the attacker node
-docker compose logs -f attacker
+The default attacker runs at most 20 bounded campaigns or 300 seconds in one
+container run. The normal client continues to generate background traffic.
+Each attack campaign writes a ground-truth manifest under `data/campaigns/`.
+These local manifests and evaluations are ignored by Git.
 
-# Follow logs from the victim web application
-docker compose logs -f victim
+For controlled measurements, start only the victim and monitor. This keeps
+the normal generator and continuous attacker out of the evaluation window:
 
-# Follow logs from the benign client generator
-docker compose logs -f benign_client
+```powershell
+$env:IDS_LOG_FEATURES = '1'
+docker compose up -d --build victim
+docker compose up -d --no-deps --build monitor
 ```
 
----
+## Run one labeled campaign
 
-## 3. Running Specific Attack Campaigns Interactively
+The PowerShell helper checks that the victim and monitor are running, pauses
+any running traffic generators, runs one bounded campaign, and restores their
+prior running state. Its target is fixed to the lab victim.
 
-You can also execute specific attack scenarios on demand using `docker compose exec`:
-
-```bash
-# 1. Run Port Scan only (Nmap)
-docker compose exec attacker python /app/attack_campaigns.py --attack scan
-
-# 2. Run Volumetric DoS SYN Flood
-docker compose exec attacker python /app/attack_campaigns.py --attack dos
-
-# 3. Run Credential Brute-Force (HTTP login & SSH)
-docker compose exec attacker python /app/attack_campaigns.py --attack bruteforce
-
-# 4. Run Web Exploitation (SQL Injection & XSS)
-docker compose exec attacker python /app/attack_campaigns.py --attack web
-
-# 5. Run Botnet C2 Beaconing
-docker compose exec attacker python /app/attack_campaigns.py --attack botnet
-
-# 6. Run all campaigns once in sequence
-docker compose exec attacker python /app/attack_campaigns.py --attack all
+```powershell
+.\scripts\run_testbed_campaign.ps1 -Attack ssh_bruteforce -Seed 42
 ```
 
----
+Available modes:
 
-## 4. Stopping the Testbed
+| Broad class | Modes |
+| --- | --- |
+| Portscan | `scan` |
+| Botnet | `botnet` |
+| Bruteforce | `ssh_bruteforce` |
+| Webattack | `web_login`, `web_sqli`, `web_xss` |
+| DoS | `dos_http`, `dos_slow`, `dos_syn` |
+| DDoS | `ddos_http_loic`, `ddos_http_hoic`, `ddos_udp` |
+| Infiltration | `infiltration` |
 
-```bash
-docker compose down
+The DDoS helper modes launch both opt-in workers with a shared campaign ID
+and distinct source IPs. Other modes use a temporary attacker container.
+`web_login` is labeled **Webattack**, since failed HTTP form submissions are
+different from the source dataset's SSH-heavy **Bruteforce** class.
+The infiltration fixture accesses only a synthetic in-memory canary and sends
+it back to a lab-only endpoint. Profile limits are in
+[`attacker/profiles.json`](attacker/profiles.json).
+
+The helper prints the generated campaign ID. After it finishes, evaluate that
+run against the monitor's SQLite records:
+
+```powershell
+uv tool run --from duckdb python scripts/evaluate_attack_campaigns.py --campaign-id 20260925T082613Z-85c7c3f1
 ```
+
+The JSON result is written to `data/campaigns/<ID>-evaluation.json`. It reports
+source IPs, action and connection counts, Stage 2 reach, model alerts,
+supplemental rule alerts, final alerts and latency. With `IDS_LOG_FEATURES=1`,
+it also compares the fullest captured snapshot per connection with the raw CIC
+subtype's 10th to 90th percentile band. A snapshot is a model verdict, not a
+unique connection. A rule-only alert does not count as a model detection.
+
+See [`ATTACKER_IMPLEMENTATION_AND_EVALUATION.md`](../ATTACKER_IMPLEMENTATION_AND_EVALUATION.md)
+for the measured lab results and limitations, and
+[`ATTACK_DATASET_AND_ATTACKER_PLAN.md`](../ATTACK_DATASET_AND_ATTACKER_PLAN.md)
+for the source-dataset findings and original design.
+
+## Inspect and stop
+
+```powershell
+docker compose logs --tail 100 monitor
+docker compose logs --tail 100 victim
+docker compose stop
+```
+
+`docker compose stop` preserves containers, SQLite telemetry and campaign
+manifests. Use `docker compose down` only when you also want to remove the lab
+containers and network.

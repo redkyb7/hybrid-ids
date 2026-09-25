@@ -15,8 +15,10 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 
 # Install python libraries for attack orchestration
-RUN pip install --no-cache-dir requests scapy
+RUN pip install --no-cache-dir requests scapy paramiko
 
 COPY attack_campaigns.py /app/attack_campaigns.py
+COPY campaign_runtime.py /app/campaign_runtime.py
+COPY profiles.json /app/profiles.json
 
 ENTRYPOINT ["python", "/app/attack_campaigns.py", "--attack", "continuous"]

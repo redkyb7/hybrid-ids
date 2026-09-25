@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "profiles": {
+    "scan": {
+      "class_label": "Portscan",
+      "reference_label": "Portscan",
+      "scenario_label": "lab-multiport-scan",
+      "max_seconds": 20,
+      "max_actions": 12,
+      "max_outbound_bytes": 2048,
+      "parameters": {
+        "ports": [21, 22, 23, 25, 53, 80, 110, 143, 443, 3306, 8080, 8443]
+      }
+    },
+    "botnet": {
+      "class_label": "Botnet",
+      "reference_label": "Botnet",
+      "scenario_label": "lab-c2-checkins",
+      "max_seconds": 15,
+      "max_actions": 8,
+      "max_outbound_bytes": 4096,
+      "parameters": {"count": 8, "interval_seconds": 0.4, "response_bytes": 129, "delay_ms": 10}
+    },
+    "ssh_bruteforce": {
+      "class_label": "Bruteforce",
+      "reference_label": "Bruteforce-SSH",
+      "scenario_label": "lab-ssh-auth-failures",
+      "max_seconds": 20,
+      "max_actions": 5,
+      "max_outbound_bytes": 4096,
+      "parameters": {"count": 5, "interval_seconds": 0.4}
+    },
+    "web_login": {
+      "class_label": "Webattack",
+      "reference_label": "Webattack-bruteforce",
+      "scenario_label": "lab-http-login-failures",
+      "max_seconds": 15,
+      "max_actions": 8,
+      "max_outbound_bytes": 4096,
+      "parameters": {"count": 8, "interval_seconds": 0.2}
+    },
+    "web_sqli": {
+      "class_label": "Webattack",
+      "reference_label": "Webattack-SQLi",
+      "scenario_label": "lab-sqli-probes",
+      "max_seconds": 10,
+      "max_actions": 5,
+      "max_outbound_bytes": 4096,
+      "parameters": {"count": 5, "interval_seconds": 0.3}
+    },
+    "web_xss": {
+      "class_label": "Webattack",
+      "reference_label": "Webattack-XSS",
+      "scenario_label": "lab-xss-probes",
+      "max_seconds": 10,
+      "max_actions": 3,
+      "max_outbound_bytes": 4096,
+      "parameters": {"count": 3, "interval_seconds": 0.3}
+    },
+    "dos_http": {
+      "class_label": "DoS",
+      "reference_label": "DoS-Hulk",
+      "scenario_label": "lab-http-load",
+      "max_seconds": 20,
+      "max_actions": 40,
+      "max_outbound_bytes": 24000,
+      "parameters": {"count": 40, "concurrency": 4, "response_bytes": 935, "delay_ms": 20}
+    },
+    "dos_slow": {
+      "class_label": "DoS",
+      "reference_label": "DoS-Slowloris",
+      "scenario_label": "lab-slow-headers",
+      "max_seconds": 25,
+      "max_actions": 4,
+      "max_outbound_bytes": 8192,
+      "parameters": {"connections": 4, "duration_seconds": 20, "fragment_interval_seconds": 0.6}
+    },
+    "dos_syn": {
+      "class_label": "DoS",
+      "reference_label": null,
+      "scenario_label": "lab-syn-burst",
+      "max_seconds": 5,
+      "max_actions": 60,
+      "max_outbound_bytes": 4096,
+      "parameters": {"count": 60, "interval_microseconds": 20000}
+    },
+    "ddos_http_loic": {
+      "class_label": "DDoS",
+      "reference_label": "DDoS-LOIC-HTTP",
+      "scenario_label": "lab-multisource-http-slow",
+      "max_seconds": 15,
+      "max_actions": 12,
+      "max_outbound_bytes": 8192,
+      "parameters": {"count": 12, "concurrency": 2, "response_bytes": 728, "delay_ms": 1500}
+    },
+    "ddos_http_hoic": {
+      "class_label": "DDoS",
+      "reference_label": "DDoS-HOIC",
+      "scenario_label": "lab-multisource-http-fast",
+      "max_seconds": 12,
+      "max_actions": 20,
+      "max_outbound_bytes": 12000,
+      "parameters": {"count": 20, "concurrency": 4, "response_bytes": 935, "delay_ms": 10}
+    },
+    "ddos_udp": {
+      "class_label": "DDoS",
+      "reference_label": "DDoS-UDP",
+      "scenario_label": "lab-multisource-udp",
+      "max_seconds": 8,
+      "max_actions": 40,
+      "max_outbound_bytes": 20000,
+      "parameters": {"flows": 10, "packets_per_flow": 4, "payload_bytes": 389, "interval_ms": 30}
+    },
+    "infiltration": {
+      "class_label": "Infiltration",
+      "reference_label": "Infiltration",
+      "scenario_label": "lab-canary-access-sequence",
+      "max_seconds": 15,
+      "max_actions": 4,
+      "max_outbound_bytes": 8192,
+      "parameters": {"canary_bytes": 1024}
+    }
+  }
+}

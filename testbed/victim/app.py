@@ -7,15 +7,21 @@ Simulates realistic enterprise web services including:
   3. Search / Query endpoint (/search) susceptible to SQL Injection / XSS
 """
 
-from flask import Flask, request, jsonify, render_template_string
+from flask import Flask, Response, request, jsonify, render_template_string
+import hashlib
+import secrets
+import socket
 import sqlite3
 import os
+import threading
+import time
 
 app = Flask(__name__)
+app.config["MAX_CONTENT_LENGTH"] = 8192
 
 # In-memory mock database for SQL injection testing
 def init_db():
-    conn = sqlite3.connect(":memory:")
+    conn = sqlite3.connect(":memory:", check_same_thread=False)
     c = conn.cursor()
     c.execute("CREATE TABLE users (id INTEGER PRIMARY KEY, username TEXT, role TEXT)")
     c.execute("INSERT INTO users VALUES (1, 'admin', 'Administrator')")
@@ -25,6 +31,51 @@ def init_db():
     return conn
 
 mock_db = init_db()
+_mock_db_lock = threading.Lock()
+
+# Synthetic testbed fixtures. These values are generated in memory and contain
+# no user data. Tokens only authorize access to the lab canary endpoints.
+LAB_CANARY_PATTERN = b"SENTINELFLOW-LAB-CANARY-ONLY-"
+_lab_tokens = {}
+_lab_tokens_lock = threading.Lock()
+_udp_stats = {"datagrams": 0, "bytes": 0}
+_udp_stats_lock = threading.Lock()
+
+
+def _bounded_int(name, default, minimum, maximum):
+    try:
+        value = int(request.args.get(name, default))
+    except (TypeError, ValueError):
+        return None
+    return value if minimum <= value <= maximum else None
+
+
+def _lab_authorized():
+    authorization = request.headers.get("Authorization", "")
+    if not authorization.startswith("Bearer "):
+        return False
+    token = authorization[7:]
+    with _lab_tokens_lock:
+        expires = _lab_tokens.get(token, 0)
+        if expires <= time.monotonic():
+            _lab_tokens.pop(token, None)
+            return False
+        return True
+
+
+def _canary(size):
+    return (LAB_CANARY_PATTERN * ((size // len(LAB_CANARY_PATTERN)) + 1))[:size]
+
+
+def run_udp_sink():
+    """Receive small one-way UDP lab packets; never reply or amplify them."""
+    with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as listener:
+        listener.bind(("0.0.0.0", 9999))
+        while True:
+            payload, _ = listener.recvfrom(1024)
+            with _udp_stats_lock:
+                _udp_stats["datagrams"] += 1
+                _udp_stats["bytes"] += len(payload)
 
 HTML_TEMPLATE = """
 <!DOCTYPE html>
@@ -100,6 +151,70 @@ def data():
         "message": "Authenticated flow telemetry normal"
     })
 
+
+@app.route("/lab/load")
+def lab_load():
+    """Bounded response size and delay for HTTP flow-profile experiments."""
+    size = _bounded_int("size", 935, 0, 2048)
+    delay_ms = _bounded_int("delay_ms", 0, 0, 2000)
+    if size is None or delay_ms is None:
+        return jsonify({"error": "lab load limits exceeded"}), 400
+    time.sleep(delay_ms / 1000)
+    return Response(b"L" * size, mimetype="application/octet-stream")
+
+
+@app.route("/lab/c2")
+def lab_c2():
+    """Small, deterministic reply for the botnet-checkin lab scenario."""
+    size = _bounded_int("size", 129, 0, 256)
+    delay_ms = _bounded_int("delay_ms", 10, 0, 500)
+    if size is None or delay_ms is None:
+        return jsonify({"error": "lab C2 limits exceeded"}), 400
+    time.sleep(delay_ms / 1000)
+    return Response(b"C" * size, mimetype="application/octet-stream")
+
+
+@app.route("/lab/auth", methods=["POST"])
+def lab_auth():
+    """Issue a short-lived token only for synthetic canary testing."""
+    if (request.form.get("username") != "lab"
+            or request.form.get("password") != "lab-only-password"):
+        return jsonify({"error": "invalid lab credentials"}), 401
+    token = secrets.token_urlsafe(24)
+    with _lab_tokens_lock:
+        _lab_tokens[token] = time.monotonic() + 60
+    return jsonify({"token": token, "expires_seconds": 60})
+
+
+@app.route("/lab/canary")
+def lab_canary():
+    if not _lab_authorized():
+        return jsonify({"error": "lab authorization required"}), 401
+    size = _bounded_int("size", 1024, 1, 4096)
+    if size is None:
+        return jsonify({"error": "lab canary size exceeded"}), 400
+    return Response(_canary(size), mimetype="application/octet-stream")
+
+
+@app.route("/lab/collect", methods=["POST"])
+def lab_collect():
+    if not _lab_authorized():
+        return jsonify({"error": "lab authorization required"}), 401
+    if request.content_length is not None and request.content_length > 4096:
+        return jsonify({"error": "lab collection size exceeded"}), 413
+    content = request.get_data(cache=False)
+    if not 1 <= len(content) <= 4096:
+        return jsonify({"error": "lab collection size exceeded"}), 413
+    if content != _canary(len(content)):
+        return jsonify({"error": "only synthetic lab canary accepted"}), 400
+    return jsonify({"bytes": len(content), "sha256": hashlib.sha256(content).hexdigest()})
+
+
+@app.route("/lab/udp-stats")
+def lab_udp_stats():
+    with _udp_stats_lock:
+        return jsonify(dict(_udp_stats))
+
 @app.route("/search")
 def search():
     """Vulnerable search endpoint simulating Web Attack (SQL Injection / XSS)."""
@@ -108,10 +223,11 @@ def search():
     if q:
         # Deliberate vulnerable string interpolation for IDS attack simulation
         try:
-            c = mock_db.cursor()
-            query = f"SELECT id, username, role FROM users WHERE username = '{q}'"
-            c.execute(query)
-            results = c.fetchall()
+            with _mock_db_lock:
+                c = mock_db.cursor()
+                query = f"SELECT id, username, role FROM users WHERE username = '{q}'"
+                c.execute(query)
+                results = c.fetchall()
         except Exception:
             results = [(1, "SQL_ERROR", "Syntax exception")]
     return render_template_string(HTML_TEMPLATE, query=q, results=results)
@@ -127,4 +243,5 @@ def login():
 
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=80)
+    threading.Thread(target=run_udp_sink, name="lab-udp-sink", daemon=True).start()
+    app.run(host="0.0.0.0", port=80, threaded=True)

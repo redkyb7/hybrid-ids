@@ -14,8 +14,8 @@ services:
       ids-network:
         ipv4_address: 192.168.100.10
     ports:
-      - "8080:80"     # Web application accessible on host localhost:8080
-      - "2222:22"     # OpenSSH server accessible on host localhost:2222
+      - "127.0.0.1:8080:80"     # Web application on this host only
+      - "127.0.0.1:2222:22"     # Testbed SSH on this host only
     restart: unless-stopped
 
   # ----------------------------------------------------------------------------
@@ -43,10 +43,12 @@ services:
     build:
       context: ./testbed/attacker
       dockerfile: Dockerfile
+    image: hybrid-ids-attacker:local
     container_name: ids-attacker
     hostname: kali-attacker
     environment:
       - PYTHONUNBUFFERED=1
+      - IDS_CAMPAIGN_LOG_DIR=/app/campaigns
     cap_add:
       - NET_ADMIN
       - NET_RAW
@@ -55,7 +57,57 @@ services:
         ipv4_address: 192.168.100.66
     depends_on:
       - victim
-    restart: unless-stopped
+    volumes:
+      - ./data/campaigns:/app/campaigns
+    # The continuous runner exits after its campaign/time budget; do not
+    # restart it into an unbounded sequence of new budgets.
+    restart: "no"
+
+  # Opt-in, distinct-source workers. Start them together with the same
+  # IDS_CAMPAIGN_ID; a single attacker container is not a distributed attack.
+  ddos_worker_1:
+    profiles: ["ddos"]
+    build:
+      context: ./testbed/attacker
+      dockerfile: Dockerfile
+    image: hybrid-ids-attacker:local
+    container_name: ids-ddos-worker-1
+    hostname: ddos-worker-1
+    entrypoint: ["python", "/app/attack_campaigns.py"]
+    command: ["--attack", "${IDS_DDOS_MODE:-ddos_http_loic}", "--campaign-id", "${IDS_CAMPAIGN_ID:-ddos-local}", "--worker-id", "ddos-1", "--seed", "${IDS_DDOS_SEED_1:-101}", "--start-at-epoch", "${IDS_CAMPAIGN_START_EPOCH:-0}"]
+    environment:
+      - PYTHONUNBUFFERED=1
+      - IDS_CAMPAIGN_LOG_DIR=/app/campaigns
+    networks:
+      ids-network:
+        ipv4_address: 192.168.100.67
+    volumes:
+      - ./data/campaigns:/app/campaigns
+    depends_on:
+      - victim
+    restart: "no"
+
+  ddos_worker_2:
+    profiles: ["ddos"]
+    build:
+      context: ./testbed/attacker
+      dockerfile: Dockerfile
+    image: hybrid-ids-attacker:local
+    container_name: ids-ddos-worker-2
+    hostname: ddos-worker-2
+    entrypoint: ["python", "/app/attack_campaigns.py"]
+    command: ["--attack", "${IDS_DDOS_MODE:-ddos_http_loic}", "--campaign-id", "${IDS_CAMPAIGN_ID:-ddos-local}", "--worker-id", "ddos-2", "--seed", "${IDS_DDOS_SEED_2:-202}", "--start-at-epoch", "${IDS_CAMPAIGN_START_EPOCH:-0}"]
+    environment:
+      - PYTHONUNBUFFERED=1
+      - IDS_CAMPAIGN_LOG_DIR=/app/campaigns
+    networks:
+      ids-network:
+        ipv4_address: 192.168.100.68
+    volumes:
+      - ./data/campaigns:/app/campaigns
+    depends_on:
+      - victim
+    restart: "no"
 
   # ----------------------------------------------------------------------------
   # 4. IDS Monitor Node (Promiscuous Sniffer & Two-Stage AI Brain)
@@ -68,14 +120,39 @@ services:
     network_mode: "service:victim"
     environment:
       - PYTHONUNBUFFERED=1
+      - IDS_ARTIFACT_ROOT=${IDS_ARTIFACT_ROOT:-/app/updated_models/extracted}
+      - IDS_STAGE1_THRESHOLD
+      - IDS_SUPPLEMENTAL_RULES=${IDS_SUPPLEMENTAL_RULES:-1}
+      - IDS_LOG_FEATURES=${IDS_LOG_FEATURES:-0}
     depends_on:
       - victim
       - attacker
       - benign_client
     volumes:
       - ./data:/app/data
-      - ./backend:/app/backend
-      - ./deep learning model:/app/deep learning model
+      - ./backend:/app/backend:ro
+      - ./deep learning model:/app/deep learning model:ro
+      - ./updated_models:/app/updated_models:ro
+    restart: unless-stopped
+
+  # ------------------------------------------------------------------------------
+  # 5. Dashboard (live telemetry and any matching combined holdout report)
+  # ------------------------------------------------------------------------------
+  dashboard:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ids-dashboard
+    environment:
+      - PYTHONUNBUFFERED=1
+      - IDS_EVALUATION_PATH=${IDS_ARTIFACT_ROOT:-/app/updated_models/extracted}/shared_evaluation.json
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - ./data:/app/data
+      - ./updated_models:/app/updated_models:ro
+    depends_on:
+      - monitor
     restart: unless-stopped
 
 # ------------------------------------------------------------------------------

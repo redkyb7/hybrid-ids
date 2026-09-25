@@ -1,0 +1,2050 @@
+{
+  "parquet_rows_scanned": 9167581,
+  "sampling": "Deterministic row-position stride within each broad class",
+  "training_sample_counts": {
+    "Benign": 7215,
+    "Portscan": 2255,
+    "DoS": 1588,
+    "Bruteforce": 2058,
+    "Webattack": 2995,
+    "Botnet": 2905
+  },
+  "live_counts": {
+    "benign": 213,
+    "scan": 12,
+    "dos": 99,
+    "bruteforce": 30,
+    "web": 24,
+    "botnet": 24
+  },
+  "comparisons": {
+    "benign": [
+      {
+        "feature": "Total Fwd Packets",
+        "training": {
+          "p10": 1.0,
+          "median": 3.0,
+          "p90": 14.0,
+          "zero_fraction": 0.005405405405405406
+        },
+        "live": {
+          "p10": 1.0,
+          "median": 6.0,
+          "p90": 6.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Total Backward Packets",
+        "training": {
+          "p10": 0.0,
+          "median": 2.0,
+          "p90": 13.0,
+          "zero_fraction": 0.12169092169092169
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 4.0,
+          "p90": 5.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Packets Length Total",
+        "training": {
+          "p10": 0.0,
+          "median": 98.0,
+          "p90": 1148.0,
+          "zero_fraction": 0.15398475398475397
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 189.0,
+          "p90": 207.4000000000001,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Packet Length Max",
+        "training": {
+          "p10": 0.0,
+          "median": 62.0,
+          "p90": 935.0,
+          "zero_fraction": 0.15398475398475397
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 189.0,
+          "p90": 207.4000000000001,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Packet Length Mean",
+        "training": {
+          "p10": 0.0,
+          "median": 45.92307662963867,
+          "p90": 187.0,
+          "zero_fraction": 0.15398475398475397
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 31.5,
+          "p90": 34.566666666666684,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Packet Length Std",
+        "training": {
+          "p10": 0.0,
+          "median": 23.459184646606445,
+          "p90": 418.14471435546875,
+          "zero_fraction": 0.4508662508662509
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 77.15892689767011,
+          "p90": 84.67069544220521,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Bwd Packet Length Max",
+        "training": {
+          "p10": 0.0,
+          "median": 166.0,
+          "p90": 1448.0,
+          "zero_fraction": 0.20914760914760916
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 166.0,
+          "p90": 1856.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.29107981220657275
+      },
+      {
+        "feature": "Bwd Packet Length Mean",
+        "training": {
+          "p10": 0.0,
+          "median": 113.0,
+          "p90": 364.57221679687564,
+          "zero_fraction": 0.20914760914760916
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 52.2,
+          "p90": 508.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.29107981220657275
+      },
+      {
+        "feature": "Fwd PSH Flags",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9642411642411642
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 1.0,
+          "p90": 1.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.6666666666666666
+      },
+      {
+        "feature": "Fwd Header Length",
+        "training": {
+          "p10": 8.0,
+          "median": 72.0,
+          "p90": 292.0,
+          "zero_fraction": 0.019404019404019403
+        },
+        "live": {
+          "p10": 32.0,
+          "median": 200.0,
+          "p90": 200.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Bwd Header Length",
+        "training": {
+          "p10": 0.0,
+          "median": 40.0,
+          "p90": 292.0,
+          "zero_fraction": 0.12307692307692308
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 136.0,
+          "p90": 168.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Packet Length Max",
+        "training": {
+          "p10": 0.0,
+          "median": 188.0,
+          "p90": 1460.0,
+          "zero_fraction": 0.14636174636174637
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 194.0,
+          "p90": 1856.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.29107981220657275
+      },
+      {
+        "feature": "Packet Length Mean",
+        "training": {
+          "p10": 0.0,
+          "median": 74.4000015258789,
+          "p90": 226.17143554687505,
+          "zero_fraction": 0.14636174636174637
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 39.27272727272727,
+          "p90": 201.1818181818182,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Packet Length Variance",
+        "training": {
+          "p10": 0.0,
+          "median": 5461.33349609375,
+          "p90": 207199.25,
+          "zero_fraction": 0.17865557865557866
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 5376.018181818183,
+          "p90": 306281.4,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.29107981220657275
+      },
+      {
+        "feature": "SYN Flag Count",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9555093555093556
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 2.0,
+          "p90": 2.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.6666666666666666
+      },
+      {
+        "feature": "URG Flag Count",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9571725571725572
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Init Fwd Win Bytes",
+        "training": {
+          "p10": -1.0,
+          "median": 508.0,
+          "p90": 33304.0,
+          "zero_fraction": 0.004573804573804574
+        },
+        "live": {
+          "p10": 501.0,
+          "median": 64240.0,
+          "p90": 64240.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.6666666666666666
+      },
+      {
+        "feature": "Init Bwd Win Bytes",
+        "training": {
+          "p10": -1.0,
+          "median": 122.0,
+          "p90": 62852.0,
+          "zero_fraction": 0.04504504504504504
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 65160.0,
+          "p90": 65160.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.6666666666666666
+      },
+      {
+        "feature": "Fwd Seg Size Min",
+        "training": {
+          "p10": 8.0,
+          "median": 20.0,
+          "p90": 32.0,
+          "zero_fraction": 0.04268884268884269
+        },
+        "live": {
+          "p10": 32.0,
+          "median": 32.0,
+          "p90": 32.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Active Std",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9007623007623008
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Idle Std",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 613.4513427734382,
+          "zero_fraction": 0.891060291060291
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      }
+    ],
+    "scan": [
+      {
+        "feature": "Total Fwd Packets",
+        "training": {
+          "p10": 1.0,
+          "median": 2.0,
+          "p90": 4.0,
+          "zero_fraction": 0.0
+        },
+        "live": {
+          "p10": 1.0,
+          "median": 1.0,
+          "p90": 1.9000000000000004,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Total Backward Packets",
+        "training": {
+          "p10": 0.0,
+          "median": 1.0,
+          "p90": 2.0,
+          "zero_fraction": 0.15121951219512195
+        },
+        "live": {
+          "p10": 1.0,
+          "median": 1.0,
+          "p90": 1.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Packets Length Total",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 458.0,
+          "zero_fraction": 0.5121951219512195
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Packet Length Max",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 211.0,
+          "zero_fraction": 0.5121951219512195
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Packet Length Mean",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 211.0,
+          "zero_fraction": 0.5121951219512195
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Packet Length Std",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 2.8284270763397217,
+          "zero_fraction": 0.7042128603104213
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Bwd Packet Length Max",
+        "training": {
+          "p10": 0.0,
+          "median": 2.0,
+          "p90": 6.0,
+          "zero_fraction": 0.39113082039911307
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Bwd Packet Length Mean",
+        "training": {
+          "p10": 0.0,
+          "median": 2.0,
+          "p90": 6.0,
+          "zero_fraction": 0.39113082039911307
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd PSH Flags",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.998669623059867
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Header Length",
+        "training": {
+          "p10": 32.0,
+          "median": 44.0,
+          "p90": 136.0,
+          "zero_fraction": 0.010199556541019957
+        },
+        "live": {
+          "p10": 24.0,
+          "median": 24.0,
+          "p90": 42.00000000000001,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.8333333333333334
+      },
+      {
+        "feature": "Bwd Header Length",
+        "training": {
+          "p10": 0.0,
+          "median": 24.0,
+          "p90": 72.0,
+          "zero_fraction": 0.1556541019955654
+        },
+        "live": {
+          "p10": 20.0,
+          "median": 20.0,
+          "p90": 23.6,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Packet Length Max",
+        "training": {
+          "p10": 0.0,
+          "median": 6.0,
+          "p90": 229.0,
+          "zero_fraction": 0.25764966740576495
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Packet Length Mean",
+        "training": {
+          "p10": 0.0,
+          "median": 2.857142925262451,
+          "p90": 229.0,
+          "zero_fraction": 0.25764966740576495
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Packet Length Variance",
+        "training": {
+          "p10": 0.0,
+          "median": 4.0,
+          "p90": 12.0,
+          "zero_fraction": 0.412860310421286
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "SYN Flag Count",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live": {
+          "p10": 1.0,
+          "median": 1.0,
+          "p90": 1.9000000000000004,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "URG Flag Count",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9840354767184035
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Init Fwd Win Bytes",
+        "training": {
+          "p10": -1.0,
+          "median": 29200.0,
+          "p90": 29200.0,
+          "zero_fraction": 0.0
+        },
+        "live": {
+          "p10": 1024.0,
+          "median": 1024.0,
+          "p90": 1024.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Init Bwd Win Bytes",
+        "training": {
+          "p10": -1.0,
+          "median": 227.0,
+          "p90": 29200.0,
+          "zero_fraction": 0.30776053215077603
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 57816.00000000002,
+          "zero_fraction": 0.8333333333333334
+        },
+        "live_outside_training_p10_p90_fraction": 0.16666666666666666
+      },
+      {
+        "feature": "Fwd Seg Size Min",
+        "training": {
+          "p10": 20.0,
+          "median": 32.0,
+          "p90": 40.0,
+          "zero_fraction": 0.010199556541019957
+        },
+        "live": {
+          "p10": 20.4,
+          "median": 24.0,
+          "p90": 24.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Active Std",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9960088691796009
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Idle Std",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9955654101995566
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      }
+    ],
+    "dos": [
+      {
+        "feature": "Total Fwd Packets",
+        "training": {
+          "p10": 2.0,
+          "median": 4.0,
+          "p90": 8.0,
+          "zero_fraction": 0.0006297229219143577
+        },
+        "live": {
+          "p10": 2.0,
+          "median": 2.0,
+          "p90": 2.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Total Backward Packets",
+        "training": {
+          "p10": 0.0,
+          "median": 4.0,
+          "p90": 7.0,
+          "zero_fraction": 0.3709068010075567
+        },
+        "live": {
+          "p10": 1.0,
+          "median": 1.0,
+          "p90": 1.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Packets Length Total",
+        "training": {
+          "p10": 0.0,
+          "median": 318.5,
+          "p90": 458.5999999999999,
+          "zero_fraction": 0.3797229219143577
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Packet Length Max",
+        "training": {
+          "p10": 0.0,
+          "median": 306.0,
+          "p90": 382.29999999999995,
+          "zero_fraction": 0.3797229219143577
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Packet Length Mean",
+        "training": {
+          "p10": 0.0,
+          "median": 43.875,
+          "p90": 113.66666412353516,
+          "zero_fraction": 0.3797229219143577
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Packet Length Std",
+        "training": {
+          "p10": 0.0,
+          "median": 116.80172348022461,
+          "p90": 191.0840087890625,
+          "zero_fraction": 0.41309823677581864
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Bwd Packet Length Max",
+        "training": {
+          "p10": 0.0,
+          "median": 935.0,
+          "p90": 7240.0,
+          "zero_fraction": 0.4282115869017632
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Bwd Packet Length Mean",
+        "training": {
+          "p10": 0.0,
+          "median": 220.6666717529297,
+          "p90": 1932.5,
+          "zero_fraction": 0.4282115869017632
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd PSH Flags",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9880352644836272
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Header Length",
+        "training": {
+          "p10": 64.0,
+          "median": 136.0,
+          "p90": 264.0,
+          "zero_fraction": 0.0006297229219143577
+        },
+        "live": {
+          "p10": 40.0,
+          "median": 40.0,
+          "p90": 40.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Bwd Header Length",
+        "training": {
+          "p10": 0.0,
+          "median": 136.0,
+          "p90": 232.0,
+          "zero_fraction": 0.3709068010075567
+        },
+        "live": {
+          "p10": 24.0,
+          "median": 24.0,
+          "p90": 24.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Packet Length Max",
+        "training": {
+          "p10": 0.0,
+          "median": 935.0,
+          "p90": 7240.0,
+          "zero_fraction": 0.37594458438287154
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Packet Length Mean",
+        "training": {
+          "p10": 0.0,
+          "median": 141.41666412353516,
+          "p90": 920.40771484375,
+          "zero_fraction": 0.37594458438287154
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Packet Length Variance",
+        "training": {
+          "p10": 0.0,
+          "median": 94847.5390625,
+          "p90": 4337460.399999999,
+          "zero_fraction": 0.3765743073047859
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "SYN Flag Count",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9722921914357683
+        },
+        "live": {
+          "p10": 2.0,
+          "median": 2.0,
+          "p90": 2.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "URG Flag Count",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9659949622166247
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Init Fwd Win Bytes",
+        "training": {
+          "p10": 0.0,
+          "median": 225.0,
+          "p90": 26883.0,
+          "zero_fraction": 0.1473551637279597
+        },
+        "live": {
+          "p10": 512.0,
+          "median": 512.0,
+          "p90": 512.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Init Bwd Win Bytes",
+        "training": {
+          "p10": -1.0,
+          "median": 219.0,
+          "p90": 235.0,
+          "zero_fraction": 0.015743073047858942
+        },
+        "live": {
+          "p10": 64240.0,
+          "median": 64240.0,
+          "p90": 64240.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Fwd Seg Size Min",
+        "training": {
+          "p10": 20.0,
+          "median": 32.0,
+          "p90": 32.0,
+          "zero_fraction": 0.020151133501259445
+        },
+        "live": {
+          "p10": 20.0,
+          "median": 20.0,
+          "p90": 20.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Active Std",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9767002518891688
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Idle Std",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9540302267002518
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      }
+    ],
+    "bruteforce": [
+      {
+        "feature": "Total Fwd Packets",
+        "training": {
+          "p10": 21.0,
+          "median": 22.0,
+          "p90": 24.0,
+          "zero_fraction": 0.0
+        },
+        "live": {
+          "p10": 1.0,
+          "median": 7.0,
+          "p90": 7.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Total Backward Packets",
+        "training": {
+          "p10": 20.0,
+          "median": 22.0,
+          "p90": 22.0,
+          "zero_fraction": 0.0014577259475218659
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 5.0,
+          "p90": 6.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Fwd Packets Length Total",
+        "training": {
+          "p10": 1912.0,
+          "median": 1928.0,
+          "p90": 1976.0,
+          "zero_fraction": 0.003401360544217687
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 250.0,
+          "p90": 252.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Fwd Packet Length Max",
+        "training": {
+          "p10": 640.0,
+          "median": 640.0,
+          "p90": 640.0,
+          "zero_fraction": 0.003401360544217687
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 220.0,
+          "p90": 220.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Fwd Packet Length Mean",
+        "training": {
+          "p10": 79.66666412353516,
+          "median": 87.3043441772461,
+          "p90": 91.04762268066406,
+          "zero_fraction": 0.003401360544217687
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 35.714285714285715,
+          "p90": 36.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Fwd Packet Length Std",
+        "training": {
+          "p10": 132.63442993164062,
+          "median": 137.68801879882812,
+          "p90": 138.18214416503906,
+          "zero_fraction": 0.003401360544217687
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 82.00812967830282,
+          "p90": 82.02786982831768,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Bwd Packet Length Max",
+        "training": {
+          "p10": 976.0,
+          "median": 976.0,
+          "p90": 976.0,
+          "zero_fraction": 0.02089407191448008
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 1943.0,
+          "p90": 1943.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Bwd Packet Length Mean",
+        "training": {
+          "p10": 121.13636016845703,
+          "median": 121.13636016845703,
+          "p90": 133.25,
+          "zero_fraction": 0.02089407191448008
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 354.8333333333333,
+          "p90": 425.8,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Fwd PSH Flags",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9825072886297376
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 2.0,
+          "p90": 2.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.6666666666666666
+      },
+      {
+        "feature": "Fwd Header Length",
+        "training": {
+          "p10": 680.0,
+          "median": 712.0,
+          "p90": 776.0,
+          "zero_fraction": 0.0
+        },
+        "live": {
+          "p10": 32.0,
+          "median": 232.0,
+          "p90": 232.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Bwd Header Length",
+        "training": {
+          "p10": 648.0,
+          "median": 712.0,
+          "p90": 712.0,
+          "zero_fraction": 0.0014577259475218659
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 168.0,
+          "p90": 200.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Packet Length Max",
+        "training": {
+          "p10": 976.0,
+          "median": 976.0,
+          "p90": 976.0,
+          "zero_fraction": 0.003401360544217687
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 1943.0,
+          "p90": 1943.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Packet Length Mean",
+        "training": {
+          "p10": 96.02083587646484,
+          "median": 102.06666564941406,
+          "p90": 106.81395721435547,
+          "zero_fraction": 0.003401360544217687
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 169.96428571428572,
+          "p90": 183.08461538461538,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Packet Length Variance",
+        "training": {
+          "p10": 39489.72265625,
+          "median": 41510.3828125,
+          "p90": 42965.6328125,
+          "zero_fraction": 0.003401360544217687
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 265760.37912087917,
+          "p90": 285315.6666666667,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "SYN Flag Count",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9825072886297376
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 2.0,
+          "p90": 2.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.6666666666666666
+      },
+      {
+        "feature": "URG Flag Count",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9970845481049563
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Init Fwd Win Bytes",
+        "training": {
+          "p10": 26883.0,
+          "median": 26883.0,
+          "p90": 26883.0,
+          "zero_fraction": 0.0
+        },
+        "live": {
+          "p10": 532.0,
+          "median": 64240.0,
+          "p90": 64240.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Init Bwd Win Bytes",
+        "training": {
+          "p10": 230.0,
+          "median": 230.0,
+          "p90": 230.0,
+          "zero_fraction": 0.01652089407191448
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 65160.0,
+          "p90": 65160.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Fwd Seg Size Min",
+        "training": {
+          "p10": 32.0,
+          "median": 32.0,
+          "p90": 32.0,
+          "zero_fraction": 0.0
+        },
+        "live": {
+          "p10": 32.0,
+          "median": 32.0,
+          "p90": 32.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Active Std",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Idle Std",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      }
+    ],
+    "web": [
+      {
+        "feature": "Total Fwd Packets",
+        "training": {
+          "p10": 2.0,
+          "median": 3.0,
+          "p90": 153.0,
+          "zero_fraction": 0.0
+        },
+        "live": {
+          "p10": 1.0,
+          "median": 6.0,
+          "p90": 6.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.3333333333333333
+      },
+      {
+        "feature": "Total Backward Packets",
+        "training": {
+          "p10": 0.0,
+          "median": 1.0,
+          "p90": 104.0,
+          "zero_fraction": 0.14290484140233722
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 4.0,
+          "p90": 5.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Packets Length Total",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 43906.0,
+          "zero_fraction": 0.7525876460767946
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 174.5,
+          "p90": 208.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Packet Length Max",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 646.0,
+          "zero_fraction": 0.7525876460767946
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 174.5,
+          "p90": 208.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Packet Length Mean",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 277.4876708984375,
+          "zero_fraction": 0.7525876460767946
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 29.083333333333336,
+          "p90": 34.666666666666664,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd Packet Length Std",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 279.29809570312494,
+          "zero_fraction": 0.7953255425709516
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 71.23932668594409,
+          "p90": 84.9156444164835,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Bwd Packet Length Max",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 1068.0,
+          "zero_fraction": 0.7953255425709516
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 2138.0,
+          "p90": 2176.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.6666666666666666
+      },
+      {
+        "feature": "Bwd Packet Length Mean",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 694.1980712890625,
+          "zero_fraction": 0.7953255425709516
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 464.5,
+          "p90": 584.125,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Fwd PSH Flags",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9996661101836394
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 1.0,
+          "p90": 1.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.6666666666666666
+      },
+      {
+        "feature": "Fwd Header Length",
+        "training": {
+          "p10": 40.0,
+          "median": 104.0,
+          "p90": 3072.0,
+          "zero_fraction": 0.007011686143572621
+        },
+        "live": {
+          "p10": 32.0,
+          "median": 200.0,
+          "p90": 200.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.3333333333333333
+      },
+      {
+        "feature": "Bwd Header Length",
+        "training": {
+          "p10": 0.0,
+          "median": 40.0,
+          "p90": 2092.0,
+          "zero_fraction": 0.14290484140233722
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 136.0,
+          "p90": 168.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Packet Length Max",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 1068.0,
+          "zero_fraction": 0.7525876460767946
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 2138.0,
+          "p90": 2176.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.6666666666666666
+      },
+      {
+        "feature": "Packet Length Mean",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 494.1379760742187,
+          "zero_fraction": 0.7525876460767946
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 209.0,
+          "p90": 230.4909090909091,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Packet Length Variance",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 126333.8828125,
+          "zero_fraction": 0.7953255425709516
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 377164.80303030304,
+          "p90": 415395.91090909095,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.6666666666666666
+      },
+      {
+        "feature": "SYN Flag Count",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9996661101836394
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 2.0,
+          "p90": 2.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.6666666666666666
+      },
+      {
+        "feature": "URG Flag Count",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9579298831385643
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Init Fwd Win Bytes",
+        "training": {
+          "p10": 2047.0,
+          "median": 29200.0,
+          "p90": 29200.0,
+          "zero_fraction": 0.0
+        },
+        "live": {
+          "p10": 535.0,
+          "median": 64240.0,
+          "p90": 64240.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Init Bwd Win Bytes",
+        "training": {
+          "p10": -1.0,
+          "median": 28960.0,
+          "p90": 28960.0,
+          "zero_fraction": 0.0
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 65160.0,
+          "p90": 65160.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.6666666666666666
+      },
+      {
+        "feature": "Fwd Seg Size Min",
+        "training": {
+          "p10": 20.0,
+          "median": 32.0,
+          "p90": 32.0,
+          "zero_fraction": 0.007011686143572621
+        },
+        "live": {
+          "p10": 32.0,
+          "median": 32.0,
+          "p90": 32.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Active Std",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Idle Std",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9502504173622704
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      }
+    ],
+    "botnet": [
+      {
+        "feature": "Total Fwd Packets",
+        "training": {
+          "p10": 3.0,
+          "median": 3.0,
+          "p90": 3.0,
+          "zero_fraction": 0.0
+        },
+        "live": {
+          "p10": 1.0,
+          "median": 6.0,
+          "p90": 6.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Total Backward Packets",
+        "training": {
+          "p10": 4.0,
+          "median": 4.0,
+          "p90": 4.0,
+          "zero_fraction": 0.008261617900172116
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 4.0,
+          "p90": 5.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.6666666666666666
+      },
+      {
+        "feature": "Fwd Packets Length Total",
+        "training": {
+          "p10": 326.0,
+          "median": 326.0,
+          "p90": 326.0,
+          "zero_fraction": 0.011359724612736662
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 177.0,
+          "p90": 177.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Fwd Packet Length Max",
+        "training": {
+          "p10": 326.0,
+          "median": 326.0,
+          "p90": 326.0,
+          "zero_fraction": 0.011359724612736662
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 177.0,
+          "p90": 177.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Fwd Packet Length Mean",
+        "training": {
+          "p10": 108.66666412353516,
+          "median": 108.66666412353516,
+          "p90": 108.66666412353516,
+          "zero_fraction": 0.011359724612736662
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 29.5,
+          "p90": 29.5,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Fwd Packet Length Std",
+        "training": {
+          "p10": 188.2161865234375,
+          "median": 188.2161865234375,
+          "p90": 188.2161865234375,
+          "zero_fraction": 0.012736660929432014
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 72.25994741210376,
+          "p90": 72.25994741210376,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Bwd Packet Length Max",
+        "training": {
+          "p10": 112.0,
+          "median": 112.0,
+          "p90": 112.0,
+          "zero_fraction": 0.008605851979345954
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 166.0,
+          "p90": 166.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Bwd Packet Length Mean",
+        "training": {
+          "p10": 32.25,
+          "median": 32.25,
+          "p90": 32.25,
+          "zero_fraction": 0.008605851979345954
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 52.2,
+          "p90": 65.25,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Fwd PSH Flags",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 1.0,
+          "p90": 1.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.6666666666666666
+      },
+      {
+        "feature": "Fwd Header Length",
+        "training": {
+          "p10": 72.0,
+          "median": 72.0,
+          "p90": 72.0,
+          "zero_fraction": 0.0006884681583476765
+        },
+        "live": {
+          "p10": 32.0,
+          "median": 200.0,
+          "p90": 200.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Bwd Header Length",
+        "training": {
+          "p10": 92.0,
+          "median": 92.0,
+          "p90": 92.0,
+          "zero_fraction": 0.008261617900172116
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 136.0,
+          "p90": 168.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Packet Length Max",
+        "training": {
+          "p10": 326.0,
+          "median": 326.0,
+          "p90": 326.0,
+          "zero_fraction": 0.008605851979345954
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 177.0,
+          "p90": 177.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Packet Length Mean",
+        "training": {
+          "p10": 56.875,
+          "median": 56.875,
+          "p90": 56.875,
+          "zero_fraction": 0.008605851979345954
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 36.5,
+          "p90": 39.81818181818182,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Packet Length Variance",
+        "training": {
+          "p10": 13318.6962890625,
+          "median": 13318.6962890625,
+          "p90": 13318.6962890625,
+          "zero_fraction": 0.009982788296041309
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 4720.272727272727,
+          "p90": 5046.963636363636,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "SYN Flag Count",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 2.0,
+          "p90": 2.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 0.6666666666666666
+      },
+      {
+        "feature": "URG Flag Count",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9989672977624785
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Init Fwd Win Bytes",
+        "training": {
+          "p10": 8192.0,
+          "median": 8192.0,
+          "p90": 8192.0,
+          "zero_fraction": 0.0
+        },
+        "live": {
+          "p10": 501.0,
+          "median": 64240.0,
+          "p90": 64240.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Init Bwd Win Bytes",
+        "training": {
+          "p10": 219.0,
+          "median": 219.0,
+          "p90": 219.0,
+          "zero_fraction": 0.00034423407917383823
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 65160.0,
+          "p90": 65160.0,
+          "zero_fraction": 0.3333333333333333
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Fwd Seg Size Min",
+        "training": {
+          "p10": 20.0,
+          "median": 20.0,
+          "p90": 20.0,
+          "zero_fraction": 0.0006884681583476765
+        },
+        "live": {
+          "p10": 32.0,
+          "median": 32.0,
+          "p90": 32.0,
+          "zero_fraction": 0.0
+        },
+        "live_outside_training_p10_p90_fraction": 1.0
+      },
+      {
+        "feature": "Active Std",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9993115318416523
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      },
+      {
+        "feature": "Idle Std",
+        "training": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 0.9993115318416523
+        },
+        "live": {
+          "p10": 0.0,
+          "median": 0.0,
+          "p90": 0.0,
+          "zero_fraction": 1.0
+        },
+        "live_outside_training_p10_p90_fraction": 0.0
+      }
+    ]
+  }
+}
