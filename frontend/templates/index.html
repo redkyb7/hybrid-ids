@@ -428,12 +428,6 @@
       const $ = (id) => document.getElementById(id);
       const score = (value) =>
         value == null ? "--" : Number(value).toFixed(4);
-      const detector = (source) => ({
-        rule: "Supplemental rule",
-        model: "ML / DL model",
-        "model+rule": "Model and rule",
-      })[source] || "Historical record";
-
       function updateDashboard(data) {
         if (data.error) {
           $("alertLabel").textContent = "Error";
@@ -460,7 +454,7 @@
         $("flows").textContent = Number(kpi.total_flows).toLocaleString();
         const alert = data.latest_alert;
         $("alertLabel").textContent = alert
-          ? `Alert / ${alert.attack_type} / ${detector(alert.detection_source)}`
+          ? `Alert / ${alert.attack_type}`
           : "Network clear";
         $("alertLabel").className = alert
           ? "shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-red-400"
@@ -554,8 +548,6 @@
             ],
             ["Protocol", log.protocol],
             ["Classification", log.attack_type],
-            ["Detection", detector(log.detection_source)],
-            ["Rule", log.rule_id || "none"],
             ["Model result", log.model_attack_type || "not recorded"],
             ["Model verdict", log.model_verdict || "not recorded"],
             ["Model stage", log.stage_reached || "not recorded"],
@@ -574,7 +566,7 @@
             [
               "Confidence",
               log.confidence == null
-                ? "not calibrated (rule)"
+                ? "not recorded"
                 : `${(Number(log.confidence) * 100).toFixed(1)}%`,
             ],
             ["Latency", `${log.latency_ms} ms`],

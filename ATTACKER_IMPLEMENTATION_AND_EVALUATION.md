@@ -2,6 +2,10 @@
 
 25 September 2026
 
+> Historical baseline: the 13-scenario measurements below used the former
+> rule-assisted monitor. The current monitor records only ML/DL verdicts.
+> A two-campaign model-only follow-up appears at the end of this report.
+
 ## What was implemented
 
 The attack node now has 13 explicit, bounded scenarios covering the seven CIC
@@ -157,3 +161,22 @@ Retest the SSH, Botnet and HTTP scenarios on that same representation before
 changing the models or claiming a hybrid detection gain. Content- and
 sequence-dependent attacks may need an explicit payload or sequence detector;
 flow dimensions alone did not identify the synthetic infiltration run.
+
+## Model-only follow-up (25 September 2026)
+
+After removing supplemental alerts, the monitor and dashboard were restarted
+with the same extracted ML/DL artifacts. Two isolated campaigns completed with
+the background generators stopped. Feature logging was off, so this check
+measures verdicts and Stage 2 reach, not feature similarity. These are bounded
+lab campaigns rather than a population F1 evaluation.
+
+| Scenario | Campaign ID | Actions | Connections | Stage 2 | Correct model class | Model alerts | p95 engine ms |
+| --- | --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| `scan` | `20260925T095340Z-2cab5cb4` | 12/12 | 12 | 10 | 0 | 0 | 48.70 |
+| `ddos_udp` | `20260925T095412Z-7ef9e71f` | 80/80 | 20, two sources | 20 | 20 DDoS | 20 | 18.65 |
+
+The scan result confirms that a Stage 1 or Stage 2 benign verdict is no longer
+overridden by a rule. It also exposes a real detection gap for this scan. The
+UDP run confirms that Stage 1 still forwards attack candidates to DL and that
+DL alerts reach the dashboard. The remaining 11 scenarios require a new
+model-only run before their current detection rates can be reported.

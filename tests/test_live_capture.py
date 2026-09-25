@@ -106,18 +106,21 @@ class TestLiveCaptureDaemon(unittest.TestCase):
         cursor.execute("SELECT id, timestamp, source_ip, destination_ip, protocol, attack_type, latency_ms FROM logs")
         rows = cursor.fetchall()
         cursor.execute("""
-            SELECT detection_source, model_attack_type, model_verdict,
+            SELECT attack_type, verdict, confidence,
+                   model_attack_type, model_verdict, model_confidence,
                    stage1_attack_probability, stage1_features_json,
                    flow_features_json, flow_start_epoch, flow_end_epoch
             FROM logs LIMIT 1
         """)
-        (detection_source, model_label, model_verdict, score, feature_json,
-         all_features_json, flow_start_epoch, flow_end_epoch) = cursor.fetchone()
+        (attack_type, verdict, confidence, model_label, model_verdict,
+         model_confidence, score, feature_json, all_features_json,
+         flow_start_epoch, flow_end_epoch) = cursor.fetchone()
         conn.close()
 
         self.assertGreaterEqual(len(rows), 2, "Database must have at least 2 logged flow verdicts")
-        self.assertIn(detection_source, {"model", "rule", "model+rule"})
-        self.assertIsNotNone(model_label)
+        self.assertEqual(attack_type, model_label)
+        self.assertEqual(verdict, model_verdict)
+        self.assertEqual(confidence, model_confidence)
         self.assertIn(model_verdict, {"BENIGN", "MALICIOUS"})
         self.assertGreaterEqual(score, 0)
         self.assertEqual(len(json.loads(feature_json)), len(daemon.hybrid_engine.stage1_features))
@@ -165,7 +168,7 @@ class TestLiveCaptureDaemon(unittest.TestCase):
 
         self.assertGreaterEqual(count, 2, "Concurrent reader must successfully count rows without locking error")
 
-    def test_rule_alert_preserves_model_verdict_without_fake_confidence(self):
+    def test_stage1_benign_flow_stays_benign_despite_http_probe_payload(self):
         daemon = LiveCaptureDaemon(
             db_path=self.db_path,
             log_features=False,
@@ -189,13 +192,13 @@ class TestLiveCaptureDaemon(unittest.TestCase):
         })
         with sqlite3.connect(self.db_path) as connection:
             row = connection.execute("""
-                SELECT attack_type, verdict, confidence, detection_source,
-                       rule_id, model_attack_type, model_verdict,
+                SELECT attack_type, verdict, confidence,
+                       model_attack_type, model_verdict,
                        stage1_attack_probability
                 FROM logs
             """).fetchone()
         self.assertEqual(row, (
-            "Web Attack", "MALICIOUS", None, "rule", "http_probe",
+            "Normal Traffic", "BENIGN", 0.98,
             "Normal Traffic", "BENIGN", 0.02,
         ))
 

@@ -108,8 +108,8 @@ def main() -> None:
         )
         query = (
             "SELECT id, source_ip, destination_ip, protocol, source_port, "
-            "destination_port, timestamp, verdict, stage_reached, "
-            "detection_source, rule_id, model_attack_type, model_verdict, "
+            "destination_port, timestamp, stage_reached, "
+            "model_attack_type, model_verdict, "
             "stage1_attack_probability, stage1_features_json, latency_ms, "
             + ", ".join(optional) + " FROM logs WHERE source_ip IN ("
             + placeholders + ") AND destination_ip = ? AND "
@@ -154,8 +154,6 @@ def main() -> None:
         if row["model_verdict"] == "MALICIOUS"
         and row["model_attack_type"] == DISPLAY_LABELS[class_label]
     ]
-    rule_only = [row for row in rows if row["detection_source"] == "rule"]
-    final_alerts = [row for row in rows if row["verdict"] == "MALICIOUS"]
     scores = [float(row["stage1_attack_probability"]) for row in rows
               if row["stage1_attack_probability"] is not None]
     latency = [float(row["latency_ms"]) for row in rows
@@ -206,10 +204,6 @@ def main() -> None:
         "model_alert_connections": len({connection_key(row) for row in model_alerts}),
         "model_correct_class_snapshots": len(correct_class),
         "model_correct_class_connections": len({connection_key(row) for row in correct_class}),
-        "rule_only_alert_snapshots": len(rule_only),
-        "rule_only_alert_connections": len({connection_key(row) for row in rule_only}),
-        "final_alert_snapshots": len(final_alerts),
-        "final_alert_connections": len({connection_key(row) for row in final_alerts}),
         "stage1_attack_score_median": percentile(scores, 0.5),
         "stage1_attack_score_p90": percentile(scores, 0.9),
         "latency_ms_p95": percentile(latency, 0.95),
@@ -226,7 +220,6 @@ def main() -> None:
           f"connections: {len(connections)} | snapshots: {len(rows)}")
     print(f"Stage 2: {len(stage2)} snapshots/{result['stage2_connections']} connections | "
           f"model alerts: {len(model_alerts)} | correct model class: {len(correct_class)} | "
-          f"rule-only: {len(rule_only)} | final alerts: {len(final_alerts)} | "
           f"p95 latency: {result['latency_ms_p95']} ms")
     if comparisons:
         matched = sum(value["median_within_dataset_p10_p90"] for value in comparisons.values())

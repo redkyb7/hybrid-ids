@@ -122,7 +122,6 @@ services:
       - PYTHONUNBUFFERED=1
       - IDS_ARTIFACT_ROOT=${IDS_ARTIFACT_ROOT:-/app/updated_models/extracted}
       - IDS_STAGE1_THRESHOLD
-      - IDS_SUPPLEMENTAL_RULES=${IDS_SUPPLEMENTAL_RULES:-1}
       - IDS_LOG_FEATURES=${IDS_LOG_FEATURES:-0}
     depends_on:
       - victim

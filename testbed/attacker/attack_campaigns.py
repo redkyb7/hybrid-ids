@@ -1,8 +1,7 @@
 """Run labeled, bounded traffic scenarios against the fixed Docker lab victim.
 
 The campaign manifests provide ground truth. A traffic label does not mean the
-ML/DL pipeline detected it; evaluate model and supplemental-rule verdicts
-separately after each isolated run.
+ML/DL pipeline detected it; evaluate model verdicts after each isolated run.
 """
 
 from __future__ import annotations

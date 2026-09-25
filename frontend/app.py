@@ -41,7 +41,7 @@ def read_telemetry(limit: int) -> dict[str, Any]:
                 if column not in columns:
                     connection.execute(f"ALTER TABLE logs ADD COLUMN {column} {definition}")
             optional = (
-                "stage_reached", "detection_source", "rule_id",
+                "stage_reached",
                 "model_attack_type", "model_verdict", "model_confidence",
                 "stage1_attack_probability",
             )
@@ -49,13 +49,25 @@ def read_telemetry(limit: int) -> dict[str, Any]:
                 name if name in columns else f"NULL AS {name}"
                 for name in optional
             )
+            # Existing databases can contain rule-overridden labels. Present
+            # their saved model verdicts without changing historical rows.
+            label_sql = (
+                "COALESCE(model_attack_type, attack_type)"
+                if "model_attack_type" in columns else "attack_type"
+            )
+            confidence_sql = (
+                "COALESCE(model_confidence, confidence)"
+                if "model_confidence" in columns else "confidence"
+            )
             logs = [
                 dict(row)
                 for row in connection.execute(
                     f"""
                           SELECT id, timestamp, source_ip, source_port,
                               destination_ip, destination_port, protocol,
-                              attack_type, confidence, latency_ms, {optional_sql}
+                              {label_sql} AS attack_type,
+                              {confidence_sql} AS confidence,
+                              latency_ms, {optional_sql}
                     FROM logs
                     ORDER BY id DESC
                     LIMIT ?
@@ -64,7 +76,8 @@ def read_telemetry(limit: int) -> dict[str, Any]:
                 )
             ]
             threat_rows = connection.execute(
-                "SELECT attack_type, COUNT(*) AS count FROM logs GROUP BY attack_type"
+                f"SELECT {label_sql} AS attack_type, COUNT(*) AS count "
+                f"FROM logs GROUP BY {label_sql}"
             ).fetchall()
 
         historical_mix = {row["attack_type"]: row["count"] for row in threat_rows}

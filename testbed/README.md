@@ -3,8 +3,8 @@
 The lab uses a private `192.168.100.0/24` bridge. Its victim is
 `192.168.100.10`; the normal client is `.101`, the main attacker is `.66`, and
 the two optional DDoS workers are `.67` and `.68`. The monitor captures traffic
-in the victim's network namespace and runs the deployed ML → DL pipeline,
-followed by supplemental rules. The victim exposes HTTP on host
+in the victim's network namespace and runs the deployed ML → DL pipeline.
+Only model verdicts produce alerts. The victim exposes HTTP on host
 `127.0.0.1:8080` and SSH on `127.0.0.1:2222`. The UDP sink is reachable only
 inside the bridge.
 
@@ -73,13 +73,14 @@ uv tool run --from duckdb python scripts/evaluate_attack_campaigns.py --campaign
 
 The JSON result is written to `data/campaigns/<ID>-evaluation.json`. It reports
 source IPs, action and connection counts, Stage 2 reach, model alerts,
-supplemental rule alerts, final alerts and latency. With `IDS_LOG_FEATURES=1`,
+correct model classes and latency. With `IDS_LOG_FEATURES=1`,
 it also compares the fullest captured snapshot per connection with the raw CIC
 subtype's 10th to 90th percentile band. A snapshot is a model verdict, not a
-unique connection. A rule-only alert does not count as a model detection.
+unique connection.
 
 See [`ATTACKER_IMPLEMENTATION_AND_EVALUATION.md`](../ATTACKER_IMPLEMENTATION_AND_EVALUATION.md)
-for the measured lab results and limitations.
+for historical rule-assisted lab results, two model-only follow-up campaigns,
+and limitations. Rerun the remaining campaigns to measure the current monitor.
 
 ## Inspect and stop
 

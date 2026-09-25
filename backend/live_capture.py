@@ -30,7 +30,6 @@ if BASE_DIR not in sys.path:
 
 from flow_aggregator import FlowAggregator
 from hybrid_engine import HybridIDSEngine
-from supplemental_detector import SupplementalDetector
 
 try:
     import scapy.all as scapy
@@ -52,8 +51,7 @@ class LiveCaptureDaemon:
                  db_path: Optional[str] = None,
                  inactivity_timeout: float = 1.5,
                  micro_batch_timeout: float = 0.15,
-                 log_features: Optional[bool] = None,
-                 supplemental_rules: Optional[bool] = None):
+                 log_features: Optional[bool] = None):
 
         self.interface = interface
         self.pcap_file = pcap_file
@@ -72,14 +70,6 @@ class LiveCaptureDaemon:
             os.environ.get("IDS_LOG_FEATURES", "0") == "1"
             if log_features is None else log_features
         )
-        self.supplemental_rules = (
-            os.environ.get("IDS_SUPPLEMENTAL_RULES", "1") == "1"
-            if supplemental_rules is None else supplemental_rules
-        )
-        self.supplemental_detector = (
-            SupplementalDetector() if self.supplemental_rules else None
-        )
-
         self.flow_aggregator = FlowAggregator(
             inactivity_timeout_sec=inactivity_timeout,
             micro_batch_timeout_sec=micro_batch_timeout,
@@ -128,8 +118,6 @@ class LiveCaptureDaemon:
                 confidence REAL,
                 verdict TEXT,
                 stage_reached TEXT,
-                detection_source TEXT,
-                rule_id TEXT,
                 model_attack_type TEXT,
                 model_verdict TEXT,
                 model_confidence REAL,
@@ -147,8 +135,6 @@ class LiveCaptureDaemon:
             "confidence": "REAL",
             "verdict": "TEXT",
             "stage_reached": "TEXT",
-            "detection_source": "TEXT",
-            "rule_id": "TEXT",
             "model_attack_type": "TEXT",
             "model_verdict": "TEXT",
             "model_confidence": "REAL",
@@ -166,30 +152,12 @@ class LiveCaptureDaemon:
         now = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         started = time.perf_counter()
 
-        # Preserve the ML -> DL result even when a supplemental rule alerts.
         result = self.hybrid_engine.classify_flow(flow_dict)
-        rule = self.supplemental_detector.inspect(flow_dict) if self.supplemental_detector else None
-        model_verdict = result["verdict"]
-        model_attack_type = result["attack_type"]
-        model_confidence = float(result["confidence"])
-        if model_verdict == "MALICIOUS":
-            verdict = model_verdict
-            attack_type = model_attack_type
-            confidence = model_confidence
-            detection_source = "model+rule" if rule else "model"
-        elif rule:
-            verdict = "MALICIOUS"
-            attack_type = rule["attack_type"]
-            confidence = None  # An explicit rule has no calibrated probability.
-            detection_source = "rule"
-        else:
-            verdict = model_verdict
-            attack_type = model_attack_type
-            confidence = model_confidence
-            detection_source = "model"
+        verdict = result["verdict"]
+        attack_type = result["attack_type"]
+        confidence = float(result["confidence"])
         latency_ms = max(1.0, (time.perf_counter() - started) * 1000)
         stage_reached = result["stage_reached"]
-        rule_id = rule["rule_id"] if rule else None
         feature_json = None
         all_feature_json = None
         if self.log_features:
@@ -221,14 +189,13 @@ class LiveCaptureDaemon:
                 INSERT INTO logs (
                     timestamp, source_ip, destination_ip, protocol, attack_type,
                     latency_ms, source_port, destination_port, confidence,
-                    verdict, stage_reached, detection_source, rule_id,
-                    model_attack_type, model_verdict, model_confidence,
+                    verdict, stage_reached, model_attack_type,
+                    model_verdict, model_confidence,
                     stage1_attack_probability, stage1_features_json,
                     flow_features_json, flow_start_epoch, flow_end_epoch
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
             ''', (now, src_ip, dst_ip, proto, attack_type, math.ceil(latency_ms), sport, dport,
-                  confidence, verdict, stage_reached, detection_source, rule_id,
-                  model_attack_type, model_verdict, model_confidence,
+                  confidence, verdict, stage_reached, attack_type, verdict, confidence,
                   float(result["stage1_attack_probability"]), feature_json,
                   all_feature_json, flow_start_epoch, flow_end_epoch))
 
@@ -244,8 +211,8 @@ class LiveCaptureDaemon:
 
         # Format Terminal Visual Output
         tag = "[SAFE] " if verdict == "BENIGN" else "[ALERT]"
-        score = f"{confidence*100:5.1f}%" if confidence is not None else "rule"
-        print(f"[{now}] {tag} {src_ip:<15} -> {dst_ip}:{dport:<5} ({proto:<4}) | {attack_type:<14} ({score}) | {stage_reached:<20} | {detection_source} | {latency_ms:.2f}ms")
+        score = f"{confidence*100:5.1f}%"
+        print(f"[{now}] {tag} {src_ip:<15} -> {dst_ip}:{dport:<5} ({proto:<4}) | {attack_type:<14} ({score}) | {stage_reached:<20} | model | {latency_ms:.2f}ms")
 
     def _flow_worker(self):
         """Worker thread that consumes raw packets, aggregates flows, and logs classifications."""
@@ -306,7 +273,6 @@ class LiveCaptureDaemon:
         print("=" * 70)
         print(f"[*] Telemetry Database : {self.db_path}")
         print(f"[*] Model Artifacts    : {self.hybrid_engine.artifact_root}")
-        print(f"[*] Supplemental Rules: {'enabled' if self.supplemental_rules else 'disabled'}")
         print(f"[*] Feature Logging   : {'enabled' if self.log_features else 'disabled'}")
         print(f"[*] BPF Filter         : {self.bpf_filter}")
         if self.pcap_file:

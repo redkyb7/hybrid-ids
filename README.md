@@ -1,6 +1,6 @@
 # SentinelFlow Hybrid IDS
 
-SentinelFlow runs a Docker testbed with a victim web server, a benign traffic generator, an attacker, an IDS monitor, and a dashboard. The monitor captures traffic to the victim, classifies flows, and writes results to `data/ids_logs.db`. The dashboard reads that database and, when available, a combined holdout report for the selected model bundle.
+SentinelFlow runs a Docker testbed with a victim web server, a benign traffic generator, an attacker, an IDS monitor, and a dashboard. The monitor captures traffic to the victim, classifies flows, and writes results to `data/ids_logs.db`. The dashboard reads that database and the selected DL model's offline evaluation metrics.
 
 ## Prerequisites
 
@@ -39,8 +39,9 @@ models in `updated_models/extracted/{ml,dl}`. Stage 1 uses the engine's 0.10
 attack threshold because this ML bundle has no saved threshold file. Stage 2
 uses its saved 0.70 confidence threshold. The 0.10 Stage 1 threshold was not
 evaluated in the original Colab report. A flow below that threshold stops at
-Stage 1; the supplemental rules can still raise an alert. If an artifact is
-missing or has the wrong schema, the monitor exits and reports the error in
+Stage 1 as benign. An attack candidate reaches Stage 2, where DL assigns the
+class or can return benign. If an artifact is missing or has the wrong schema,
+the monitor exits and reports the error in
 `docker compose logs monitor`.
 
 The monitor image includes the Python, scikit-learn, TensorFlow, XGBoost, and
@@ -53,21 +54,20 @@ the DL model's standalone classification macro F1 (`0.7737`) from
 eight-class test-set result, not a combined pipeline or live-traffic score.
 Their standalone scores cannot be combined into one pipeline score.
 
-The current attacker evaluation covers 13 bounded scenarios across seven
-attack classes using the deployed bundle. It records Stage 2 reach, model
-classifications, rule alerts, and feature comparisons with CIC data. See
+The attacker evaluation records a historical 13-scenario rule-assisted baseline
+and two model-only follow-up campaigns. The scan had no model alerts, while the
+two-source UDP campaign produced 20 correct DDoS alerts. See
 [ATTACKER_IMPLEMENTATION_AND_EVALUATION.md](ATTACKER_IMPLEMENTATION_AND_EVALUATION.md)
 for the measured results and limitations.
 
-Rule alerts are labeled separately from ML/DL verdicts in the dashboard's log
-details. The displayed DL macro F1 does not measure Stage 1 gating or the
-supplemental checks. Set
-`IDS_SUPPLEMENTAL_RULES=0` before
-recreating the monitor to disable those checks. Set `IDS_LOG_FEATURES=1` to
+The displayed DL macro F1 does not measure Stage 1 gating or live traffic.
+The monitor now records only ML/DL verdicts. The dashboard presents the saved
+model verdict for older rows that were previously overridden by rules; the
+database itself is preserved. Set `IDS_LOG_FEATURES=1` to
 store the numeric Stage 1 and Stage 2 flow features per snapshot for a
 diagnostic run; it is off by default and does not store packet payloads.
-Recreate the monitor after
-changing either setting with `docker compose up -d --no-deps monitor`.
+Recreate the monitor after changing this setting with
+`docker compose up -d --no-deps monitor`.
 
 Set `IDS_ARTIFACT_ROOT` before running Compose to select another complete
 bundle mounted inside the monitor and dashboard containers. The dashboard
@@ -112,4 +112,5 @@ If you see `exec /app/entrypoint.sh: no such file or directory` for `victim`, re
 
 See [testbed/README.md](testbed/README.md) for campaign commands and
 [ATTACKER_IMPLEMENTATION_AND_EVALUATION.md](ATTACKER_IMPLEMENTATION_AND_EVALUATION.md)
-for the measured seven-class live evaluation.
+for the historical seven-class baseline and model-only follow-up. Rerun the
+remaining campaigns to measure the current pipeline.
