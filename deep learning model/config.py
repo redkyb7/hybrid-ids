@@ -1,5 +1,3 @@
-# config.py
-
 import os
 
 
@@ -18,7 +16,7 @@ PROJECT_ROOT = os.path.abspath(
 DATA_PATH = os.path.join(
     PROJECT_ROOT,
     "clean_data",
-    "cicids2017_cleaned.csv",
+    "cic-collection.parquet",
 )
 
 SAVED_MODEL_DIR = os.path.join(
@@ -26,19 +24,13 @@ SAVED_MODEL_DIR = os.path.join(
     "saved_model",
 )
 
-os.makedirs(
-    SAVED_MODEL_DIR,
-    exist_ok=True,
-)
-
-
 # ============================================================
 # SAVED ARTIFACTS
 # ============================================================
 
 MODEL_SAVE_PATH = os.path.join(
     SAVED_MODEL_DIR,
-    "cnn_nids.keras",
+    "nids_model.keras",
 )
 
 SCALER_SAVE_PATH = os.path.join(
@@ -56,6 +48,16 @@ FEATURE_NAMES_SAVE_PATH = os.path.join(
     "feature_names.pkl",
 )
 
+METADATA_SAVE_PATH = os.path.join(
+    SAVED_MODEL_DIR,
+    "metadata.json",
+)
+
+THRESHOLDS_SAVE_PATH = os.path.join(
+    SAVED_MODEL_DIR,
+    "thresholds.json",
+)
+
 X_TEST_SAVE_PATH = os.path.join(
     SAVED_MODEL_DIR,
     "X_test.npy",
@@ -66,59 +68,74 @@ Y_TEST_SAVE_PATH = os.path.join(
     "y_test.npy",
 )
 
+CLASSIFICATION_REPORT_SAVE_PATH = os.path.join(
+    SAVED_MODEL_DIR,
+    "classification_report.json",
+)
+
+METRICS_SAVE_PATH = os.path.join(
+    SAVED_MODEL_DIR,
+    "evaluation_metrics.json",
+)
+
+CONFUSION_MATRIX_SAVE_PATH = os.path.join(
+    SAVED_MODEL_DIR,
+    "confusion_matrix.png",
+)
+
+NORMALIZED_CONFUSION_MATRIX_SAVE_PATH = os.path.join(
+    SAVED_MODEL_DIR,
+    "confusion_matrix_normalized.png",
+)
+
 
 # ============================================================
 # DATASET
 # ============================================================
 
-LABEL_COLUMN = "Attack Type"
+# Your Parquet dataset has:
+#
+# - Label: 33 fine-grained attack labels
+# - ClassLabel: 8 canonical attack categories
+#
+# We train on the already curated ClassLabel target.
+LABEL_COLUMN = "ClassLabel"
 
-LABEL_MAP = {
-
-    # Normal
-    "Normal Traffic": "Normal",
-    "BENIGN": "Normal",
-    "Normal": "Normal",
-
-    # DoS
-    "DoS": "DoS",
-
-    # DDoS
-    "DDoS": "DDoS",
-
-    # Port Scan
-    "Port Scanning": "Port Scan",
-    "Port Scan": "Port Scan",
-
-    # Brute Force
-    "Brute Force": "Brute Force",
-
-    # Web Attack
-    "Web Attacks": "Web Attack",
-    "Web Attack": "Web Attack",
-
-    # Botnet
-    "Bots": "Botnet",
-    "Botnet": "Botnet",
-}
-
-# Features excluded to prevent port overfitting and OS fingerprint leakage
-EXCLUDE_FEATURES = [
-    "Destination Port",
-    "Init_Win_bytes_forward",
-    "Init_Win_bytes_backward",
+# The fine-grained label is retained in the Parquet source, but excluded
+# because it directly reveals a more specific version of the target label.
+LEAKAGE_COLUMNS = [
+    "Label",
 ]
+
+# Your inspected Parquet data has 57 numeric feature columns and two
+# categorical label columns. No extra feature exclusion is needed.
+EXCLUDE_FEATURES = LEAKAGE_COLUMNS
+
+# These are the exact expected target categories in your data.
+EXPECTED_CLASSES = [
+    "Benign",
+    "Botnet",
+    "Bruteforce",
+    "DDoS",
+    "DoS",
+    "Infiltration",
+    "Portscan",
+    "Webattack",
+]
+
+# Retain strict validation so accidental target/schema changes are detected.
+STRICT_CLASS_VALIDATION = True
+
+# Exact duplicate removal is expensive on a 9.1M-row dataset.
+# Set True only if you have plenty of RAM and want to remove duplicates.
+REMOVE_DUPLICATES = False
 
 
 # ============================================================
 # DATA SPLITTING
 # ============================================================
 
-# Final split:
-# 80% training
-# 10% validation
-# 10% testing
-
+# 80% train, 10% validation, 10% test
 HOLDOUT_SIZE = 0.20
 HOLDOUT_TEST_RATIO = 0.50
 
@@ -126,45 +143,90 @@ RANDOM_STATE = 42
 
 
 # ============================================================
+# PREPROCESSING
+# ============================================================
+
+# Your inspection showed no NaN or infinity values. Clipping is still
+# beneficial for heavily skewed flow-statistics values.
+USE_PERCENTILE_CLIPPING = True
+
+LOWER_CLIP_PERCENTILE = 0.5
+UPPER_CLIP_PERCENTILE = 99.5
+
+
+# ============================================================
 # MODEL HYPERPARAMETERS
 # ============================================================
 
-# Maximum epochs.
-# Early stopping will normally finish before this.
-EPOCHS = 15
+EPOCHS = 30
 
-# Large batch is suitable for 2M+ flows.
-BATCH_SIZE = 2048
+# Start at 512. If macOS runs out of memory, reduce to 256 or 128.
+BATCH_SIZE = 512
 
-# Initial Adam learning rate.
-LEARNING_RATE = 1e-3
+LEARNING_RATE = 3e-4
 
-# Allow slightly more recovery time than previous run.
-EARLY_STOPPING_PATIENCE = 4
+EARLY_STOPPING_PATIENCE = 6
 
-# Reduce LR before early stopping.
 LR_REDUCTION_PATIENCE = 2
 
 MIN_LEARNING_RATE = 1e-6
 
+L2_REGULARIZATION = 1e-5
+
+DROPOUT_INPUT = 0.30
+DROPOUT_BLOCK_1 = 0.25
+DROPOUT_BLOCK_2 = 0.20
+
 
 # ============================================================
-# CLASS WEIGHT CONFIGURATION
+# LOSS / CLASS IMBALANCE
 # ============================================================
-
-# "balanced" raw class weights were too extreme:
-#
-# Botnet       ~184
-# Web Attack   ~168
-#
-# Square-root compression reduces extreme weights while
-# still giving minority classes additional importance.
 
 USE_SOFTENED_CLASS_WEIGHTS = True
 
+# Square-root compression of balanced class weights.
+CLASS_WEIGHT_POWER = 0.5
+
+MIN_CLASS_WEIGHT = 0.25
+MAX_CLASS_WEIGHT = 10.0
+
+# Leave False for the first training run.
+# Test focal loss later as a separate experiment.
+USE_FOCAL_LOSS = False
+
+FOCAL_GAMMA = 2.0
+
 
 # ============================================================
-# TF.DATA
+# INFERENCE
+# ============================================================
+
+DEFAULT_UNKNOWN_THRESHOLD = 0.60
+
+TUNE_UNKNOWN_THRESHOLD = True
+
+THRESHOLD_GRID = [
+    0.30,
+    0.35,
+    0.40,
+    0.45,
+    0.50,
+    0.55,
+    0.60,
+    0.65,
+    0.70,
+    0.75,
+    0.80,
+    0.85,
+    0.90,
+]
+
+
+# ============================================================
+# TF.DATA / REPRODUCIBILITY
 # ============================================================
 
 SHUFFLE_BUFFER_SIZE = 100_000
+
+# Keep False unless deterministic repeatability is required.
+ENABLE_DETERMINISTIC_OPS = False

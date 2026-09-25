@@ -6,9 +6,17 @@ __pycache__/
 
 # Large Datasets & Databases (GitHub 100MB file limit)
 *.csv
+*.parquet
 *.arff
 *.db
 *.db-journal
+*.npy
+*.npz
+*.zip
+/deep learning model/saved_model/
+
+# Local Colab upload bundle, including a duplicate of the 1 GB dataset
+/colab_shared_eval/
 
 # Checkpoints & Tensorboard Logs
 logs/
@@ -17,3 +25,6 @@ logs/
 *.sqlite
 *.sqlite3
 data/*.db
+/data/live_eval_windows.json
+/data/campaigns/
+/graphify-out/

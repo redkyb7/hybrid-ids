@@ -1,5 +1,3 @@
-# model.py
-
 import tensorflow as tf
 
 from tensorflow.keras import (
@@ -8,140 +6,156 @@ from tensorflow.keras import (
     regularizers,
 )
 
+if __package__:
+    from . import config
+else:
+    import config
 
-def build_cnn(
+
+def residual_dense_block(
+    x,
+    units: int,
+    dropout_rate: float,
+    name: str,
+):
+    """
+    Dense residual block suitable for tabular flow features.
+    """
+
+    shortcut = x
+
+    x = layers.Dense(
+        units,
+        kernel_initializer="he_normal",
+        kernel_regularizer=regularizers.l2(
+            config.L2_REGULARIZATION
+        ),
+        name=f"{name}_dense_1",
+    )(x)
+
+    x = layers.BatchNormalization(
+        name=f"{name}_batch_norm_1",
+    )(x)
+
+    x = layers.Activation(
+        "relu",
+        name=f"{name}_relu_1",
+    )(x)
+
+    x = layers.Dropout(
+        dropout_rate,
+        name=f"{name}_dropout_1",
+    )(x)
+
+    x = layers.Dense(
+        units,
+        kernel_regularizer=regularizers.l2(
+            config.L2_REGULARIZATION
+        ),
+        name=f"{name}_dense_2",
+    )(x)
+
+    x = layers.BatchNormalization(
+        name=f"{name}_batch_norm_2",
+    )(x)
+
+    if shortcut.shape[-1] != units:
+        shortcut = layers.Dense(
+            units,
+            use_bias=False,
+            name=f"{name}_projection",
+        )(shortcut)
+
+    x = layers.Add(
+        name=f"{name}_add",
+    )(
+        [
+            x,
+            shortcut,
+        ]
+    )
+
+    x = layers.Activation(
+        "relu",
+        name=f"{name}_relu_2",
+    )(x)
+
+    return x
+
+
+def build_nids_model(
     input_shape: tuple,
     num_classes: int,
 ) -> Model:
     """
-    Efficient 1D CNN for network-flow
-    intrusion detection.
+    Residual MLP for tabular network-flow intrusion detection.
 
     Input:
-        (52 features, 1 channel)
+        (number_of_features, 1)
 
-    Architecture:
-        Conv1D 32
-        ↓
-        BatchNorm
-        ↓
-        MaxPool
-        ↓
-        Conv1D 64
-        ↓
-        BatchNorm
-        ↓
-        MaxPool
-        ↓
-        Conv1D 128
-        ↓
-        BatchNorm
-        ↓
-        GlobalAveragePooling
-        ↓
-        Dense 128
-        ↓
-        Dense 64
-        ↓
-        Softmax
+    The feature axis is flattened because flow statistics are tabular
+    variables and do not form a natural time-series sequence.
     """
-
-    # ========================================================
-    # INPUT
-    # ========================================================
 
     inputs = tf.keras.Input(
         shape=input_shape,
         name="flow_features",
     )
 
-
-    # ========================================================
-    # CONVOLUTION BLOCK 1
-    # ========================================================
-
-    x = layers.Conv1D(
-        filters=32,
-        kernel_size=3,
-        padding="same",
-        activation="relu",
+    x = layers.Flatten(
+        name="flatten_features",
     )(inputs)
 
-    x = layers.BatchNormalization()(x)
-
-    x = layers.MaxPooling1D(
-        pool_size=2,
-    )(x)
-
-
-    # ========================================================
-    # CONVOLUTION BLOCK 2
-    # ========================================================
-
-    x = layers.Conv1D(
-        filters=64,
-        kernel_size=3,
-        padding="same",
-        activation="relu",
-    )(x)
-
-    x = layers.BatchNormalization()(x)
-
-    x = layers.MaxPooling1D(
-        pool_size=2,
-    )(x)
-
-
-    # ========================================================
-    # CONVOLUTION BLOCK 3
-    # ========================================================
-
-    x = layers.Conv1D(
-        filters=128,
-        kernel_size=3,
-        padding="same",
-        activation="relu",
-    )(x)
-
-    x = layers.BatchNormalization()(x)
-
-
-    # ========================================================
-    # GLOBAL POOLING
-    # ========================================================
-
-    x = layers.GlobalAveragePooling1D()(x)
-
-
-    # ========================================================
-    # CLASSIFICATION HEAD
-    # ========================================================
-
     x = layers.Dense(
-        128,
-        activation="relu",
+        256,
+        kernel_initializer="he_normal",
         kernel_regularizer=regularizers.l2(
-            1e-4
+            config.L2_REGULARIZATION
         ),
+        name="input_dense",
+    )(x)
+
+    x = layers.BatchNormalization(
+        name="input_batch_norm",
+    )(x)
+
+    x = layers.Activation(
+        "relu",
+        name="input_relu",
     )(x)
 
     x = layers.Dropout(
-        0.30
+        config.DROPOUT_INPUT,
+        name="input_dropout",
     )(x)
+
+    x = residual_dense_block(
+        x,
+        units=256,
+        dropout_rate=config.DROPOUT_BLOCK_1,
+        name="residual_block_1",
+    )
+
+    x = residual_dense_block(
+        x,
+        units=128,
+        dropout_rate=config.DROPOUT_BLOCK_2,
+        name="residual_block_2",
+    )
 
     x = layers.Dense(
         64,
         activation="relu",
+        kernel_regularizer=regularizers.l2(
+            config.L2_REGULARIZATION
+        ),
+        name="classification_dense",
     )(x)
 
     x = layers.Dropout(
-        0.20
+        0.15,
+        name="classification_dropout",
     )(x)
-
-
-    # ========================================================
-    # OUTPUT
-    # ========================================================
 
     outputs = layers.Dense(
         num_classes,
@@ -149,11 +163,19 @@ def build_cnn(
         name="predictions",
     )(x)
 
-
-    model = Model(
+    return Model(
         inputs=inputs,
         outputs=outputs,
-        name="CNN_NIDS",
+        name="Tabular_Residual_NIDS",
     )
 
-    return model
+
+# Compatibility alias if older code imports build_cnn.
+def build_cnn(
+    input_shape: tuple,
+    num_classes: int,
+) -> Model:
+    return build_nids_model(
+        input_shape=input_shape,
+        num_classes=num_classes,
+    )

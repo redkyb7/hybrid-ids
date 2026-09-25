@@ -1,5 +1,5 @@
-# preprocess.py
-
+import json
+import os
 import pickle
 
 import numpy as np
@@ -11,127 +11,420 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 import config
 
 
-def load_and_preprocess(
-    data_path: str = config.DATA_PATH
+def _read_dataset(
+    data_path: str,
+) -> pd.DataFrame:
+    """
+    Read the CIC collection Parquet dataset.
+    """
+
+    if not os.path.exists(data_path):
+        raise FileNotFoundError(
+            "Dataset file was not found:\n"
+            f"{data_path}"
+        )
+
+    return pd.read_parquet(
+        data_path
+    )
+
+
+def _validate_dataset_schema(
+    df: pd.DataFrame,
 ):
     """
-    Load, clean, split, scale and prepare the network-flow dataset.
-
-    Final split:
-        80% training
-        10% validation
-        10% testing
-
-    Important:
-    - Scaling is fitted ONLY on training data.
-    - Test data is never used during training.
-    - No random oversampling is performed.
+    Validate expected target column and target classes.
     """
-
-    # ========================================================
-    # 1. LOAD DATA
-    # ========================================================
-
-    print("[1/5] Loading dataset...")
-
-    df = pd.read_csv(
-        data_path,
-        low_memory=False,
-    )
-
-    print(
-        f"      Loaded: "
-        f"{df.shape[0]:,} rows × {df.shape[1]} cols"
-    )
-
-
-    # ========================================================
-    # 2. NORMALISE LABELS + CLEAN DATA
-    # ========================================================
-
-    print("[2/5] Cleaning data...")
 
     if config.LABEL_COLUMN not in df.columns:
         raise ValueError(
-            f"Label column "
-            f"'{config.LABEL_COLUMN}' "
-            f"not found in dataset."
+            f"Target column '{config.LABEL_COLUMN}' "
+            "was not found.\n\n"
+            f"Available columns:\n"
+            f"{list(df.columns)}"
         )
 
-    # Clean label strings
     labels = (
         df[config.LABEL_COLUMN]
         .astype(str)
         .str.strip()
     )
 
-    # Convert known names to canonical classes
-    df[config.LABEL_COLUMN] = (
-        labels
-        .map(config.LABEL_MAP)
-        .fillna(labels)
+    df[config.LABEL_COLUMN] = labels
+
+    found_classes = sorted(
+        labels.unique().tolist()
     )
 
-    # All columns except target and excluded leakage columns are features
-    exclude_list = getattr(config, "EXCLUDE_FEATURES", [])
-    feature_cols = [
+    expected_classes = sorted(
+        config.EXPECTED_CLASSES
+    )
+
+    unexpected_classes = sorted(
+        set(found_classes)
+        - set(expected_classes)
+    )
+
+    missing_expected_classes = sorted(
+        set(expected_classes)
+        - set(found_classes)
+    )
+
+    if unexpected_classes:
+        message = (
+            "Unexpected classes found in "
+            f"'{config.LABEL_COLUMN}':\n"
+            + "\n".join(
+                f"- {class_name}"
+                for class_name
+                in unexpected_classes
+            )
+        )
+
+        if config.STRICT_CLASS_VALIDATION:
+            raise ValueError(
+                message
+                + "\n\nUpdate EXPECTED_CLASSES in "
+                "config.py if these are intentional."
+            )
+
+        print(
+            "\nWARNING:\n"
+            + message
+        )
+
+    if missing_expected_classes:
+        print(
+            "\nWARNING: Expected classes not present "
+            "in this dataset:\n"
+            + "\n".join(
+                f"- {class_name}"
+                for class_name
+                in missing_expected_classes
+            )
+        )
+
+
+def _get_feature_columns(
+    df: pd.DataFrame,
+) -> list[str]:
+    """
+    Select numeric feature columns and exclude target/leakage columns.
+    """
+
+    excluded_columns = set(
+        config.EXCLUDE_FEATURES
+        + [config.LABEL_COLUMN]
+    )
+
+    candidate_columns = [
         column
         for column in df.columns
-        if column != config.LABEL_COLUMN and column not in exclude_list
+        if column not in excluded_columns
     ]
 
-    # Convert feature columns to numeric
-    df[feature_cols] = df[
-        feature_cols
-    ].apply(
-        pd.to_numeric,
-        errors="coerce",
+    non_numeric_features = [
+        column
+        for column in candidate_columns
+        if not pd.api.types.is_numeric_dtype(
+            df[column]
+        )
+    ]
+
+    if non_numeric_features:
+        print(
+            "\nIgnoring non-numeric columns:"
+        )
+
+        for column in non_numeric_features:
+            print(
+                f"      - {column}"
+            )
+
+    feature_columns = [
+        column
+        for column in candidate_columns
+        if pd.api.types.is_numeric_dtype(
+            df[column]
+        )
+    ]
+
+    if not feature_columns:
+        raise ValueError(
+            "No numeric feature columns were found."
+        )
+
+    return feature_columns
+
+
+def _clip_features(
+    X_train: np.ndarray,
+    X_val: np.ndarray,
+    X_test: np.ndarray,
+) -> tuple[
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+    np.ndarray,
+]:
+    """
+    Clip values using percentiles fitted only on training data.
+    """
+
+    lower_bounds = np.percentile(
+        X_train,
+        config.LOWER_CLIP_PERCENTILE,
+        axis=0,
+    ).astype(
+        np.float32
     )
 
-    # Replace infinity with NaN
-    df.replace(
+    upper_bounds = np.percentile(
+        X_train,
+        config.UPPER_CLIP_PERCENTILE,
+        axis=0,
+    ).astype(
+        np.float32
+    )
+
+    X_train = np.clip(
+        X_train,
+        lower_bounds,
+        upper_bounds,
+    )
+
+    X_val = np.clip(
+        X_val,
+        lower_bounds,
+        upper_bounds,
+    )
+
+    X_test = np.clip(
+        X_test,
+        lower_bounds,
+        upper_bounds,
+    )
+
+    return (
+        X_train,
+        X_val,
+        X_test,
+        lower_bounds,
+        upper_bounds,
+    )
+
+
+def _print_class_distribution(
+    y: np.ndarray,
+    label_encoder: LabelEncoder,
+    title: str,
+):
+    """
+    Print label counts and percentages.
+    """
+
+    print(
+        f"\n      {title}"
+    )
+
+    unique_classes, counts = np.unique(
+        y,
+        return_counts=True,
+    )
+
+    for class_id, count in zip(
+        unique_classes,
+        counts,
+    ):
+        class_name = label_encoder.classes_[
+            class_id
+        ]
+
+        percentage = (
+            count / len(y)
+        ) * 100
+
+        print(
+            f"        {class_name:15s}: "
+            f"{count:>10,} "
+            f"({percentage:6.2f}%)"
+        )
+
+
+def load_and_preprocess(
+    data_path: str = config.DATA_PATH,
+):
+    """
+    Load and preprocess the CIC collection Parquet dataset.
+
+    Splits:
+        80% train
+        10% validation
+        10% test
+
+    Preprocessing is fitted only on training data:
+    - Optional percentile clipping
+    - Standard scaling
+    """
+
+    os.makedirs(config.SAVED_MODEL_DIR, exist_ok=True)
+
+    # ========================================================
+    # 1. LOAD DATA
+    # ========================================================
+
+    print("[1/6] Loading Parquet dataset...")
+
+    df = _read_dataset(
+        data_path
+    )
+
+    print(
+        f"      Loaded: "
+        f"{df.shape[0]:,} rows × "
+        f"{df.shape[1]:,} columns"
+    )
+
+    # ========================================================
+    # 2. VALIDATE TARGET / SELECT FEATURES
+    # ========================================================
+
+    print(
+        "[2/6] Validating target and selecting features..."
+    )
+
+    _validate_dataset_schema(
+        df
+    )
+
+    feature_cols = _get_feature_columns(
+        df
+    )
+
+    print(
+        f"      Target column: "
+        f"{config.LABEL_COLUMN}"
+    )
+
+    print(
+        f"      Numeric features selected: "
+        f"{len(feature_cols)}"
+    )
+
+    # ========================================================
+    # 3. VALIDATE FEATURES / CLEAN
+    # ========================================================
+
+    print(
+        "[3/6] Validating numeric features..."
+    )
+
+    X_frame = df[
+        feature_cols
+    ].copy()
+
+    X_frame.replace(
         [np.inf, -np.inf],
         np.nan,
         inplace=True,
     )
 
-    before = len(df)
-
-    # Remove rows containing invalid values
-    df.dropna(
-        subset=feature_cols + [config.LABEL_COLUMN],
-        inplace=True,
+    valid_feature_rows = ~X_frame.isna().any(
+        axis=1
     )
 
-    removed = before - len(df)
+    valid_label_rows = (
+        df[config.LABEL_COLUMN]
+        .notna()
+    )
+
+    valid_rows = (
+        valid_feature_rows
+        & valid_label_rows
+    )
+
+    removed_invalid = int(
+        (~valid_rows).sum()
+    )
+
+    if removed_invalid > 0:
+        X_frame = X_frame.loc[
+            valid_rows
+        ].copy()
+
+        labels = df.loc[
+            valid_rows,
+            config.LABEL_COLUMN,
+        ].copy()
+    else:
+        labels = df[
+            config.LABEL_COLUMN
+        ].copy()
 
     print(
-        f"      Dropped {removed:,} "
-        f"rows with NaN/Inf"
+        f"      Invalid rows removed: "
+        f"{removed_invalid:,}"
     )
 
+    if config.REMOVE_DUPLICATES:
+        print(
+            "      Removing duplicate rows..."
+        )
+
+        before_duplicates = len(
+            X_frame
+        )
+
+        duplicate_frame = X_frame.copy()
+        duplicate_frame[
+            config.LABEL_COLUMN
+        ] = labels.to_numpy()
+
+        duplicate_frame = duplicate_frame.drop_duplicates()
+
+        labels = duplicate_frame.pop(
+            config.LABEL_COLUMN
+        )
+
+        X_frame = duplicate_frame
+
+        removed_duplicates = (
+            before_duplicates
+            - len(X_frame)
+        )
+
+        print(
+            f"      Duplicate rows removed: "
+            f"{removed_duplicates:,}"
+        )
+
+    # Free original dataframe before converting to NumPy.
+    del df
 
     # ========================================================
-    # 3. FEATURES + LABEL ENCODING
+    # 4. ENCODE LABELS
     # ========================================================
 
-    print("[3/5] Encoding labels...")
+    print("[4/6] Encoding target labels...")
 
-    X = df[
-        feature_cols
-    ].to_numpy(
-        dtype=np.float32
+    X = X_frame.to_numpy(
+        dtype=np.float32,
+        copy=False,
     )
 
-    y_raw = df[
-        config.LABEL_COLUMN
-    ].to_numpy()
+    y_raw = labels.to_numpy()
+
+    del X_frame
+    del labels
 
     label_encoder = LabelEncoder()
 
     y = label_encoder.fit_transform(
         y_raw
-    ).astype(np.int32)
+    ).astype(
+        np.int32
+    )
 
     print(
         f"      Classes: "
@@ -139,22 +432,19 @@ def load_and_preprocess(
     )
 
     print(
-        f"      Features: "
-        f"{len(feature_cols)}"
+        f"      Input features: "
+        f"{X.shape[1]}"
     )
 
-
     # ========================================================
-    # 4. TRAIN / VALIDATION / TEST SPLIT
+    # 5. TRAIN / VALIDATION / TEST SPLIT
     # ========================================================
 
     print(
-        "[4/5] Creating train / "
+        "[5/6] Creating train / "
         "validation / test splits..."
     )
 
-    # 80% training
-    # 20% temporary holdout
     (
         X_train,
         X_holdout,
@@ -168,9 +458,9 @@ def load_and_preprocess(
         stratify=y,
     )
 
-    # Split 20% holdout equally:
-    # 10% validation
-    # 10% test
+    del X
+    del y
+
     (
         X_val,
         X_test,
@@ -184,9 +474,6 @@ def load_and_preprocess(
         stratify=y_holdout,
     )
 
-    # Free large temporary arrays
-    del X
-    del y
     del X_holdout
     del y_holdout
 
@@ -205,71 +492,63 @@ def load_and_preprocess(
         f"{len(X_test):,}"
     )
 
-
-    # ========================================================
-    # DISPLAY CLASS DISTRIBUTION
-    # ========================================================
-
-    print("\n      Training class distribution:")
-
-    unique_classes, counts = np.unique(
+    _print_class_distribution(
         y_train,
-        return_counts=True,
+        label_encoder,
+        "Training class distribution:",
     )
 
-    for class_id, count in zip(
-        unique_classes,
-        counts,
-    ):
-        class_name = label_encoder.classes_[
-            class_id
-        ]
+    # ========================================================
+    # 6. CLIP / SCALE / SAVE ARTIFACTS
+    # ========================================================
 
-        percentage = (
-            count / len(y_train)
-        ) * 100
+    print(
+        "\n[6/6] Scaling features and saving artifacts..."
+    )
 
-        print(
-            f"        "
-            f"{class_name:15s}: "
-            f"{count:>10,} "
-            f"({percentage:6.2f}%)"
+    clip_lower = None
+    clip_upper = None
+
+    if config.USE_PERCENTILE_CLIPPING:
+        (
+            X_train,
+            X_val,
+            X_test,
+            clip_lower,
+            clip_upper,
+        ) = _clip_features(
+            X_train,
+            X_val,
+            X_test,
         )
 
-
-    # ========================================================
-    # 5. SCALE FEATURES
-    # ========================================================
-
-    print("\n[5/5] Scaling features...")
+        print(
+            "      Applied train-derived "
+            "percentile clipping."
+        )
 
     scaler = StandardScaler()
 
-    # Fit ONLY on training data
     X_train = scaler.fit_transform(
         X_train
-    ).astype(np.float32)
+    ).astype(
+        np.float32
+    )
 
-    # Validation/test use training scaler
     X_val = scaler.transform(
         X_val
-    ).astype(np.float32)
+    ).astype(
+        np.float32
+    )
 
     X_test = scaler.transform(
         X_test
-    ).astype(np.float32)
+    ).astype(
+        np.float32
+    )
 
-
-    # ========================================================
-    # RESHAPE FOR 1D CNN
-    #
-    # Before:
-    # (samples, 52)
-    #
-    # After:
-    # (samples, 52, 1)
-    # ========================================================
-
+    # Network input shape:
+    # (samples, features, 1)
     X_train = X_train[
         ..., np.newaxis
     ]
@@ -281,11 +560,6 @@ def load_and_preprocess(
     X_test = X_test[
         ..., np.newaxis
     ]
-
-
-    # ========================================================
-    # SAVE PREPROCESSING ARTIFACTS
-    # ========================================================
 
     with open(
         config.SCALER_SAVE_PATH,
@@ -314,11 +588,6 @@ def load_and_preprocess(
             file,
         )
 
-
-    # ========================================================
-    # SAVE EXACT UNSEEN TEST SET
-    # ========================================================
-
     np.save(
         config.X_TEST_SAVE_PATH,
         X_test,
@@ -329,40 +598,78 @@ def load_and_preprocess(
         y_test,
     )
 
+    metadata = {
+        "artifact_version": "3.0.0",
+        "dataset_path": os.path.abspath(
+            data_path
+        ),
+        "label_column": config.LABEL_COLUMN,
+        "excluded_columns": list(
+            config.EXCLUDE_FEATURES
+        ),
+        "classes": label_encoder.classes_.tolist(),
+        "num_classes": int(
+            len(label_encoder.classes_)
+        ),
+        "feature_names": feature_cols,
+        "num_features": int(
+            len(feature_cols)
+        ),
+        "model_input_shape": list(
+            X_train.shape[1:]
+        ),
+        "percentile_clipping": {
+            "enabled": bool(
+                config.USE_PERCENTILE_CLIPPING
+            ),
+            "lower_percentile": float(
+                config.LOWER_CLIP_PERCENTILE
+            ),
+            "upper_percentile": float(
+                config.UPPER_CLIP_PERCENTILE
+            ),
+            "lower_bounds": (
+                clip_lower.tolist()
+                if clip_lower is not None
+                else None
+            ),
+            "upper_bounds": (
+                clip_upper.tolist()
+                if clip_upper is not None
+                else None
+            ),
+        },
+        "split": {
+            "random_state": int(
+                config.RANDOM_STATE
+            ),
+            "train_samples": int(
+                len(X_train)
+            ),
+            "validation_samples": int(
+                len(X_val)
+            ),
+            "test_samples": int(
+                len(X_test)
+            ),
+        },
+    }
 
-    # ========================================================
-    # ARTIFACT SUMMARY
-    # ========================================================
+    with open(
+        config.METADATA_SAVE_PATH,
+        "w",
+        encoding="utf-8",
+    ) as file:
+        json.dump(
+            metadata,
+            file,
+            indent=4,
+        )
 
     print(
-        f"      Scaler       -> "
-        f"{config.SCALER_SAVE_PATH}"
+        f"      Model artifacts -> "
+        f"{config.SAVED_MODEL_DIR}"
     )
-
-    print(
-        f"      Encoder      -> "
-        f"{config.LABEL_ENCODER_SAVE_PATH}"
-    )
-
-    print(
-        f"      Feature names -> "
-        f"{config.FEATURE_NAMES_SAVE_PATH}"
-    )
-
-    print(
-        f"      Test X       -> "
-        f"{config.X_TEST_SAVE_PATH}"
-    )
-
-    print(
-        f"      Test y       -> "
-        f"{config.Y_TEST_SAVE_PATH}"
-    )
-
-
-    # ========================================================
-    # RETURN DATA
-    # ========================================================
 
     return (
         X_train,
