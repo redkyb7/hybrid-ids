@@ -3,285 +3,1444 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>SentinelFlow | Security Operations Center</title>
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>SentinelFlow — Hybrid ML + DL Intrusion Detection System</title>
+    <!-- Chart.js was already a dependency; kept as-is so the two existing charts keep working. -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.7/dist/chart.umd.min.js"></script>
     <style>
+      @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;600;700&display=swap');
       :root {
         color-scheme: dark;
+        /* ---- Design tokens ----
+           Base: near-black / charcoal, only a faint indigo/violet undertone.
+           Cyan = primary technology highlight. Violet = Deep Learning stage only.
+           Teal = healthy live monitoring. Amber = warning/suspicious. Red = confirmed attack only. */
+        --bg-1: #08080b;
+        --bg-2: #0c0c12;
+        --bg-3: #141022;
+        --surface: rgba(20, 20, 27, 0.62);
+        --surface-quiet: rgba(20, 20, 27, 0.4);
+        --border: rgba(56, 211, 238, 0.14);
+        --border-strong: rgba(56, 211, 238, 0.4);
+        --border-quiet: rgba(148, 163, 184, 0.09);
+        --text-primary: #f3f6fc;
+        --text-secondary: #a6b0c3;
+        --text-faint: #7c8699;
+        --teal: #2dd4bf;
+        --teal-glow: rgba(45, 212, 191, 0.4);
+        --cyan: #22d3ee;
+        --cyan-glow: rgba(34, 211, 238, 0.35);
+        --violet: #a78bfa;
+        --violet-glow: rgba(167, 139, 250, 0.4);
+        --amber: #fbbf24;
+        --amber-bg: rgba(251, 191, 36, 0.12);
+        --amber-border: rgba(251, 191, 36, 0.4);
+        --red: #ff7659;
+        --red-bg: rgba(255, 100, 64, 0.17);
+        --red-border: rgba(255, 118, 89, 0.65);
+        --font-sans:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+        --font-mono:
+          ui-monospace, "SFMono-Regular", "JetBrains Mono", "Roboto Mono", Menlo, Consolas,
+          "Liberation Mono", monospace;
+        --radius: 14px;
+        --radius-sm: 8px;
+      }
+      * {
+        box-sizing: border-box;
+      }
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        min-height: 100%;
       }
       body {
-        font-family:
-          Inter,
-          ui-sans-serif,
-          system-ui,
-          -apple-system,
-          BlinkMacSystemFont,
-          "Segoe UI",
-          sans-serif;
+        background: var(--bg-1);
+        color: var(--text-primary);
+        font-family: var(--font-sans);
+        -webkit-font-smoothing: antialiased;
+      }
+      *:focus-visible {
+        outline: 2px solid var(--cyan);
+        outline-offset: 2px;
+      }
+      .hidden {
+        display: none !important;
+      }
+      .mono {
+        font-family: var(--font-mono);
+      }
+
+      /* ---------- Animated background: pure CSS, near-black base, indigo/violet only ---------- */
+      .bg-fx {
+        position: fixed;
+        inset: 0;
+        z-index: -1;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 60% 45% at 16% -8%, rgba(76, 29, 149, 0.18), transparent 60%),
+          radial-gradient(ellipse 55% 42% at 100% 6%, rgba(49, 46, 129, 0.15), transparent 55%),
+          linear-gradient(165deg, var(--bg-1) 0%, var(--bg-2) 55%, var(--bg-3) 100%);
+      }
+      .bg-grid {
+        position: absolute;
+        inset: -10% -10% -30% -10%;
+        background-image:
+          linear-gradient(rgba(255, 255, 255, 0.035) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(255, 255, 255, 0.035) 1px, transparent 1px);
+        background-size: 46px 46px;
+        -webkit-mask-image: radial-gradient(ellipse 75% 55% at 50% 8%, black 5%, transparent 72%);
+        mask-image: radial-gradient(ellipse 75% 55% at 50% 8%, black 5%, transparent 72%);
+      }
+      .bg-glow {
+        position: absolute;
+        border-radius: 50%;
+        filter: blur(120px);
+        opacity: 0.22;
+      }
+      .bg-glow-indigo {
+        width: 52vw;
+        height: 52vw;
+        background: #4c1d95;
+        top: -20%;
+        left: -14%;
+      }
+      .bg-glow-violet {
+        width: 46vw;
+        height: 46vw;
+        background: #5b21b6;
+        bottom: -24%;
+        right: -10%;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .bg-grid {
+          animation: gridDrift 46s linear infinite;
+        }
+        .bg-glow-indigo {
+          animation: floatSlow 28s ease-in-out infinite;
+        }
+        .bg-glow-violet {
+          animation: floatSlow 34s ease-in-out infinite reverse;
+        }
+      }
+      @keyframes gridDrift {
+        from {
+          transform: translate3d(0, 0, 0);
+        }
+        to {
+          transform: translate3d(46px, 46px, 0);
+        }
+      }
+      @keyframes floatSlow {
+        0%,
+        100% {
+          transform: translate(0, 0);
+        }
+        50% {
+          transform: translate(4%, 3%);
+        }
+      }
+
+      .shell {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 2.25rem 2.5rem 3.5rem;
+      }
+
+      /* ---------- Shared panel look: frosted dark glass, cyan hairline border ---------- */
+      .panel {
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        backdrop-filter: blur(16px) saturate(140%);
+        -webkit-backdrop-filter: blur(16px) saturate(140%);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.03) inset, 0 12px 32px rgba(0, 0, 0, 0.55);
+        transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+      }
+      @media (hover: hover) {
+        .panel:hover {
+          transform: translateY(-2px);
+          border-color: var(--border-strong);
+          box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 16px 40px rgba(0, 0, 0, 0.6),
+            0 0 26px rgba(34, 211, 238, 0.1);
+        }
+      }
+      @media (prefers-reduced-motion: reduce) {
+        .panel,
+        .panel:hover {
+          transition: none;
+          transform: none;
+        }
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .panel {
+          animation: fadeInUp 0.5s ease both;
+        }
+      }
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* Smooth data-refresh transitions on key values */
+      .flash-update {
+        opacity: 1;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .flash-update {
+          animation: softFlash 0.5s ease;
+        }
+      }
+      @keyframes softFlash {
+        from {
+          opacity: 0.4;
+        }
+        to {
+          opacity: 1;
+        }
+      }
+
+      /* ---------- Header ---------- */
+      .app-header {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 1.75rem;
+        padding-bottom: 1.75rem;
+        border-bottom: 1px solid var(--border-quiet);
+      }
+      .gradient-text {
+        background: linear-gradient(90deg, var(--cyan), var(--blue, #3b82f6) 55%, var(--violet));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .gradient-live {
+        background: linear-gradient(90deg, var(--teal), var(--cyan));
+        -webkit-background-clip: text;
+        background-clip: text;
+        color: transparent;
+      }
+      .brand-name {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        font-size: 1.65rem;
+        font-weight: 800;
+        letter-spacing: -0.01em;
+      }
+      .brand-mark {
+        width: 30px;
+        height: 30px;
+        flex: none;
+        filter: drop-shadow(0 0 8px rgba(34, 211, 238, 0.45));
+      }
+      .brand-tag {
+        margin: 0.55rem 0 0;
+        font-size: 0.76rem;
+        font-weight: 700;
+        letter-spacing: 0.1em;
+      }
+      .brand-lede {
+        margin: 0.6rem 0 0;
+        max-width: 50ch;
+        font-size: 0.9rem;
+        line-height: 1.55;
+        color: var(--text-secondary);
+      }
+      .header-controls {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.85rem;
+      }
+      .live-indicator {
+        display: flex;
+        flex-direction: column;
+        align-items: flex-end;
+        gap: 0.35rem;
+      }
+      .status-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 0.55rem;
+        padding: 0.4rem 0.9rem;
+        border-radius: 999px;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        background: rgba(45, 212, 191, 0.1);
+        border: 1px solid rgba(45, 212, 191, 0.35);
+        box-shadow: 0 0 18px rgba(45, 212, 191, 0.15);
+      }
+      .status-pill.is-paused {
+        background: rgba(124, 138, 168, 0.1);
+        border-color: rgba(148, 163, 184, 0.25);
+        box-shadow: none;
+      }
+      .status-pill.is-paused #status {
+        background: none;
+        -webkit-text-fill-color: initial;
+        color: var(--text-faint);
+      }
+      .status-dot {
+        width: 0.5rem;
+        height: 0.5rem;
+        border-radius: 50%;
+        background: var(--text-faint);
+      }
+      .status-pill.is-live .status-dot {
+        background: var(--teal);
+        box-shadow: 0 0 8px 1px var(--teal-glow);
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .status-pill.is-live .status-dot {
+          animation: pulseTeal 2.2s ease-in-out infinite;
+        }
+      }
+      @keyframes pulseTeal {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(45, 212, 191, 0.55);
+        }
+        50% {
+          box-shadow: 0 0 0 6px rgba(45, 212, 191, 0);
+        }
+      }
+      .last-refreshed {
+        font-family: var(--font-mono);
+        font-size: 0.74rem;
+        color: var(--text-faint);
+      }
+      .controls-row {
+        display: flex;
+        align-items: center;
+        gap: 1.1rem;
+      }
+      .control {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        white-space: nowrap;
+      }
+      .control select {
+        height: 2rem;
+        border: 1px solid var(--border);
+        border-radius: var(--radius-sm);
+        background: rgba(10, 10, 16, 0.75);
+        color: var(--text-primary);
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        padding: 0 0.5rem;
+      }
+      .control select:focus-visible {
+        border-color: var(--cyan);
+      }
+      .toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        cursor: pointer;
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        white-space: nowrap;
+      }
+      .toggle input {
+        position: absolute;
+        opacity: 0;
+        width: 1px;
+        height: 1px;
       }
       .toggle-track {
-        transition:
-          background-color 0.2s,
-          border-color 0.2s;
+        display: inline-flex;
+        align-items: center;
+        width: 2.15rem;
+        height: 1.25rem;
+        border-radius: 999px;
+        background: rgba(124, 138, 168, 0.18);
+        border: 1px solid var(--border);
+        padding: 0.1rem;
+        transition: background-color 0.2s, border-color 0.2s;
       }
       .toggle-thumb {
-        transition:
-          transform 0.2s,
-          background-color 0.2s;
+        width: 0.9rem;
+        height: 0.9rem;
+        border-radius: 50%;
+        background: #dbeeff;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
+        transition: transform 0.2s;
       }
-      input:checked + .toggle-track {
-        background: #34d399;
-        border-color: #34d399;
+      .toggle input:checked + .toggle-track {
+        background: rgba(34, 211, 238, 0.25);
+        border-color: var(--cyan);
+        box-shadow: 0 0 12px rgba(34, 211, 238, 0.25);
       }
-      input:checked + .toggle-track .toggle-thumb {
-        transform: translateX(1rem);
-        background: #000;
+      .toggle input:checked + .toggle-track .toggle-thumb {
+        transform: translateX(0.9rem);
+        background: var(--cyan);
       }
-      .table-scroll {
-        scrollbar-color: #3f3f46 transparent;
-        scrollbar-width: thin;
+
+      /* ---------- Pipeline strip ---------- */
+      .pipeline {
+        margin: 1.85rem 0;
       }
-      .log-row:focus-visible {
-        outline: 1px solid #60a5fa;
-        outline-offset: -1px;
+      .pipeline-steps {
+        display: flex;
+        align-items: center;
+        gap: 0;
       }
-      #status {
-        flex: 0 0 3.5rem;
-        width: 3.5rem;
+      .step {
+        display: flex;
+        align-items: center;
+        gap: 0.6rem;
+        padding: 0.65rem 1.1rem;
+        border-radius: 999px;
+        border: 1px solid var(--border);
+        background: var(--surface-quiet);
+        flex: none;
       }
-      .alert-copy {
+      .step-num {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        width: 1.4rem;
+        height: 1.4rem;
+        border-radius: 50%;
+        background: rgba(34, 211, 238, 0.14);
+        border: 1px solid rgba(34, 211, 238, 0.5);
+        color: var(--cyan);
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 700;
+        flex: none;
+        box-shadow: 0 0 10px rgba(34, 211, 238, 0.2);
+        transition: background-color 0.3s, border-color 0.3s, color 0.3s, box-shadow 0.3s;
+      }
+      .step.is-dl .step-num {
+        background: rgba(167, 139, 250, 0.14);
+        border-color: rgba(167, 139, 250, 0.55);
+        color: var(--violet);
+        box-shadow: 0 0 10px rgba(167, 139, 250, 0.25);
+      }
+      .step.is-alert-end.is-active-threat .step-num {
+        background: rgba(251, 77, 110, 0.16);
+        border-color: rgba(251, 77, 110, 0.6);
+        color: var(--red);
+        box-shadow: 0 0 14px rgba(251, 77, 110, 0.4);
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .step.is-alert-end.is-active-threat .step-num {
+          animation: pulseRedRing 1.8s ease-in-out infinite;
+        }
+      }
+      @keyframes pulseRedRing {
+        0%,
+        100% {
+          box-shadow: 0 0 0 0 rgba(251, 77, 110, 0.45);
+        }
+        50% {
+          box-shadow: 0 0 0 7px rgba(251, 77, 110, 0);
+        }
+      }
+      .step-label {
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        white-space: nowrap;
+      }
+      .step-connector {
+        position: relative;
+        flex: 1 1 24px;
+        min-width: 20px;
+        height: 2px;
+        margin: 0 0.35rem;
+        border-radius: 2px;
+        background: linear-gradient(
+          90deg,
+          rgba(34, 211, 238, 0.12),
+          rgba(34, 211, 238, 0.6),
+          rgba(34, 211, 238, 0.12)
+        );
+        background-size: 220% 100%;
+      }
+      @media (prefers-reduced-motion: no-preference) {
+        .step-connector {
+          animation: flowLine 3.2s linear infinite;
+        }
+      }
+      @keyframes flowLine {
+        from {
+          background-position: 220% 0;
+        }
+        to {
+          background-position: -220% 0;
+        }
+      }
+
+      /* ---------- KPI rows ---------- */
+      .kpi-row {
+        display: grid;
+        grid-template-columns: 1.7fr 1fr 1fr 1fr;
+        gap: 1rem;
+        margin-bottom: 1rem;
+      }
+      .kpi-card {
+        padding: 1.3rem 1.4rem;
+      }
+      .kpi-label {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 0.76rem;
+        font-weight: 600;
+        letter-spacing: 0.03em;
+        color: var(--text-secondary);
+      }
+      .kpi-scope {
+        color: var(--text-faint);
+      }
+      .kpi-number {
+        margin: 0.6rem 0 0;
+        font-family: var(--font-mono);
+        font-size: clamp(2.5rem, 3.6vw, 3.5rem);
+        font-weight: 800;
+        letter-spacing: -0.01em;
+        color: var(--text-primary);
+        text-shadow: 0 0 26px rgba(34, 211, 238, 0.14);
+      }
+      .kpi-unit {
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+      .kpi-note {
+        margin: 0.55rem 0 0;
+        font-family: var(--font-mono);
+        font-size: 0.78rem;
+        color: var(--text-secondary);
+      }
+      .text-teal {
+        color: var(--teal) !important;
+      }
+      .text-amber {
+        color: var(--amber) !important;
+      }
+      .text-red {
+        color: var(--red) !important;
+      }
+      .text-violet {
+        color: var(--violet) !important;
+      }
+
+      /* Alert card — the visual focal point when a threat exists */
+      .kpi-alert {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        position: relative;
+        overflow: hidden;
+      }
+      .kpi-alert.is-safe {
+        border-color: rgba(45, 212, 191, 0.3);
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.04) inset, 0 12px 32px rgba(0, 0, 0, 0.55),
+          0 0 22px rgba(45, 212, 191, 0.08);
+      }
+      .kpi-alert.is-warning {
+        border-color: var(--amber-border);
+        background: linear-gradient(180deg, var(--amber-bg), var(--surface));
+      }
+      .kpi-alert.is-threat {
+        border-color: var(--red-border);
+        background: linear-gradient(180deg, var(--red-bg), var(--surface));
+        box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 16px 40px rgba(0, 0, 0, 0.6),
+          0 0 32px rgba(251, 77, 110, 0.28);
+      }
+      /* Stored alerts remain visible without suggesting they happened just now. */
+      @keyframes alertGlow {
+        0%,
+        100% {
+          box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 16px 40px rgba(0, 0, 0, 0.6),
+            0 0 24px rgba(251, 77, 110, 0.22);
+        }
+        50% {
+          box-shadow: 0 1px 0 rgba(255, 255, 255, 0.05) inset, 0 16px 40px rgba(0, 0, 0, 0.6),
+            0 0 42px rgba(251, 77, 110, 0.42);
+        }
+      }
+      .kpi-alert .kpi-label {
+        color: var(--text-secondary);
+      }
+      .kpi-alert-headline {
+        margin: 0.55rem 0 0;
+        font-family: var(--font-mono);
+        font-size: clamp(1.5rem, 2.2vw, 2rem);
+        font-weight: 800;
+        color: var(--teal);
+      }
+      .kpi-alert.is-warning .kpi-alert-headline {
+        color: var(--amber);
+      }
+      .kpi-alert.is-threat .kpi-alert-headline {
+        color: var(--red);
+      }
+      .alert-grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(128px, 1fr));
+        gap: 0.6rem 1.2rem;
+        margin: 0.9rem 0 0.2rem;
+      }
+      .alert-field {
+        display: flex;
+        flex-direction: column;
+        gap: 0.2rem;
         min-width: 0;
       }
+      .alert-field-k {
+        font-family: var(--font-mono);
+        font-size: 0.66rem;
+        font-weight: 700;
+        letter-spacing: 0.06em;
+        text-transform: uppercase;
+        color: var(--text-secondary);
+      }
+      .alert-field-v {
+        font-family: var(--font-mono);
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        overflow-wrap: anywhere;
+      }
+      .kpi-alert-detail {
+        margin: 0.7rem 0 0;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--text-secondary);
+        overflow-wrap: anywhere;
+      }
+
+      /* Secondary row — historical totals + offline model metric */
+      .kpi-row-secondary {
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        gap: 1rem;
+        margin: 0.25rem 0 2rem;
+        padding-top: 1.1rem;
+        border-top: 1px solid var(--border-quiet);
+      }
+      .kpi-card-quiet {
+        background: var(--surface-quiet);
+        border: 1px solid var(--border-quiet);
+        border-radius: var(--radius);
+        padding: 1.1rem 1.3rem;
+      }
+      .kpi-card-quiet.is-f1 {
+        border-color: rgba(167, 139, 250, 0.35);
+        box-shadow: 0 0 22px rgba(167, 139, 250, 0.1);
+      }
+      .kpi-label-quiet {
+        margin: 0;
+        font-family: var(--font-mono);
+        font-size: 0.74rem;
+        font-weight: 600;
+        color: var(--text-secondary);
+      }
+      .kpi-number-quiet {
+        margin: 0.45rem 0 0;
+        font-family: var(--font-mono);
+        font-size: clamp(1.85rem, 2.3vw, 2.2rem);
+        font-weight: 800;
+        color: var(--text-primary);
+      }
+      .kpi-card-quiet.is-f1 .kpi-number-quiet {
+        text-shadow: 0 0 18px rgba(167, 139, 250, 0.2);
+      }
+      .kpi-note-quiet {
+        margin: 0.45rem 0 0;
+        font-size: 0.75rem;
+        line-height: 1.4;
+        color: var(--text-secondary);
+      }
+
+      /* ---------- Charts ---------- */
+      .charts-grid {
+        display: grid;
+        grid-template-columns: 1.4fr 0.8fr;
+        gap: 1.25rem;
+        margin-bottom: 2rem;
+      }
+      .chart-card {
+        padding: 1.3rem 1.4rem 1.4rem;
+      }
+      .chart-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.9rem;
+      }
+      .chart-head h2 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+      .chart-sub {
+        font-family: var(--font-mono);
+        font-size: 0.76rem;
+        color: var(--text-faint);
+        white-space: nowrap;
+      }
+      .chart-wrap {
+        position: relative;
+        height: 17rem;
+      }
+      #threatPercent {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-family: var(--font-mono);
+        font-size: 1.4rem;
+        font-weight: 700;
+        color: var(--text-primary);
+        pointer-events: none;
+      }
+
+      /* ---------- Detection table ---------- */
+      .table-section {
+        padding: 1.3rem 1.4rem 0.5rem;
+      }
+      .table-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 1rem;
+        margin-bottom: 0.9rem;
+      }
+      .table-head h2 {
+        margin: 0;
+        font-size: 0.95rem;
+        font-weight: 700;
+        color: var(--text-primary);
+      }
+      .table-head span {
+        font-family: var(--font-mono);
+        font-size: 0.76rem;
+        color: var(--text-faint);
+      }
+      .table-scroll {
+        overflow-x: auto;
+        scrollbar-color: var(--border-strong) transparent;
+        scrollbar-width: thin;
+      }
+      table {
+        width: 100%;
+        min-width: 940px;
+        border-collapse: collapse;
+        text-align: left;
+        font-size: 0.82rem;
+      }
+      thead th {
+        padding: 0 1rem 0.7rem 0;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.03em;
+        color: var(--text-secondary);
+        border-bottom: 1px solid var(--border);
+        white-space: nowrap;
+      }
+      tbody td {
+        padding: 0.7rem 1rem 0.7rem 0;
+        border-bottom: 1px solid var(--border-quiet);
+        color: var(--text-secondary);
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        white-space: nowrap;
+      }
+      .num-cell {
+        text-align: right;
+      }
+      .link-cell {
+        color: var(--cyan);
+        font-weight: 700;
+        text-align: right;
+        cursor: pointer;
+      }
+      .log-row {
+        cursor: pointer;
+      }
+      .log-row:hover td {
+        background: rgba(34, 211, 238, 0.05);
+      }
+      .chip {
+        display: inline-flex;
+        align-items: center;
+        padding: 0.15rem 0.55rem;
+        border-radius: 999px;
+        font-family: var(--font-mono);
+        font-size: 0.72rem;
+        font-weight: 700;
+        letter-spacing: 0.02em;
+        border: 1px solid transparent;
+      }
+      .chip-safe {
+        color: var(--teal);
+        background: rgba(45, 212, 191, 0.1);
+        border-color: rgba(45, 212, 191, 0.35);
+      }
+      .chip-threat {
+        color: var(--red);
+        background: rgba(251, 77, 110, 0.12);
+        border-color: rgba(251, 77, 110, 0.4);
+      }
+      .chip-stage1 {
+        color: var(--cyan);
+        background: rgba(34, 211, 238, 0.08);
+        border-color: rgba(34, 211, 238, 0.28);
+      }
+      .chip-stage2 {
+        color: var(--violet);
+        background: rgba(167, 139, 250, 0.1);
+        border-color: rgba(167, 139, 250, 0.35);
+      }
+      .detail-row td {
+        border-bottom: 1px solid var(--border-quiet);
+      }
+      .detail-cell {
+        background: rgba(10, 10, 16, 0.6);
+        border-left: 3px solid var(--cyan);
+        padding: 1rem 1.25rem !important;
+        white-space: normal;
+      }
+      .detail-grid {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.6rem 2rem;
+        font-size: 0.78rem;
+      }
+      .detail-label {
+        font-family: var(--font-mono);
+        color: var(--text-faint);
+      }
+      .detail-value {
+        font-family: var(--font-mono);
+        color: var(--text-primary);
+        font-weight: 700;
+      }
+      #empty {
+        padding: 2.5rem 0;
+        text-align: center;
+        font-family: var(--font-mono);
+        font-size: 0.8rem;
+        color: var(--text-faint);
+      }
+
+      footer#footer {
+        margin-top: 1.75rem;
+        padding-top: 1rem;
+        border-top: 1px solid var(--border-quiet);
+        font-family: var(--font-mono);
+        font-size: 0.76rem;
+        color: var(--text-faint);
+      }
+
+      /* ---------- Responsive ---------- */
+      @media (max-width: 1080px) {
+        .kpi-row {
+          grid-template-columns: repeat(2, 1fr);
+        }
+        .kpi-alert {
+          grid-column: 1 / -1;
+        }
+        .charts-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      @media (max-width: 720px) {
+        .shell {
+          padding: 1.5rem 1.25rem 2.5rem;
+        }
+        .app-header {
+          flex-direction: column;
+          align-items: flex-start;
+        }
+        .header-controls {
+          align-items: flex-start;
+          width: 100%;
+        }
+        .live-indicator {
+          align-items: flex-start;
+        }
+        .kpi-row,
+        .kpi-row-secondary {
+          grid-template-columns: 1fr;
+        }
+        .kpi-alert {
+          grid-column: auto;
+        }
+        .pipeline-steps {
+          flex-wrap: wrap;
+          row-gap: 0.6rem;
+        }
+        .step-connector {
+          display: none;
+        }
+        .detail-grid {
+          grid-template-columns: repeat(2, minmax(0, 1fr));
+        }
+      }
+      /* Keep Claude's visual system; improve projector legibility and controls. */
+      .brand-name { font-size: clamp(1.9rem, 2.6vw, 2.35rem); }
+      .brand-lede { max-width: 72ch; font-size: 1rem; color: #d2daeb; }
+      .kpi-number { font-size: clamp(2.7rem, 4vw, 3.8rem); }
+      .kpi-alert-headline { font-size: clamp(1.55rem, 2.35vw, 2.35rem); }
+      .kpi-label, .kpi-label-quiet, .kpi-note, .kpi-note-quiet, .chart-sub, .table-head span { color: #c0cbe0; }
+      .kpi-scope, .last-refreshed { color: #b9c5da; }
+      .chart-head h2, .table-head h2 { font-size: 1.1rem; }
+      tbody td { color: #c5d1e5; }
+      .chart-wrap { height: 19rem; }
+      .kpi-alert.is-threat { background: linear-gradient(145deg, rgba(255,108,70,.24), rgba(22,18,28,.75) 80%); }
+      .kpi-alert.is-threat .kpi-alert-headline { text-shadow: 0 0 20px rgba(255,118,89,.35); }
+      .status-caption { max-width: 25rem; text-align:right; font-size:.77rem; line-height:1.4; color:#b9c5da; }
+      .status-pill.is-warning { color: var(--amber); border-color: var(--amber-border); background: var(--amber-bg); box-shadow:none; }
+      .status-pill.is-warning .status-dot { background: var(--amber); }
+      .view-controls { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin-bottom:1rem; }
+      .view-controls p { margin:0; font-size:.83rem; color:#c0cbe0; }
+      .view-buttons, .table-tools { display:flex; align-items:center; gap:.45rem; flex-wrap:wrap; }
+      .view-button { border:1px solid rgba(120,151,197,.35); border-radius:8px; padding:.48rem .77rem; background:#202030; color:#edf2ff; font:700 .8rem var(--font-sans); cursor:pointer; transition: transform .18s, background .18s, border-color .18s; }
+      .view-button:hover { transform:translateY(-1px); background:#2a3045; border-color:var(--cyan); }
+      .view-button.is-selected { color:#09151e; background:var(--cyan); border-color:var(--cyan); }
+      .table-head { align-items:center; flex-wrap:wrap; }
+      .table-tools label { font-size:.8rem; color:#c0cbe0; }
+      .table-tools input { width:min(19rem,65vw); background:#181c2a; border:1px solid rgba(120,151,197,.35); border-radius:8px; color:#f3f6fc; padding:.55rem .7rem; font:.83rem var(--font-sans); }
+      .table-tools input::placeholder { color:#adbbd0; opacity:1; }
+      .log-row:focus-visible td { background:rgba(34,211,238,.11); }
+      @media(max-width:720px) { .status-caption { text-align:left; } .chart-head { flex-wrap:wrap; } }
+      @media(prefers-reduced-motion:reduce) { .view-button { transition:none; } .view-button:hover { transform:none; } }
+      .explore-bar { padding:1.1rem 1.3rem; border:1px solid rgba(120,151,197,.28); border-radius:18px; background:linear-gradient(105deg,rgba(31,28,51,.96),rgba(13,16,27,.96)); }
+      .explore-intro h2 { margin:0 0 .32rem; font-size:1.22rem; color:#f7f8ff; }
+      .explore-intro p { max-width:42rem; line-height:1.5; }
+      .explore-picker { display:grid; gap:.45rem; }
+      .explore-picker-label { color:#e9edfb; font-size:.78rem; font-weight:700; letter-spacing:.04em; }
+      .view-buttons { padding:4px; border:1px solid rgba(120,151,197,.3); border-radius:12px; background:#0d101b; }
+      .view-button[data-limit] { min-width:7.8rem; border:0; border-radius:9px; background:transparent; }
+      .view-button[data-limit].is-selected { background:#66d2ed; color:#09151e; box-shadow:0 0 24px rgba(102,210,237,.24); }
+      .donut-head { align-items:start; }
+      .donut-head h2 { font-size:1.25rem; line-height:1.2; }
+      .donut-head .chart-sub { white-space:normal; line-height:1.4; text-align:right; }
+      .donut-hint { margin:-.25rem 0 .9rem; color:#c9d4e9; font-size:.82rem; }
+      .donut-stage { position:relative; width:min(100%,16rem); aspect-ratio:1; margin:0 auto 1rem; }
+      .donut-stage canvas { position:absolute; inset:0; width:100%!important; height:100%!important; cursor:pointer; }
+      #threatPercent { position:absolute; inset:26%; display:flex; flex-direction:column; gap:.1rem; align-items:center; justify-content:center; text-align:center; pointer-events:none; line-height:1.05; }
+      #threatPercentValue { color:#fafbff; font-size:clamp(1.8rem,2.8vw,2.5rem); font-weight:800; letter-spacing:-.06em; }
+      #threatPercentLabel { color:#d0d9eb; font:600 .77rem var(--font-sans); letter-spacing:.04em; }
+      .class-legend { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:.45rem; }
+      .class-filter { display:flex; align-items:center; gap:.55rem; min-width:0; padding:.68rem .75rem; border:1px solid rgba(150,169,207,.25); border-radius:10px; background:#191a2a; color:#f3f5ff; cursor:pointer; text-align:left; transition:transform .18s,border-color .18s,background .18s; }
+      .class-filter:hover,.class-filter:focus-visible { transform:translateY(-2px); background:#25243b; border-color:#87cce9; }
+      .class-filter[aria-pressed="true"] { border-color:#78d8f1; background:#183140; box-shadow:inset 0 0 0 1px #78d8f1; }
+      .class-swatch { flex:none; width:.7rem; height:.7rem; border-radius:3px; }
+      .class-name { overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:.78rem; font-weight:650; }
+      .class-share { margin-left:auto; color:#e1e9fb; font:700 .78rem var(--font-mono); }
+      .filter-hint { margin:.75rem 0 0; min-height:1.2em; color:#cbd7eb; font-size:.78rem; text-align:center; }
+      @media(max-width:920px) { .explore-bar { align-items:flex-start; } }
+      @media(max-width:520px) { .view-buttons { width:100%; } .view-button[data-limit] { min-width:0; flex:1; padding:.55rem .25rem; } .donut-head { flex-wrap:wrap; } .donut-head .chart-sub { text-align:left; } .class-legend { grid-template-columns:1fr; } }
+      @media(prefers-reduced-motion:reduce) { .class-filter { transition:none; } .class-filter:hover { transform:none; } }
+      .pipeline-title { display:flex; align-items:baseline; justify-content:space-between; gap:1rem; margin-bottom:.8rem; }
+      .pipeline-title h2 { margin:0; font-size:1rem; color:#eef4ff; }
+      .pipeline-title span { font-size:.8rem; color:#c3d1e8; }
+      .pipeline .step { cursor:pointer; color:#ecf4ff; font:700 .85rem var(--font-sans); transition:background .18s,border-color .18s,transform .18s,box-shadow .18s; }
+      .pipeline .step:hover,.pipeline .step:focus-visible { transform:translateY(-3px); background:#26243e; border-color:#73d5ec; }
+      .pipeline .step[aria-pressed="true"] { border-color:#72d8f1; background:#1c3241; box-shadow:0 0 20px rgba(81,204,236,.15); }
+      .step-icon { width:1.25rem; height:1.25rem; fill:none; stroke:currentColor; stroke-width:1.7; stroke-linecap:round; stroke-linejoin:round; color:#80e0f4; }
+      .step.is-dl .step-icon { color:#bfa3ff; } .step.is-alert-end .step-icon { color:#ff8272; }
+      .pipeline-detail { display:flex; align-items:center; gap:1.2rem; margin-top:.85rem; padding:1rem 1.2rem; border:1px solid rgba(108,174,206,.3); border-radius:15px; background:linear-gradient(100deg,#171b2c,#19152b); }
+      .pipeline-detail strong { color:#f6f8ff; white-space:nowrap; font-size:.96rem; }
+      .pipeline-detail p { margin:0; color:#d2dcf0; line-height:1.5; font-size:.85rem; }
+      .pipeline-detail .detail-badge { margin-left:auto; padding:.4rem .6rem; border-radius:7px; background:#282338; color:#e2d2ff; font-size:.72rem; white-space:nowrap; }
+      .chart-card { display:flex; flex-direction:column; }
+      .latency-actions { display:flex; align-items:center; justify-content:space-between; gap:1rem; flex-wrap:wrap; margin:.2rem 0 .5rem; }
+      .chart-mode { display:flex; align-items:center; gap:.25rem; padding:3px; border-radius:9px; background:#101421; border:1px solid #31394d; }
+      .chart-mode button { border:0; border-radius:7px; padding:.4rem .7rem; background:transparent; color:#d1ddf1; font:700 .74rem var(--font-sans); cursor:pointer; }
+      .chart-mode button[aria-pressed="true"] { background:#23415a; color:#f7fbff; }
+      .chart-mode button:hover { color:#fff; }
+      .chart-card .chart-wrap { height:20rem; }
+      .chart-insight { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.65rem; margin-top:auto; padding-top:1rem; }
+      .chart-insight div { padding:.85rem; background:#191b2b; border:1px solid #30394e; border-radius:11px; }
+      .chart-insight span { display:block; color:#c0cde2; font-size:.75rem; }
+      .chart-insight strong { display:block; margin-top:.3rem; color:#f7f9ff; font:700 1.2rem var(--font-mono); }
+      .chart-insight-note { margin:.7rem 0 0; color:#c9d4e8; font-size:.78rem; line-height:1.45; }
+      @media(max-width:1080px) { .chart-card .chart-wrap { height:18rem; } }
+      @media(max-width:720px) { .pipeline-detail { flex-wrap:wrap; } .pipeline-detail strong { white-space:normal; } .pipeline-detail .detail-badge { margin-left:0; } .chart-insight { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+      @media(max-width:480px) { .chart-insight { grid-template-columns:1fr; } }
+      @media(prefers-reduced-motion:reduce) { .pipeline .step { transition:none; } .pipeline .step:hover { transform:none; } }
+      /* Focus the first screen on the finding. Details stay one click away. */
+      .brand-lede { max-width:48rem; margin-top:.35rem; font-size:1.12rem; line-height:1.45; color:#e7ebfa; }
+      .brand-tag { color:#f5a58c; }
+      .pipeline { margin:1.3rem 0 1.45rem; }
+      .pipeline-title h2 { color:#e8b5a5; font-size:1.03rem; }
+      .pipeline-title span { color:#d3d8e9; font-size:.88rem; }
+      .pipeline-detail[hidden] { display:none; }
+      .pipeline .step[aria-pressed="true"] { border-color:#ff9b72; background:#38202e; box-shadow:0 0 22px rgba(249,107,66,.16); }
+      .pipeline .step:hover,.pipeline .step:focus-visible { border-color:#ff9b72; }
+      .kpi-row { grid-template-columns:minmax(0,2.1fr) repeat(3,minmax(0,1fr)); }
+      .kpi-card { min-height:14.5rem; position:relative; }
+      .kpi-row .kpi-card:not(.kpi-alert) { padding:1.5rem; border-top:2px solid #5f657e; }
+      .kpi-row .kpi-card:nth-child(2) { border-top-color:#ff775d; background:linear-gradient(170deg,#261b2b,#13141f 72%); }
+      .kpi-row .kpi-card:nth-child(3) { border-top-color:#7e91bb; }
+      .kpi-row .kpi-card:nth-child(4) { border-top-color:#f3a057; }
+      .kpi-row .kpi-label { font:700 .97rem var(--font-sans); color:#e2e8f4; letter-spacing:0; }
+      .kpi-row .kpi-scope { display:block; margin-top:.15rem; color:#b8c4db; font-size:.78rem; font-weight:500; }
+      .kpi-row .kpi-number { font-size:clamp(2.5rem,3.6vw,3.45rem); margin-top:1rem; letter-spacing:-.045em; }
+      .kpi-row .kpi-card:nth-child(2) .kpi-number { color:#ff876b; text-shadow:0 0 22px rgba(255,103,74,.22); }
+      .kpi-row .kpi-card:nth-child(4) .kpi-number { color:#ffc17d; }
+      .kpi-row .kpi-note { color:#c9d4e5; font:500 .82rem var(--font-sans); line-height:1.4; }
+      .kpi-alert { border-top:2px solid #ff765c; }
+      .kpi-alert .kpi-alert-headline { font-size:clamp(2rem,3vw,2.75rem); letter-spacing:-.04em; }
+      .alert-field-k { color:#d9d5e4; font:700 .75rem var(--font-sans); letter-spacing:0; }
+      .alert-field-v { font-size:.98rem; }
+      .kpi-alert-detail { color:#d5d8e4; font-size:.78rem; }
+      .history-panel { margin:0 0 1.7rem; border:1px solid #323449; border-radius:13px; background:#151521; }
+      .history-panel summary { display:flex; justify-content:space-between; align-items:center; gap:1rem; cursor:pointer; padding:.8rem 1.1rem; color:#d6d9eb; font:700 .9rem var(--font-sans); list-style:none; }
+      .history-panel summary::-webkit-details-marker { display:none; }
+      .history-panel summary::after { content:"＋"; color:#ffad85; font-size:1.2rem; }
+      .history-panel[open] summary::after { content:"−"; }
+      .history-panel summary:hover { color:#fff; }
+      .history-panel .kpi-row-secondary { margin:0; padding:0 1rem 1rem; border-top:0; }
+      .explore-intro p:not(#viewSummary) { display:none; }
+      .explore-intro h2 { color:#f2f4ff; }
+      .chart-head h2, .table-head h2 { color:#f4f5ff; }
+      @media(max-width:1080px) { .kpi-row { grid-template-columns:repeat(3,minmax(0,1fr)); } .kpi-alert { grid-column:1/-1; } }
+      @media(max-width:720px) { .kpi-row { grid-template-columns:1fr; } .kpi-alert { grid-column:auto; } .kpi-card { min-height:0; } .history-panel .kpi-row-secondary { grid-template-columns:1fr; } }
+      /* Juice Lab inspired materials, rebuilt for the actual IDS telemetry. */
+      :root { --font-sans:"DM Sans",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; --font-display:"Space Grotesk","DM Sans",sans-serif; --surface:rgba(17,24,35,.55); --border:rgba(171,206,236,.18); --border-strong:rgba(245,151,109,.55); --radius:20px; }
+      .bg-fx { background:radial-gradient(ellipse 52% 52% at 8% 16%,rgba(48,62,99,.3),transparent 72%),radial-gradient(ellipse 42% 54% at 96% 86%,rgba(105,40,75,.24),transparent 78%),linear-gradient(145deg,#080c12,#0e121b 55%,#100e18); }
+      .bg-grid { opacity:.42; background-size:68px 68px; }
+      .bg-glow-indigo { background:#183d71; opacity:.27; } .bg-glow-violet { background:#763750; opacity:.24; }
+      .shell { max-width:1540px; padding:2rem clamp(1rem,3.2vw,3.5rem) 3rem; }
+      .panel,.explore-bar,.history-panel,.pipeline-detail { background:linear-gradient(140deg,rgba(37,49,66,.58),rgba(14,19,30,.66) 62%,rgba(35,25,37,.52)); border:1px solid rgba(160,203,232,.22); box-shadow:inset 0 1px rgba(228,240,255,.09),inset 1px 0 rgba(151,192,231,.04),0 20px 54px rgba(0,0,0,.26); backdrop-filter:blur(24px) saturate(145%); -webkit-backdrop-filter:blur(24px) saturate(145%); }
+      .panel:hover { border-color:rgba(237,164,124,.48); }
+      .brand-name,.app-header h1,.kpi-number,.kpi-alert-headline,.chart-insight strong,.kpi-number-quiet,#threatPercentValue { font-family:var(--font-display); }
+      .brand-name { letter-spacing:-.055em; font-size:clamp(2rem,3vw,2.7rem); }
+      .brand-tag { font-family:var(--font-sans); font-size:.76rem; letter-spacing:.15em; }
+      .gradient-text { background:linear-gradient(100deg,#e7f9ff,#85cdeb 52%,#f8a97b); -webkit-background-clip:text; background-clip:text; color:transparent; }
+      .brand-lede { font-weight:500; color:#d8e3ed; }
+      .app-header { padding-bottom:1.15rem; }
+      .view-nav { display:flex; gap:.3rem; width:max-content; max-width:100%; padding:.32rem; margin:1.1rem 0; border:1px solid rgba(160,203,232,.25); border-radius:13px; background:rgba(18,27,39,.67); backdrop-filter:blur(20px); }
+      .view-tab { display:flex; align-items:center; gap:.55rem; padding:.7rem 1.15rem; border:0; border-radius:10px; background:transparent; color:#c7d6e5; font:700 .9rem var(--font-sans); cursor:pointer; transition:background .2s,color .2s,transform .2s; }
+      .view-tab svg { width:1.1rem; height:1.1rem; fill:none; stroke:currentColor; stroke-width:1.8; stroke-linecap:round; stroke-linejoin:round; }
+      .view-tab:hover { color:white; transform:translateY(-1px); }
+      .view-tab[aria-selected="true"] { color:#fff; background:linear-gradient(120deg,rgba(234,117,73,.32),rgba(104,128,159,.24)); box-shadow:inset 0 0 0 1px rgba(255,168,125,.45); }
+      .page-view[hidden] { display:none!important; }
+      .overview-intro { display:flex; align-items:end; justify-content:space-between; gap:1rem; margin:1.55rem 0 1rem; }
+      .overview-intro h1 { margin:0; color:#f5f8ff; font:700 clamp(1.6rem,2.3vw,2.3rem)/1.1 var(--font-display); letter-spacing:-.045em; }
+      .overview-intro p { margin:.5rem 0 0; color:#b9c9da; font-size:.91rem; }
+      .overview-intro .scope-pill { display:inline-flex; align-items:center; gap:.5rem; flex:none; padding:.5rem .8rem; border:1px solid #614637; border-radius:999px; background:#281c1c; color:#ffc19c; font-size:.76rem; font-weight:700; }
+      .scope-pill::before { content:""; width:.4rem; height:.4rem; border-radius:50%; background:#fc9c69; box-shadow:0 0 9px #fc9c69; }
+      .kpi-row { grid-template-columns:minmax(0,1.8fr) repeat(3,minmax(0,1fr)); gap:.85rem; }
+      .kpi-row .kpi-card { min-height:17rem; }
+      .kpi-row .kpi-card:not(.kpi-alert) { border-top:1px solid rgba(160,203,232,.22); background:linear-gradient(145deg,rgba(35,45,61,.54),rgba(13,20,30,.56)); }
+      .kpi-row .kpi-card:nth-child(2) { border-color:rgba(244,132,83,.5); background:linear-gradient(145deg,rgba(94,49,43,.44),rgba(24,24,33,.65)); }
+      .kpi-row .kpi-label { color:#e8edf4; font-size:1rem; }
+      .kpi-row .kpi-card:not(.kpi-alert) .kpi-number { margin-top:1.7rem; }
+      .kpi-alert.is-threat { border:1px solid rgba(255,147,95,.78); background:radial-gradient(circle at 88% 50%,rgba(244,111,60,.24),transparent 50%),linear-gradient(125deg,rgba(92,49,44,.56),rgba(22,24,36,.66)); box-shadow:inset 0 1px rgba(255,201,160,.18),0 22px 50px rgba(0,0,0,.3),0 0 28px rgba(244,110,61,.14); }
+      .kpi-alert { padding-right:clamp(1.4rem,9vw,9rem); }
+      .alarm-mark { position:absolute; right:1.35rem; top:50%; transform:translateY(-50%); width:clamp(5rem,8vw,8rem); aspect-ratio:1; display:grid; place-items:center; color:#f39269; border:1px solid rgba(255,156,99,.23); border-radius:50%; background:radial-gradient(circle,rgba(255,126,64,.17),rgba(255,145,89,.035) 65%,transparent 72%); pointer-events:none; }
+      .alarm-mark::before,.alarm-mark::after { content:""; position:absolute; inset:11%; border:1px dashed rgba(255,155,100,.4); border-radius:50%; } .alarm-mark::after { inset:-13%; border-style:solid; border-color:rgba(255,155,100,.11); }
+      .alarm-mark svg { width:58%; height:58%; fill:none; stroke:currentColor; stroke-width:1.5; stroke-linejoin:round; stroke-linecap:round; filter:drop-shadow(0 0 12px rgba(255,131,76,.7)); }
+      .kpi-alert.is-safe .alarm-mark { color:#8cd7cb; } .kpi-alert.is-warning .alarm-mark { color:#fbc17b; }
+      @media(prefers-reduced-motion:no-preference) { .kpi-alert.is-threat .alarm-mark::before { animation:alarmOrbit 16s linear infinite; } .kpi-alert.is-threat .alarm-mark svg { animation:alarmBreathe 3s ease-in-out infinite; } }
+      @keyframes alarmOrbit { to { transform:rotate(360deg); } } @keyframes alarmBreathe { 50% { filter:drop-shadow(0 0 22px rgba(255,131,76,1)); transform:scale(1.04); } }
+      .pipeline { margin:1.4rem 0; } .pipeline-title h2 { font-family:var(--font-display); font-size:1.1rem; }
+      .pipeline .step { background:rgba(28,36,49,.55); border-color:rgba(160,203,232,.26); backdrop-filter:blur(12px); }
+      .history-panel summary,.chart-head h2,.table-head h2,.explore-intro h2 { font-family:var(--font-display); }
+      .investigate-title { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin:1.6rem 0 .85rem; }
+      .investigate-title h1 { margin:0; font:700 clamp(1.6rem,2.3vw,2.3rem) var(--font-display); letter-spacing:-.04em; }
+      .investigate-title p { color:#bdcddd; margin:0; font-size:.88rem; }
+      .primary-action { border:1px solid rgba(255,188,146,.55); border-radius:10px; padding:.75rem 1.1rem; background:linear-gradient(110deg,#f5986c,#f3b174); color:#1b1820; font:800 .83rem var(--font-sans); cursor:pointer; box-shadow:0 8px 25px rgba(232,108,62,.24); }
+      .primary-action:hover { filter:brightness(1.1); transform:translateY(-2px); }
+      .kpi-alert .primary-action { align-self:flex-start; margin-top:1rem; }
+      .table-section { margin-top:1.25rem; }
+      @media(max-width:1150px) { .kpi-row { grid-template-columns:repeat(3,minmax(0,1fr)); } .kpi-alert { grid-column:1/-1; } }
+      @media(max-width:720px) { .kpi-row { grid-template-columns:1fr; } .kpi-alert { grid-column:auto; } .kpi-row .kpi-card { min-height:0; } .alarm-mark { width:4rem; opacity:.5; } .kpi-alert { padding-right:5rem; } .investigate-title,.overview-intro { align-items:start; flex-wrap:wrap; } .overview-intro .scope-pill { flex:none; } }
+      @media(prefers-reduced-motion:reduce) { .view-tab,.primary-action { transition:none; } .view-tab:hover,.primary-action:hover { transform:none; } }
+      .kpi-alert.is-threat { --attack-accent:#ff846b; border-color:var(--attack-accent); }
+      .kpi-alert.is-threat .kpi-alert-headline,.kpi-alert.is-threat .alarm-mark { color:var(--attack-accent); }
+      .attack-meaning { margin:.3rem 0 0; color:#ffe0cf; font:500 .88rem/1.4 var(--font-sans); }
+      .kpi-row .kpi-card { min-height:15rem; }
+      .kpi-row .kpi-card:not(.kpi-alert) .kpi-number { margin-top:1.25rem; }
+      .alert-field-k { font-size:.81rem; color:#dddae2; }
+      .alert-field-v { font-family:var(--font-sans); font-size:.98rem; font-weight:700; }
+      .alert-field-v:has(.chip) { font-family:var(--font-sans); }
+      .focused-notice { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:.8rem; margin:0 0 1.05rem; padding:1rem 1.2rem; border:1px solid rgba(255,169,114,.66); border-radius:13px; background:linear-gradient(110deg,rgba(134,72,49,.34),rgba(32,29,44,.77)); box-shadow:0 0 30px rgba(255,119,71,.1); }
+      .focused-notice[hidden] { display:none; }
+      .focused-notice strong { display:block; color:#ffe7d6; font:700 1.05rem var(--font-display); }
+      .focused-notice p { margin:.3rem 0 0; color:#e9d7cd; font-size:.86rem; }
+      .focused-notice button { border:1px solid rgba(255,176,121,.52); background:rgba(255,164,111,.14); color:#ffdec7; border-radius:8px; padding:.56rem .8rem; font:700 .8rem var(--font-sans); cursor:pointer; }
+      .focused-notice button:hover { background:rgba(255,164,111,.28); }
+      .log-row { transition:background .18s ease,box-shadow .18s ease; }
+      .log-row:hover td { background:rgba(84,114,145,.2); }
+      .log-row.is-focused td { background:rgba(241,130,73,.2)!important; border-top:1px solid rgba(255,177,111,.75); border-bottom:1px solid rgba(255,177,111,.75); color:#fff6ef; }
+      .log-row.is-focused td:first-child { border-left:3px solid #ffac70; }
+      .log-row.is-focused td:last-child { border-right:1px solid rgba(255,177,111,.75); }
+      .log-row.is-focused + .detail-row:not(.hidden) td { background:rgba(76,47,50,.58); border:1px solid rgba(255,177,111,.35); }
+      @media(prefers-reduced-motion:no-preference) { .log-row.is-focused td:first-child { animation:focusGlow 2.2s ease-in-out 2; } }
+      @keyframes focusGlow { 50% { box-shadow:inset 5px 0 15px rgba(255,160,96,.4); } }
+      .overview-evidence { margin:1.25rem 0 1rem; padding:1.2rem 1.35rem; }
+      .evidence-head { display:flex; align-items:center; justify-content:space-between; gap:1rem; margin-bottom:.85rem; }
+      .evidence-head h2 { margin:0; font:700 1.13rem var(--font-display); color:#f7f8fc; }
+      .evidence-head span { color:#bfcee0; font-size:.77rem; }
+      .evidence-list { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.65rem; }
+      .evidence-item { display:flex; flex-direction:column; gap:.34rem; min-width:0; padding:.8rem .9rem; border:1px solid rgba(144,180,207,.27); border-radius:11px; background:rgba(14,22,34,.56); color:#fff; text-align:left; cursor:pointer; transition:transform .18s,border-color .18s,background .18s,box-shadow .18s; }
+      .evidence-item:hover,.evidence-item:focus-visible { transform:translateY(-3px); border-color:#f8a878; background:rgba(54,44,49,.74); box-shadow:0 12px 24px rgba(0,0,0,.24); }
+      .evidence-item strong { color:#ffad8d; font:700 1rem var(--font-display); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .evidence-item span { color:#d9e0ef; font-size:.79rem; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+      .evidence-item small { color:#aebdd0; font:500 .73rem var(--font-sans); }
+      .evidence-footer { margin:.75rem 0 0; color:#c6d5e5; font-size:.8rem; }
+      .evidence-footer button { border:0; padding:0; background:none; color:#ffae86; font:700 .8rem var(--font-sans); cursor:pointer; }
+      .history-panel { display:none; }
+      .model-strip { display:grid; grid-template-columns:1.25fr repeat(3,minmax(0,1fr)); align-items:center; gap:1rem; margin:1rem 0 1.5rem; padding:1.1rem 1.35rem; border:1px solid rgba(160,203,232,.22); border-radius:16px; background:linear-gradient(130deg,rgba(37,45,62,.52),rgba(18,23,34,.62)); backdrop-filter:blur(18px); }
+      .model-strip-title strong { display:block; color:#e8d1fb; font:700 1.04rem var(--font-display); }
+      .model-strip-title span { display:block; margin-top:.25rem; color:#bdc9db; font-size:.76rem; line-height:1.35; }
+      .model-stat { padding-left:1.1rem; border-left:1px solid rgba(173,196,221,.24); }
+      .model-stat span { display:block; color:#c5cfdf; font-size:.77rem; }
+      .model-stat strong { display:block; margin-top:.24rem; color:#f2f5fa; font:700 1.45rem var(--font-display); }
+      .model-stat.is-f1 strong { color:#c4a8ff; }
+      .model-stat small { display:block; color:#b9c7da; font-size:.72rem; }
+      .selected-context { display:flex; flex-direction:column; gap:1rem; margin:0 0 1.25rem; padding:1.35rem 1.5rem; border:1px solid rgba(255,163,107,.66); border-radius:17px; background:linear-gradient(110deg,rgba(96,49,47,.55),rgba(17,25,37,.64)); backdrop-filter:blur(20px); }
+      .selected-context[hidden] { display:none; }
+      .selected-context-head { display:flex; justify-content:space-between; align-items:start; gap:1rem; }
+      .selected-context .eyebrow { color:#ffc8a5; font:700 .78rem var(--font-sans); letter-spacing:.08em; text-transform:uppercase; }
+      .selected-context h2 { margin:.25rem 0 0; color:#fff4ec; font:700 clamp(1.4rem,2vw,1.9rem) var(--font-display); }
+      .selected-context-grid { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:.65rem; }
+      .selected-context-grid div { padding:.65rem .75rem; border:1px solid rgba(227,183,164,.22); border-radius:9px; background:rgba(12,19,30,.36); min-width:0; }
+      .selected-context-grid span { display:block; color:#d5c9ca; font-size:.75rem; }
+      .selected-context-grid strong { display:block; margin-top:.22rem; color:#f8f2f0; font-size:.88rem; overflow-wrap:anywhere; }
+      .selected-context-actions { display:flex; gap:.55rem; flex-wrap:wrap; }
+      .selected-context-actions button { border:1px solid rgba(255,178,132,.55); border-radius:8px; padding:.57rem .85rem; background:rgba(247,150,99,.13); color:#ffe0cb; font:700 .78rem var(--font-sans); cursor:pointer; }
+      .selected-context-actions button:hover { background:rgba(247,150,99,.28); }
+      @media(max-width:1100px) { .evidence-list { grid-template-columns:repeat(2,minmax(0,1fr)); } .model-strip { grid-template-columns:repeat(2,minmax(0,1fr)); } .selected-context-grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+      @media(max-width:650px) { .evidence-list,.model-strip,.selected-context-grid { grid-template-columns:1fr; } .model-stat { border-left:0; padding-left:0; padding-top:.6rem; border-top:1px solid rgba(173,196,221,.24); } }
+      @media(prefers-reduced-motion:reduce) { .evidence-item { transition:none; } .evidence-item:hover { transform:none; } }
+      /* Overview composition: one primary finding, three compact supporting signals. */
+      .overview-intro { margin:1.2rem 0 1.25rem; }
+      .overview-intro h1 { font-size:clamp(1.55rem,2.1vw,2rem); }
+      .overview-intro p { margin:.35rem 0 0; }
+      .brand-lede { max-width:42rem; font-size:.98rem; }
+      .kpi-row { grid-template-columns:minmax(0,1.55fr) minmax(18rem,.95fr); grid-template-rows:repeat(3,minmax(0,1fr)); gap:.8rem; margin-bottom:1.15rem; }
+      .kpi-row .kpi-card { min-height:0; }
+      .app-header { align-items:center; }
+      .brand-name { font-size:clamp(2.55rem,3.55vw,3.45rem); line-height:1.05; }
+      .brand-tag { margin-top:.8rem; font-size:clamp(.86rem,1.04vw,1.02rem); letter-spacing:.11em; line-height:1.3; }
+      .brand-mark { width:clamp(2.4rem,3.1vw,3rem); height:clamp(2.4rem,3.1vw,3rem); }
+      .kpi-row .kpi-alert { grid-column:1; grid-row:1 / 4; min-height:27rem; padding:2rem 2.25rem; justify-content:space-evenly; align-items:stretch; text-align:left; gap:.35rem; }
+      .alert-lead { display:grid; grid-template-columns:clamp(8rem,12vw,11rem) minmax(0,1fr); align-items:center; gap:1.65rem; }
+      .alert-lead-copy { min-width:0; }
+      .kpi-alert .alarm-mark { position:relative; top:auto; right:auto; transform:none; width:100%; max-width:11rem; margin:0; flex:none; }
+      .kpi-alert .alarm-mark svg { width:68%; height:68%; stroke-width:2; }
+      .alert-kicker { display:inline-flex; align-items:center; gap:.55rem; padding:.44rem .72rem; border:1px solid rgba(255,168,108,.72); border-radius:999px; background:rgba(121,55,42,.42); color:#ffe1c9; font:800 .75rem var(--font-sans); letter-spacing:.09em; }
+      .alert-kicker::before { content:""; width:.48rem; height:.48rem; border-radius:50%; background:#ffab77; box-shadow:0 0 10px #ff9f69; }
+      .alert-meta { color:#e3cfc6; margin-left:.65rem; font:600 .75rem var(--font-sans); }
+      .kpi-alert .kpi-alert-headline { margin-top:.9rem; font-size:clamp(2.6rem,4vw,4rem); line-height:1; letter-spacing:-.055em; }
+      .kpi-alert .attack-meaning { margin-top:.45rem; font-size:.96rem; }
+      .kpi-alert .alert-grid { grid-template-columns:repeat(3,minmax(0,1fr)); width:100%; max-width:none; gap:.8rem 1rem; margin:.4rem 0 0; padding:1.2rem 0; border-top:1px solid rgba(255,196,162,.25); border-bottom:1px solid rgba(255,196,162,.18); text-align:left; }
+      .kpi-alert .alert-field { align-items:flex-start; text-align:left; }
+      .kpi-alert .alert-grid.has-stage { grid-template-columns:repeat(2,minmax(0,1fr)); }
+      .kpi-alert .alert-field-k { font-size:.74rem; color:#ccbfc3; }
+      .kpi-alert .alert-field-v { font-size:1rem; color:#fbf3f0; }
+      .alert-field[hidden] { display:none; }
+      .kpi-alert .kpi-alert-detail { margin:.9rem 0 0; font-size:.77rem; }
+      .kpi-alert .primary-action { margin:.6rem auto 0; align-self:center; display:inline-flex; align-items:center; justify-content:center; gap:.5rem; min-width:12.5rem; padding:.78rem 1.3rem; border:1px solid #ffdd91; background:linear-gradient(115deg,#ffdb86,#ffb862); color:#271b16; box-shadow:0 9px 28px rgba(242,160,77,.24),inset 0 1px rgba(255,255,255,.45); font:700 .92rem var(--font-sans); letter-spacing:.005em; }
+      .kpi-alert .primary-action:hover,.kpi-alert .primary-action:focus-visible { background:linear-gradient(115deg,#ffe6a4,#ffc477); border-color:#fff0bc; box-shadow:0 12px 32px rgba(242,160,77,.36),inset 0 1px rgba(255,255,255,.55); }
+      .primary-action .flow-id { color:#674532; font:500 .75rem var(--font-mono); }
+      .primary-action .action-arrow { color:#713b2a; }
+      .kpi-alert .kpi-alert-detail { margin:.2rem 0 0; }
+      .refresh-agent { display:inline-flex; position:relative; width:1.55rem; height:1.45rem; margin-left:.2rem; color:#60e7eb; vertical-align:middle; opacity:.4; transition:opacity .2s; }
+      .refresh-agent.is-running { opacity:1; }
+      .refresh-agent svg { width:100%; height:100%; overflow:visible; stroke:currentColor; stroke-width:2; stroke-linecap:round; stroke-linejoin:round; fill:none; }
+      .refresh-agent .agent-head { fill:currentColor; stroke:none; }
+      .refresh-agent.is-fetching svg { animation:agentFetching .55s ease-in-out infinite alternate; }
+      @media(prefers-reduced-motion:no-preference) {
+        .refresh-agent.is-running { animation:agentTravel 1.25s ease-in-out infinite alternate; }
+        .refresh-agent.is-running .agent-leg-left { transform-origin:12px 15px; animation:agentStride .52s ease-in-out infinite alternate; }
+        .refresh-agent.is-running .agent-leg-right { transform-origin:12px 15px; animation:agentStride .52s ease-in-out infinite alternate-reverse; }
+      }
+      @keyframes agentTravel { from { transform:translateX(-3px); } to { transform:translateX(4px); } }
+      @keyframes agentStride { from { transform:rotate(-25deg); } to { transform:rotate(25deg); } }
+      @keyframes agentFetching { from { transform:rotate(-11deg); } to { transform:rotate(11deg); } }
+      .kpi-row .kpi-card:not(.kpi-alert) { display:flex; flex-direction:column; justify-content:center; align-items:flex-start; gap:0; padding:1.2rem 1.65rem; }
+      .kpi-row .kpi-card:not(.kpi-alert) .kpi-label { font-size:1.02rem; line-height:1.24; }
+      .kpi-row .kpi-card:not(.kpi-alert) .kpi-scope { margin-top:.2rem; font-size:.79rem; font-weight:500; }
+      .kpi-row .kpi-card:not(.kpi-alert) .kpi-number { margin:.5rem 0 .05rem; font-size:clamp(2.25rem,3.2vw,3.2rem); text-align:left; line-height:1.05; }
+      .kpi-row .kpi-card:not(.kpi-alert) .kpi-note { margin-top:.35rem; font-size:.79rem; }
+      .refresh-now { padding:.51rem .75rem; border:1px solid rgba(131,207,228,.42); border-radius:9px; color:#d9f8ff; background:rgba(35,73,88,.28); font:700 .82rem var(--font-sans); cursor:pointer; white-space:nowrap; }
+      .refresh-now:hover,.refresh-now:focus-visible { border-color:#74dded; background:rgba(51,121,136,.38); }
+      .refresh-now:disabled { opacity:.55; cursor:wait; }
+      .custom-refresh { width:5rem; height:2rem; padding:0 .45rem; color:#f1f7ff; border:1px solid rgba(131,207,228,.48); border-radius:7px; background:#141824; font:700 .8rem var(--font-sans); }
+      .custom-refresh[hidden] { display:none; }
+      .kpi-row .kpi-card:nth-child(3) .kpi-number { color:#dce8f7; }
+      .model-strip { position:relative; margin-top:1.1rem; border-left:3px solid #a68ce2; }
+      .model-strip-title strong { color:#ede1ff; }
+      .model-stat.is-f1 { position:relative; padding-bottom:.45rem; }
+      .model-stat.is-f1::after { content:""; display:block; width:min(100%,10rem); height:.3rem; margin-top:.55rem; border-radius:999px; background:linear-gradient(90deg,#ad92f1 var(--f1-progress,0%),rgba(163,153,196,.2) var(--f1-progress,0%)); }
+      .pipeline { margin:1.45rem 0 .4rem; padding:1rem 1.2rem; border:1px solid rgba(155,187,219,.23); border-radius:16px; background:linear-gradient(120deg,rgba(33,41,59,.46),rgba(17,22,36,.48)); }
+      .pipeline-title h2 { color:#e4d5f3; font-size:1.07rem; }
+      .pipeline-title span { font-size:.8rem; }
+      .pipeline-steps { gap:.2rem; }
+      .pipeline .step { padding:.55rem .76rem; font-size:.76rem; }
+      .pipeline .step-connector { opacity:.55; }
+      .pipeline-detail { margin-top:.8rem; padding:.8rem 1rem; }
+      .pipeline-detail p { font-size:.81rem; }
+      @media(max-width:1120px) { .kpi-row { grid-template-columns:1fr; grid-template-rows:auto; } .kpi-row .kpi-alert { grid-column:1; grid-row:auto; min-height:25rem; } .kpi-row .kpi-card:not(.kpi-alert) { min-height:6.5rem; } }
+      @media(max-width:720px) { .kpi-row .kpi-alert { padding:1.5rem 1.2rem; gap:1rem; } .alert-lead { grid-template-columns:5.5rem minmax(0,1fr); gap:1rem; } .kpi-alert .alarm-mark { opacity:1; width:5.5rem; } .kpi-alert .alert-grid { grid-template-columns:repeat(2,minmax(0,1fr)); } .kpi-row .kpi-card:not(.kpi-alert) .kpi-number { font-size:2.4rem; } .controls-row { flex-wrap:wrap; justify-content:flex-end; } .pipeline { overflow-x:auto; } .pipeline-steps { min-width:45rem; } .pipeline-title { min-width:0; } }
+      @media(max-width:420px) { .alert-lead { grid-template-columns:1fr; } .kpi-alert .alarm-mark { width:5rem; } .brand-tag { font-size:.65rem; } }
     </style>
   </head>
-  <body class="min-h-screen bg-black text-zinc-100 antialiased">
-    <main class="mx-auto max-w-[1440px] px-5 py-6 sm:px-8 lg:px-10 lg:py-9">
-      <header
-        class="flex flex-col gap-6 border-b border-zinc-800 pb-7 sm:flex-row sm:items-end sm:justify-between"
-      >
-        <div>
-          <p
-            class="mb-3 text-[11px] font-semibold uppercase tracking-[0.18em] text-zinc-500"
-          >
-            SentinelFlow / Hybrid IDS
-          </p>
-          <h1
-            class="text-2xl font-medium tracking-tight text-white sm:text-3xl"
-          >
-            Security Operations Center
-          </h1>
-          <p class="mt-2 text-sm text-zinc-500">
-            Real-time packet inspection, flow aggregation, and threat
-            classification.
-          </p>
+  <body>
+    <div class="bg-fx" aria-hidden="true">
+      <div class="bg-grid"></div>
+      <div class="bg-glow bg-glow-indigo"></div>
+      <div class="bg-glow bg-glow-violet"></div>
+    </div>
+
+    <main class="shell">
+      <!-- ============ HEADER ============ -->
+      <header class="app-header">
+        <div class="brand">
+          <div class="brand-name">
+            <svg class="brand-mark" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path d="M12 2l7 3v6c0 5-3.2 8.5-7 10-3.8-1.5-7-5-7-10V5l7-3z" fill="#0c0c12" stroke="#22D3EE" stroke-width="0.6" />
+              <path d="M8.5 12.2l2.4 2.4 4.6-4.9" stroke="#22D3EE" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" fill="none" />
+            </svg>
+            <span class="gradient-text">SentinelFlow</span>
+          </div>
+          <p class="brand-tag mono gradient-text">NETWORK INTRUSION DETECTION DASHBOARD</p>
         </div>
-        <div class="flex items-center gap-5 text-xs text-zinc-400">
-          <label class="flex h-8 shrink-0 items-center gap-2 whitespace-nowrap">
-            <span class="text-zinc-600">Refresh</span>
-            <select
-              id="refreshRate"
-              class="h-8 w-[72px] border border-zinc-800 bg-black px-2 text-xs text-zinc-300 outline-none focus:border-zinc-600"
-            >
-              <option value="2">2 sec</option>
-              <option value="5" selected>5 sec</option>
-              <option value="10">10 sec</option>
-              <option value="30">30 sec</option>
-            </select>
-          </label>
-          <label
-            class="flex w-[124px] shrink-0 cursor-pointer items-center justify-start gap-2 whitespace-nowrap"
-          >
-            <input id="liveToggle" type="checkbox" checked class="sr-only" />
-            <span
-              class="toggle-track flex h-5 w-9 shrink-0 items-center rounded-full border border-zinc-700 bg-zinc-800 p-0.5"
-            >
-              <span
-                class="toggle-thumb h-3.5 w-3.5 rounded-full bg-zinc-500"
-              ></span>
+        <div class="header-controls">
+          <div class="live-indicator">
+            <span id="statusPill" class="status-pill is-live">
+              <span class="status-dot" aria-hidden="true"></span>
+              <span id="status" class="gradient-live">LIVE</span>
             </span>
-            <span id="toggleLabel" class="w-[82px]">Live refresh</span>
-          </label>
-          <span
-            id="status"
-            class="w-14 border-l border-zinc-800 pl-5 text-center font-medium text-emerald-400"
-            >LIVE</span
-          >
+            <span id="lastRefreshed" class="last-refreshed">Waiting for first update…</span>
+            <span id="statusCaption" class="status-caption">Connecting to dashboard telemetry</span>
+          </div>
+          <div class="controls-row">
+            <label class="control">
+              <span>Refresh every</span>
+              <select id="refreshRate">
+                <option value="2">2 sec</option>
+                <option value="5" selected>5 sec</option>
+                <option value="10">10 sec</option>
+                <option value="30">30 sec</option>
+                <option value="60">1 min</option>
+                <option value="120">2 min</option>
+                <option value="300">5 min</option>
+                <option value="custom">Custom</option>
+              </select>
+              <input id="customRefresh" class="custom-refresh" type="number" min="1" max="3600" step="1" value="45" aria-label="Custom refresh interval in seconds" title="Seconds, from 1 to 3600" hidden />
+            </label>
+            <label class="toggle">
+              <input id="liveToggle" type="checkbox" checked />
+              <span class="toggle-track"><span class="toggle-thumb"></span></span>
+              <span id="toggleLabel">Live refresh</span>
+              <span id="refreshAgent" class="refresh-agent" aria-hidden="true"><svg viewBox="0 0 24 24"><circle class="agent-head" cx="12" cy="4" r="2.3"/><path d="M12 7v8m0-6-5 4m5-4 5 3"/><path class="agent-leg-left" d="m12 15-4 6"/><path class="agent-leg-right" d="m12 15 5 6"/></svg></span>
+            </label>
+            <button id="refreshNow" type="button" class="refresh-now" title="Fetch the latest saved detections once">↻ Refresh now</button>
+          </div>
         </div>
       </header>
+      <nav class="view-nav" aria-label="Dashboard views">
+        <button type="button" class="view-tab" data-view="overview" aria-selected="true" aria-controls="overviewView"><svg viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="3"/><path d="M7 14h3l2-5 2 7 2-3h2"/></svg> Overview</button>
+        <button type="button" class="view-tab" data-view="investigate" aria-selected="false" aria-controls="investigateView"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="11" cy="11" r="7"/><path d="m16 16 5 5M8 11h6"/></svg> Investigate</button>
+      </nav>
+      <div id="overviewView" class="page-view">
+        <div class="overview-intro"><div><h1>Threat overview</h1><p>Hybrid ML + DL analysis of simulated network traffic</p></div><span class="scope-pill">SAVED TELEMETRY</span></div>
 
-      <section
-        id="alert"
-        class="my-7 flex min-h-14 items-center gap-4 border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm"
-        aria-live="polite"
-      >
-        <span
-          id="alertLabel"
-          class="shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-400"
-          >Status</span
-        >
-        <span id="alertCopy" class="alert-copy text-zinc-400"
-          >Waiting for telemetry...</span
-        >
-      </section>
-
-      <section
-        class="grid grid-cols-2 divide-x divide-zinc-800 border-y border-zinc-800 lg:grid-cols-4"
-        aria-label="System metrics"
-      >
-        <article class="px-4 py-5 first:pl-0 sm:px-6 lg:py-7">
-          <p
-            class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
-          >
-            Pipeline latency
-          </p>
-          <p
-            id="latency"
-            class="mt-4 text-3xl font-light tracking-tight text-white"
-          >
-            -- <span class="text-sm text-zinc-500">ms</span>
-          </p>
-          <p id="latencyNote" class="mt-2 text-xs text-zinc-600">
-            Waiting for flows
-          </p>
-        </article>
-        <article class="px-4 py-5 sm:px-6 lg:py-7">
-          <p
-            class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
-          >
-            System macro F1
-          </p>
-          <p id="f1" class="mt-4 text-3xl font-light tracking-tight text-white">
-            --
-          </p>
-          <p id="f1Note" class="mt-2 text-xs text-zinc-600">
-            Saved evaluation metric
-          </p>
-        </article>
-        <article class="px-4 py-5 sm:px-6 lg:py-7">
-          <p
-            class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
-          >
-            Threats flagged
-          </p>
-          <p
-            id="attacks"
-            class="mt-4 text-3xl font-light tracking-tight text-white"
-          >
-            --
-          </p>
-          <p class="mt-2 text-xs text-zinc-600">Historical database total</p>
-        </article>
-        <article class="px-4 py-5 last:pr-0 sm:px-6 lg:py-7">
-          <p
-            class="text-[11px] font-medium uppercase tracking-[0.14em] text-zinc-500"
-          >
-            Total flows
-          </p>
-          <p
-            id="flows"
-            class="mt-4 text-3xl font-light tracking-tight text-white"
-          >
-            --
-          </p>
-          <p class="mt-2 text-xs text-zinc-600">Historical database total</p>
-        </article>
-      </section>
-
-      <section class="mt-8 grid gap-8 lg:grid-cols-[1.4fr_0.8fr]">
-        <article class="min-w-0 border-t border-zinc-800 pt-5">
-          <div class="mb-5 flex items-baseline justify-between gap-4">
-            <h2 class="text-sm font-medium text-zinc-200">
-              Flow latency by sequence
-            </h2>
-            <span class="text-[11px] text-zinc-600"
-              >x: flow ID / y: latency (ms)</span
-            >
-          </div>
-          <div class="relative h-72"><canvas id="latencyChart"></canvas></div>
-        </article>
-        <article class="min-w-0 border-t border-zinc-800 pt-5">
-          <div class="mb-5 flex items-baseline justify-between gap-4">
-            <h2 class="text-sm font-medium text-zinc-200">
-              Threat classification
-            </h2>
-            <span id="threatTotal" class="text-[11px] text-zinc-600"
-              >0 events</span
-            >
-          </div>
-          <div class="relative h-72">
-            <canvas id="threatChart"></canvas>
-            <div
-              id="threatPercent"
-              class="pointer-events-none absolute inset-0 flex items-center justify-center text-2xl font-light text-zinc-300"
-            >
-              --
+      <!-- ============ LIVE OPERATIONAL KPIs (row 1) ============ -->
+      <!-- Fields: data.latest_alert, kpi.window_attacks, kpi.window_size, kpi.avg_latency -->
+      <section class="kpi-row" aria-label="Live monitoring metrics">
+        <article id="alert" class="panel kpi-card kpi-alert is-safe" aria-live="polite">
+          <div class="alert-lead"><div class="alarm-mark" aria-hidden="true"><svg viewBox="0 0 64 64"><path d="M32 8 4 55h56L32 8Z"/><path d="M32 24v15m0 8h.01"/></svg></div>
+          <div class="alert-lead-copy"><p class="kpi-label"><span class="alert-kicker">LATEST DETECTED ATTACK</span></p>
+          <p id="alertLabel" class="kpi-alert-headline gradient-live">Waiting for telemetry…</p>
+          <p id="attackMeaning" class="attack-meaning hidden"></p></div></div>
+          <div id="alertGrid" class="alert-grid hidden">
+            <div class="alert-field">
+              <span class="alert-field-k">Source</span>
+              <span id="alertSource" class="alert-field-v">--</span>
+            </div>
+            <div class="alert-field">
+              <span class="alert-field-k">Destination</span>
+              <span id="alertDest" class="alert-field-v">--</span>
+            </div>
+            <span id="alertClass" hidden></span>
+            <div class="alert-field">
+              <span class="alert-field-k">Confidence</span>
+              <span id="alertConfidence" class="alert-field-v">--</span>
+            </div>
+            <div id="stageField" class="alert-field">
+              <span class="alert-field-k">Pipeline stage</span>
+              <span id="alertStage" class="alert-field-v">--</span>
             </div>
           </div>
+          <p id="alertCopy" class="kpi-alert-detail">Connecting to the detection pipeline…</p>
+          <button id="inspectAlert" class="primary-action" type="button"><span>Investigate flow</span><span class="action-arrow" aria-hidden="true">→</span></button>
+        </article>
+        <article class="panel kpi-card">
+          <p class="kpi-label">Threats detected <span class="kpi-scope">In selected flows</span></p>
+          <p id="windowAttacks" class="kpi-number">--</p>
+          <p id="windowAttacksNote" class="kpi-note">In selected saved records</p>
+        </article>
+        <article class="panel kpi-card">
+          <p class="kpi-label">Traffic inspected <span class="kpi-scope">Saved flows in view</span></p>
+          <p id="windowFlows" class="kpi-number">--</p>
+          <p id="windowFlowsNote" class="kpi-note">Latest stored flows in view</p>
+        </article>
+        <article class="panel kpi-card">
+          <p class="kpi-label">Detection speed <span class="kpi-scope">Average per flow</span></p>
+          <p id="latency" class="kpi-number">-- <span class="kpi-unit">ms</span></p>
+          <p id="latencyNote" class="kpi-note">Waiting for flows</p>
+        </article>
+      </section>
+      <section class="panel overview-evidence" aria-label="Recent detected threats"><div class="evidence-head"><h2>Recent detected flows</h2><span>Select a flow to inspect its evidence</span></div><div id="overviewEvidence" class="evidence-list"></div><p class="evidence-footer">Showing the latest threats in the selected window · <button id="openInvestigate" type="button">Explore all flows →</button></p></section>
+
+      <!-- ============ HISTORICAL + OFFLINE METRICS (row 2) ============ -->
+      <!-- Fields: kpi.total_flows, kpi.total_attacks, kpi.dl_macro_f1 (or legacy current_f1) -->
+      <section class="model-strip" aria-label="Model validation and historical totals"><div class="model-strip-title"><strong>Model &amp; system evidence</strong><span>Offline validation and all-time saved records</span></div><div class="model-stat is-f1"><span>Offline DL Macro F1</span><strong id="f1">--</strong><small id="f1Note">Held-out test set · Stage 2 only</small></div><div class="model-stat"><span>Saved flows · all time</span><strong id="totalFlows">--</strong></div><div class="model-stat"><span>Threats flagged · all time</span><strong id="totalAttacks">--</strong></div></section>
+      <!-- ============ PIPELINE ============ -->
+      <section class="pipeline" aria-label="How the detection pipeline works">
+        <div class="pipeline-title"><h2>Detection path · from traffic to alert</h2><span>Select a stage for details ↓</span></div>
+        <div class="pipeline-steps">
+          <button type="button" class="step" data-pipeline="0" aria-pressed="false"><span class="step-num">1</span><svg class="step-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 12h4l2-5 4 10 2-5h6"/></svg><span class="step-label">Live Traffic</span></button>
+          <span class="step-connector" aria-hidden="true"></span>
+          <button type="button" class="step" data-pipeline="1" aria-pressed="false"><span class="step-num">2</span><svg class="step-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 5h16M4 12h10M4 19h16M18 9v6m-3-3h6"/></svg><span class="step-label">Flow Features</span></button>
+          <span class="step-connector" aria-hidden="true"></span>
+          <button type="button" class="step" data-pipeline="2" aria-pressed="false"><span class="step-num">3</span><svg class="step-icon" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2"/><circle cx="19" cy="5" r="2"/><circle cx="19" cy="19" r="2"/><path d="m7 11 10-5M7 13l10 5"/></svg><span class="step-label">ML Triage</span></button>
+          <span class="step-connector" aria-hidden="true"></span>
+          <button type="button" class="step is-dl" data-pipeline="3" aria-pressed="false"><span class="step-num">4</span><svg class="step-icon" viewBox="0 0 24 24" aria-hidden="true"><rect x="3" y="3" width="18" height="18" rx="4"/><path d="M7 9h10M7 15h10M10 7v10M14 7v10"/></svg><span class="step-label">DL Classification</span></button>
+          <span class="step-connector" aria-hidden="true"></span>
+          <button type="button" id="pipelineStep5" class="step is-alert-end" data-pipeline="4" aria-pressed="false"><span class="step-num">5</span><svg class="step-icon" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3 2.5 20h19L12 3Z"/><path d="M12 9v5m0 3h.01"/></svg><span class="step-label">Alert</span></button>
+        </div>
+        <div id="pipelineDetail" class="pipeline-detail" aria-live="polite" hidden><strong id="pipelineDetailTitle">Explore the detection pipeline</strong><p id="pipelineDetailText">Select any stage to understand how the system processes a flow.</p><span class="detail-badge">PROCESS OVERVIEW</span></div>
+      </section>
+
+      </div>
+      <div id="investigateView" class="page-view" hidden>
+        <div class="investigate-title"><h1>Investigate detections</h1><p>Filter traffic, inspect patterns and open a saved flow</p></div>
+        <section id="selectedContext" class="selected-context" aria-label="Selected alert details" hidden><div class="selected-context-head"><div><span class="eyebrow">Selected detection · saved flow</span><h2 id="selectedTitle">--</h2></div><span id="selectedFlowId" class="scope-pill">--</span></div><div class="selected-context-grid"><div><span>Source</span><strong id="selectedSource">--</strong></div><div><span>Destination</span><strong id="selectedDestination">--</strong></div><div><span>Confidence</span><strong id="selectedConfidence">--</strong></div><div><span>Processing</span><strong id="selectedLatency">--</strong></div><div><span>Recorded</span><strong id="selectedTimestamp">--</strong></div></div><div class="selected-context-actions"><button id="jumpToFlow" type="button">Jump to highlighted record ↓</button><button id="closeSelected" type="button">Clear selection</button></div></section>
+
+      <!-- ============ CHARTS ============ -->
+      <!-- The charts and filters use the same selected data.logs window. -->
+      <div class="view-controls explore-bar" aria-label="Explore stored flow records">
+        <div class="explore-intro"><h2>Explore traffic</h2><p>Choose a recent flow window, then select an attack type below to inspect its detections.</p><p id="viewSummary" aria-live="polite">Showing latest 500 saved flows</p></div>
+        <div class="explore-picker"><span class="explore-picker-label">SHOW RECENT FLOWS</span><div class="view-buttons" role="group" aria-label="Choose number of recent flows">
+          <button type="button" class="view-button" data-limit="100" aria-pressed="false">100 flows</button>
+          <button type="button" class="view-button is-selected" data-limit="500" aria-pressed="true">500 flows</button>
+          <button type="button" class="view-button" data-limit="2500" aria-pressed="false">2,500 flows</button>
+        </div>
+        </div>
+      </div>
+      <section class="charts-grid">
+        <article class="panel chart-card">
+          <div class="chart-head">
+            <h2 id="latencyHeading">Processing time by flow</h2>
+            <span class="chart-sub">Selected recent flows</span>
+          </div>
+          <div class="latency-actions"><span id="latencyDescription" class="chart-sub">Each point is one classified flow · hover to inspect</span><div class="chart-mode" role="group" aria-label="Change traffic chart"><button type="button" data-chart-mode="latency" aria-pressed="true">Processing time</button><button type="button" data-chart-mode="activity" aria-pressed="false">Attack activity</button></div></div>
+          <div class="chart-wrap"><canvas id="latencyChart"></canvas></div>
+          <div class="chart-insight" aria-label="Metrics for selected flows"><div><span>Flows in view</span><strong id="chartFlowCount">--</strong></div><div><span id="chartMiddleLabel">Typical processing</span><strong id="chartMiddleValue">--</strong></div><div><span id="chartLastLabel">Slowest flow</span><strong id="chartLastValue">--</strong></div></div>
+          <p id="chartInsightNote" class="chart-insight-note">Hover over a point to inspect its flow ID and processing time.</p>
+        </article>
+        <article class="panel chart-card">
+          <div class="chart-head donut-head">
+            <h2>What the model detected</h2>
+            <span id="threatTotal" class="chart-sub">0 selected flows</span>
+          </div>
+          <p class="donut-hint">Select a segment or category to filter the detection log ↓</p>
+          <div class="donut-stage">
+            <canvas id="threatChart"></canvas>
+            <div id="threatPercent"><span id="threatPercentValue">--</span><span id="threatPercentLabel">flagged</span></div>
+          </div>
+          <div id="classLegend" class="class-legend" role="group" aria-label="Filter detections by classification"></div>
+          <p id="classFilterHint" class="filter-hint" aria-live="polite">Select a category to see its detection records.</p>
         </article>
       </section>
 
-      <section class="mt-10 border-t border-zinc-800 pt-5">
-        <div class="mb-5 flex items-baseline justify-between gap-4">
-          <h2 class="text-sm font-medium text-zinc-200">Detection log</h2>
-          <span class="text-[11px] uppercase tracking-[0.12em] text-zinc-600"
-            >Latest records</span
-          >
+      <!-- ============ DETECTION TABLE ============ -->
+      <!-- Fields: data.logs[] — id, timestamp, source_ip/port, destination_ip/port,
+           protocol, attack_type, confidence, latency_ms, stage_reached. -->
+      <section class="panel table-section">
+        <div id="focusedNotice" class="focused-notice" hidden><div><strong id="focusTitle">Selected alert</strong><p id="focusMeta"></p></div><button id="clearFocus" type="button">Clear selection</button></div>
+        <div class="table-head">
+          <h2>Recent detections</h2>
+          <div class="table-tools"><label for="logSearch">Filter records</label><input id="logSearch" type="search" placeholder="Attack type, IP or protocol" autocomplete="off" /><button type="button" id="clearFilter" class="view-button">All flows</button><span id="tableCount">Newest first</span></div>
         </div>
-        <div class="table-scroll overflow-x-auto">
-          <table class="w-full min-w-[720px] border-collapse text-left text-xs">
+        <div class="table-scroll">
+          <table>
             <thead>
-              <tr class="text-[10px] uppercase tracking-[0.12em] text-zinc-600">
-                <th class="pb-3 pr-5 font-medium">Time</th>
-                <th class="pb-3 pr-5 font-medium">Source</th>
-                <th class="pb-3 pr-5 font-medium">Target</th>
-                <th class="pb-3 pr-5 font-medium">Protocol</th>
-                <th class="pb-3 pr-5 font-medium">Classification</th>
-                <th class="pb-3 text-right font-medium">Latency</th>
-                <th class="pb-3 text-right font-medium">Details</th>
+              <tr>
+                <th>Time</th>
+                <th>Source</th>
+                <th>Target</th>
+                <th>Protocol</th>
+                <th>Detected class</th>
+                <th class="num-cell">Confidence</th>
+                <th class="num-cell">Processing time</th>
+                <th>Pipeline stage</th>
+                <th class="num-cell">Details</th>
               </tr>
             </thead>
-            <tbody id="logBody" class="text-zinc-400"></tbody>
+            <tbody id="logBody"></tbody>
           </table>
-          <div
-            id="empty"
-            class="hidden py-12 text-center text-xs text-zinc-600"
-          >
-            No telemetry recorded yet.
-          </div>
+          <div id="empty" class="hidden">No matching records in this selection.</div>
         </div>
       </section>
-      <footer
-        id="footer"
-        class="mt-8 border-t border-zinc-900 pt-4 text-[11px] text-zinc-600"
-      >
-        API connected / awaiting telemetry
-      </footer>
+      </div>
+
+      <footer id="footer">API connected · awaiting telemetry</footer>
     </main>
 
     <script>
       const normalLabels = new Set(["Normal Traffic", "Normal"]);
+
+      // Donut palette: Normal = teal (healthy). Attack categories move amber → red
+      // as severity increases — all are already-confirmed detections, so they stay
+      // in the amber/red family (never cyan or violet, which are reserved elsewhere).
       const colors = {
-        "Normal Traffic": "#34d399",
-        Normal: "#34d399",
-        "Port Scan": "#f59e0b",
-        DoS: "#ef4444",
-        DDoS: "#be123c",
-        "Brute Force": "#f97316",
-        "Web Attack": "#a855f7",
-        Botnet: "#06b6d4",
+        "Normal Traffic": "#2DD4BF",
+        Normal: "#2DD4BF",
+        "Port Scan": "#FBBF24",
+        "Brute Force": "#F2994A",
+        DoS: "#F2545B",
+        DDoS: "#D7263D",
+        "Web Attack": "#C81E5C",
+        Botnet: "#7A1735",
+        "Other Attack": "#A78BFA",
+        "Unknown Attack": "#FBBF24",
       };
+
+      const reduceMotion = window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+      const chartAnimation = reduceMotion ? false : { duration: 400, easing: "easeOutQuad" };
+
       const axis = {
         display: true,
-        grid: { color: "rgba(63,63,70,.42)", drawTicks: false },
+        grid: { color: "rgba(148,163,184,.10)", drawTicks: false },
         border: { display: false },
-        ticks: {
-          color: "#71717a",
-          font: { size: 10 },
-          padding: 8,
-          maxTicksLimit: 8,
-        },
+        ticks: { color: "#A6B0C3", font: { size: 11, family: "ui-monospace, monospace" }, padding: 8, maxTicksLimit: 8 },
       };
+
       const latencyChart = new Chart(document.getElementById("latencyChart"), {
         type: "line",
         data: {
@@ -290,18 +1449,19 @@
             {
               data: [],
               label: "Pipeline latency",
-              borderColor: "#60a5fa",
-              backgroundColor: "rgba(96,165,250,.08)",
-              borderWidth: 1.5,
+              borderColor: "#22D3EE",
+              backgroundColor: "rgba(34,211,238,.12)",
+              borderWidth: 2,
               fill: true,
               tension: 0.28,
               pointRadius: 0,
               pointHoverRadius: 3,
+              pointHoverBackgroundColor: "#22D3EE",
             },
             {
               data: [],
-              label: "250 ms limit",
-              borderColor: "#ef4444",
+              label: "250 ms reference",
+              borderColor: "#FBBF24",
               borderDash: [5, 5],
               borderWidth: 1.5,
               pointRadius: 0,
@@ -314,106 +1474,59 @@
         options: {
           responsive: true,
           maintainAspectRatio: false,
+          animation: chartAnimation,
           interaction: { intersect: false, mode: "index" },
           plugins: {
             legend: {
               display: true,
-              labels: {
-                color: "#a1a1aa",
-                boxWidth: 18,
-                padding: 14,
-                font: { size: 10 },
-              },
+              labels: { color: "#A6B0C3", boxWidth: 16, padding: 14, font: { size: 11, family: "ui-monospace, monospace" } },
             },
             tooltip: {
-              backgroundColor: "#18181b",
-              borderColor: "#3f3f46",
+              backgroundColor: "#0b0b12",
+              borderColor: "rgba(34,211,238,.4)",
               borderWidth: 1,
-              titleColor: "#a1a1aa",
-              bodyColor: "#f4f4f5",
+              titleColor: "#F3F6FC",
+              bodyColor: "#F3F6FC",
               padding: 10,
               displayColors: false,
+              bodyFont: { family: "ui-monospace, monospace" },
+              titleFont: { family: "ui-monospace, monospace" },
             },
           },
           scales: {
             x: {
               ...axis,
-              title: {
-                display: true,
-                text: "Flow sequence ID",
-                color: "#71717a",
-                font: { size: 10, weight: "400" },
-              },
+              title: { display: true, text: "Flow sequence ID", color: "#A6B0C3", font: { size: 11, weight: "400" } },
             },
             y: {
               ...axis,
               beginAtZero: true,
-              title: {
-                display: true,
-                text: "Latency (ms)",
-                color: "#71717a",
-                font: { size: 10, weight: "400" },
-              },
+              title: { display: true, text: "Latency (ms)", color: "#A6B0C3", font: { size: 11, weight: "400" } },
             },
           },
         },
       });
+
       const threatChart = new Chart(document.getElementById("threatChart"), {
         type: "doughnut",
-        data: {
-          labels: [],
-          datasets: [
-            {
-              data: [],
-              backgroundColor: [],
-              borderColor: "#000",
-              borderWidth: 3,
-              hoverOffset: 3,
-            },
-          ],
-        },
+        data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderColor: "#0c0c12", borderWidth: 3, hoverOffset: 4 }] },
         options: {
           responsive: true,
           maintainAspectRatio: false,
-          cutout: "76%",
+          cutout: "74%",
+          animation: chartAnimation,
           plugins: {
-            legend: {
-              position: "bottom",
-              labels: {
-                color: "#d4d4d8",
-                boxWidth: 8,
-                boxHeight: 8,
-                padding: 14,
-                font: { size: 10 },
-                generateLabels: (chart) => {
-                  const values = chart.data.datasets[0].data;
-                  const total = values.reduce((sum, value) => sum + value, 0);
-                  return chart.data.labels.map((label, index) => ({
-                    text: `${label} ${total ? ((values[index] / total) * 100).toFixed(1) : "0.0"}%`,
-                    fillStyle: chart.data.datasets[0].backgroundColor[index],
-                    strokeStyle: "transparent",
-                    lineWidth: 0,
-                    hidden: false,
-                    index,
-                    fontColor: "#d4d4d8",
-                  }));
-                },
-              },
-            },
+            legend: { display: false },
             tooltip: {
-              backgroundColor: "#18181b",
-              borderColor: "#3f3f46",
+              backgroundColor: "#0b0b12",
+              borderColor: "rgba(34,211,238,.4)",
               borderWidth: 1,
               padding: 10,
+              bodyFont: { family: "ui-monospace, monospace" },
               callbacks: {
                 label: (context) => {
-                  const total = context.dataset.data.reduce(
-                    (sum, value) => sum + value,
-                    0,
-                  );
-                  const percent = total
-                    ? ((context.raw / total) * 100).toFixed(1)
-                    : "0.0";
+                  const total = context.dataset.data.reduce((sum, value) => sum + value, 0);
+                  const percent = total ? ((context.raw / total) * 100).toFixed(1) : "0.0";
                   return ` ${context.label}: ${percent}%`;
                 },
               },
@@ -421,92 +1534,338 @@
           },
         },
       });
+
       let pollTimer;
       let refreshSeconds = 5;
       let expandedLogId = null;
       let expandedLogSnapshot = null;
+      let selectedLimit = 500;
       const $ = (id) => document.getElementById(id);
-      const score = (value) =>
-        value == null ? "--" : Number(value).toFixed(3);
+      function showView(view, focusTable = false) {
+        const investigate = view === "investigate";
+        $("overviewView").hidden = investigate;
+        $("investigateView").hidden = !investigate;
+        document.querySelectorAll("[data-view]").forEach((button) => button.setAttribute("aria-selected", String(button.dataset.view === view)));
+        if (investigate) {
+          requestAnimationFrame(() => { latencyChart.resize(); threatChart.resize(); });
+        }
+        const target = focusTable ? document.querySelector(".table-section") : investigate ? $("investigateView") : $("overviewView");
+        target.scrollIntoView({ behavior: reduceMotion ? "instant" : "smooth", block: "start" });
+      }
+      document.querySelectorAll("[data-view]").forEach((button) => button.addEventListener("click", () => showView(button.dataset.view)));
+      $("inspectAlert").addEventListener("click", () => {
+        const alert = latestTelemetry?.latest_alert;
+        if (alert) selectFlow(alert);
+      });
+      $("openInvestigate").addEventListener("click", () => showView("investigate"));
+      $("jumpToFlow").addEventListener("click", () => {
+        const focused = document.querySelector(".log-row.is-focused");
+        if (focused) focused.scrollIntoView({ behavior: reduceMotion ? "instant" : "smooth", block: "center" });
+      });
+      $("closeSelected").addEventListener("click", () => clearSelectedFlow());
+      function selectFlow(log) {
+        activeClass = log.attack_type;
+        searchTerm = "";
+        $("logSearch").value = "";
+        focusedLogId = log.id;
+        expandedLogId = log.id;
+        expandedLogSnapshot = { ...log };
+        if (latestTelemetry) updateDashboard(latestTelemetry);
+        showView("investigate");
+      }
+      function clearSelectedFlow() {
+        focusedLogId = null;
+        expandedLogId = null;
+        expandedLogSnapshot = null;
+        if (latestTelemetry) updateDashboard(latestTelemetry);
+      }
+      let chartMode = "latency";
+      let chartPointLogs = [];
+      const pipelineInfo = [
+        ["01 · Live Traffic", "Captures simulated network traffic and groups packets into flows. Capture status is not available here."],
+        ["02 · Flow Features", "Turns each captured flow into features for model inference."],
+        ["03 · ML Triage", "Screens flows for suspicious activity. Per-stage decisions are not recorded in this view."],
+        ["04 · DL Classification", "Classifies suspicious traffic by attack type. The Macro F1 above comes from offline validation."],
+        ["05 · Alert", "Saves detected threats with source, target, class, confidence and timestamp."],
+      ];
+      document.querySelectorAll("[data-pipeline]").forEach((button) => button.addEventListener("click", () => {
+        const selected = button.getAttribute("aria-pressed") !== "true";
+        document.querySelectorAll("[data-pipeline]").forEach((step) => step.setAttribute("aria-pressed", String(selected && step === button)));
+        $("pipelineDetail").hidden = !selected;
+        $("pipelineDetailTitle").textContent = selected ? pipelineInfo[Number(button.dataset.pipeline)][0] : "Explore the detection pipeline";
+        $("pipelineDetailText").textContent = selected ? pipelineInfo[Number(button.dataset.pipeline)][1] : "Select any stage to understand how the system processes a flow.";
+      }));
+      let latestTelemetry = null;
+      let searchTerm = "";
+      let activeClass = null;
+      let focusedLogId = null;
+      let requestSerial = 0;
+      const attackAccent = {
+        "Port Scan":"#f6c46f", "Brute Force":"#ffad72", DoS:"#ff846b",
+        DDoS:"#ff6874", "Web Attack":"#ff809b", Botnet:"#f2a0bd",
+      };
+      const attackMeaning = {
+        "Port Scan":"Classified as network port probing",
+        "Brute Force":"Classified as repeated access attempts",
+        DoS:"Classified as a denial-of-service attempt",
+        DDoS:"Classified as distributed denial-of-service traffic",
+        "Web Attack":"Classified as an attack on a web service",
+        Botnet:"Classified as botnet-related traffic",
+      };
+      const score = (value) => (value == null ? "--" : Number(value).toFixed(3));
+      function flashUpdate(el) {
+        el.classList.remove("flash-update");
+        void el.offsetWidth; // restart the animation
+        el.classList.add("flash-update");
+      }
+
+      function setAlertScheme(scheme) {
+        // scheme: "safe" (teal — healthy monitoring) | "warning" (amber) | "threat" (red — confirmed attack only)
+        $("alert").className = `panel kpi-card kpi-alert is-${scheme}`;
+        $("alertLabel").classList.toggle("gradient-live", scheme === "safe");
+        // The highlighted node indicates a saved alert, not proof of ongoing attack.
+        $("pipelineStep5").classList.toggle("is-active-threat", scheme === "threat");
+      }
 
       function updateDashboard(data) {
         if (data.error) {
-          $("alertLabel").textContent = "Error";
-          $("alertLabel").className =
-            "shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-red-400";
+          // A connection/read error is an operational issue, not a confirmed
+          // attack, so it uses the amber "warning" scheme rather than red.
+          setAlertScheme("warning");
+          $("alertGrid").classList.add("hidden");
+          $("inspectAlert").hidden = true;
+          $("attackMeaning").classList.add("hidden");
+          $("selectedContext").hidden = true;
+          $("alertLabel").textContent = "Connection issue";
           $("alertCopy").textContent = data.error;
-          $("alertCopy").className = "alert-copy text-red-300";
-          $("alert").className =
-            "my-7 flex min-h-14 items-center gap-4 border border-red-900/70 bg-red-950/20 px-4 py-3 text-sm";
+          $("status").textContent = "UNAVAILABLE";
+          $("statusPill").className = "status-pill is-warning";
+          $("statusCaption").textContent = "Unable to read saved telemetry";
+          $("refreshAgent").classList.remove("is-running");
           return;
         }
+
         const kpi = data.kpis;
-        $("latency").innerHTML =
-          `${kpi.avg_latency} <span class="text-sm text-zinc-500">ms</span>`;
-        $("latencyNote").textContent =
-          kpi.avg_latency < 250 ? "Under 250ms target" : "Above 250ms target";
-        $("latencyNote").className =
-          `mt-2 text-xs ${kpi.avg_latency < 250 ? "text-emerald-400" : "text-red-400"}`;
-        $("f1").textContent = score(kpi.current_f1);
-        $("f1Note").textContent =
-          kpi.f1_improvement == null
-            ? "Saved evaluation metric"
-            : `${kpi.f1_improvement >= 0 ? "+" : ""}${kpi.f1_improvement}% vs 0.700 target`;
-        $("f1Note").className =
-          `mt-2 text-xs ${kpi.current_f1 != null && kpi.current_f1 >= kpi.f1_target ? "text-emerald-400" : "text-red-400"}`;
-        $("f1").className =
-          `mt-4 text-3xl font-light tracking-tight ${kpi.current_f1 != null && kpi.current_f1 >= kpi.f1_target ? "text-emerald-400" : "text-red-400"}`;
-        $("attacks").textContent = Number(kpi.total_attacks).toLocaleString();
-        $("flows").textContent = Number(kpi.total_flows).toLocaleString();
+        latestTelemetry = data;
+        $("overviewEvidence").replaceChildren();
+        const recentThreats = data.logs.filter((log) => log.attack_type && !normalLabels.has(log.attack_type)).slice(0, 4);
+        if (!recentThreats.length) {
+          const emptyEvidence = document.createElement("p");
+          emptyEvidence.textContent = "No detected attacks in this selected window.";
+          $("overviewEvidence").appendChild(emptyEvidence);
+        }
+        recentThreats.forEach((log) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "evidence-item";
+          const label = document.createElement("strong");
+          label.textContent = log.attack_type;
+          label.style.color = attackAccent[log.attack_type] || "#ffad8d";
+          const route = document.createElement("span");
+          route.textContent = `${log.source_ip || "Unknown"} → ${log.destination_ip || "Unknown"}`;
+          const stamp = document.createElement("small");
+          stamp.textContent = `Flow #${log.id} · ${log.timestamp || "Time unavailable"}`;
+          button.append(label, route, stamp);
+          button.addEventListener("click", () => selectFlow(log));
+          $("overviewEvidence").appendChild(button);
+        });
+        $("status").textContent = $("liveToggle").checked ? "AUTO REFRESH" : "PAUSED";
+        $("statusPill").className = `status-pill ${$("liveToggle").checked ? "is-live" : "is-paused"}`;
+        $("refreshAgent").classList.toggle("is-running", $("liveToggle").checked);
+        $("statusCaption").textContent = $("liveToggle").checked
+          ? "Showing saved detections · capture status unknown"
+          : "Refresh paused · saved detections visible";
+        $("viewSummary").textContent = `Showing ${Number(kpi.window_size).toLocaleString()} of the latest ${selectedLimit.toLocaleString()} saved flows`;
+
+        // --- Live window KPIs: kpi.window_attacks / kpi.window_size ---
+        $("windowAttacks").textContent = Number(kpi.window_attacks).toLocaleString();
+        $("windowFlows").textContent = Number(kpi.window_size).toLocaleString();
+        $("windowAttacksNote").textContent = `of ${Number(kpi.window_size).toLocaleString()} selected flows`;
+        $("windowFlowsNote").textContent = `Most recent ${selectedLimit.toLocaleString()} requested`;
+        flashUpdate($("windowAttacks"));
+        flashUpdate($("windowFlows"));
+
+        // --- Avg pipeline latency: kpi.avg_latency ---
+        $("latency").innerHTML = `${kpi.avg_latency} <span class="kpi-unit">ms</span>`;
+        flashUpdate($("latency"));
+        const withinTarget = kpi.avg_latency < 250;
+        $("latencyNote").textContent = withinTarget ? "Below 250 ms reference" : "Above 250 ms reference";
+        $("latencyNote").className = `kpi-note ${withinTarget ? "text-teal" : "text-amber"}`;
+
+        // --- Historical totals: kpi.total_flows / kpi.total_attacks ---
+        $("totalFlows").textContent = Number(kpi.total_flows).toLocaleString();
+        $("totalAttacks").textContent = Number(kpi.total_attacks).toLocaleString();
+
+        // Five-attack API uses dl_macro_f1; older projects may expose current_f1.
+        const displayedF1 = kpi.dl_macro_f1 ?? kpi.current_f1;
+        $("f1").textContent = score(displayedF1);
+        $("f1").parentElement.style.setProperty("--f1-progress", displayedF1 == null ? "0%" : `${Math.min(100, Math.max(0, Number(displayedF1) * 100))}%`);
+        flashUpdate($("f1"));
+        $("f1").className = "kpi-number-quiet text-violet";
+        $("f1Note").textContent = displayedF1 == null
+          ? (kpi.evaluation_status || "Offline DL report unavailable for selected model")
+          : "Held-out data · Stage 2 only";
+
+        // --- Current status card: data.latest_alert ---
         const alert = data.latest_alert;
-        $("alertLabel").textContent = alert
-          ? `Alert / ${alert.attack_type}`
-          : "Network clear";
-        $("alertLabel").className = alert
-          ? "shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-red-400"
-          : "shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-emerald-400";
-        $("alertCopy").textContent = alert
-          ? `${alert.source_ip}  →  ${alert.destination_ip}  /  ${alert.protocol}  /  ${alert.timestamp}`
-          : "No malicious flows in the current telemetry window.";
-        $("alertCopy").className = alert
-          ? "alert-copy font-medium text-red-200"
-          : "alert-copy text-zinc-400";
-        $("alert").className = alert
-          ? "my-7 flex min-h-14 items-center gap-4 border border-red-900/70 bg-red-950/20 px-4 py-3 text-sm"
-          : "my-7 flex min-h-14 items-center gap-4 border border-zinc-800 bg-zinc-950 px-4 py-3 text-sm";
+        if (alert) {
+          setAlertScheme("threat");
+          $("alert").style.setProperty("--attack-accent", attackAccent[alert.attack_type] || "#ff9879");
+          $("inspectAlert").hidden = false;
+          const actionLabel = document.createElement("span");
+          actionLabel.textContent = "Investigate flow";
+          const flowId = document.createElement("span");
+          flowId.className = "flow-id";
+          flowId.textContent = `#${alert.id}`;
+          const actionArrow = document.createElement("span");
+          actionArrow.className = "action-arrow";
+          actionArrow.setAttribute("aria-hidden", "true");
+          actionArrow.textContent = "→";
+          $("inspectAlert").replaceChildren(actionLabel, flowId, actionArrow);
+          $("alertLabel").textContent = alert.attack_type;
+          $("attackMeaning").textContent = attackMeaning[alert.attack_type] || "Suspicious traffic classified by the detector";
+          $("attackMeaning").classList.remove("hidden");
+          flashUpdate($("alertLabel"));
+          $("alertGrid").classList.remove("hidden");
+          $("alertGrid").classList.toggle("has-stage", Boolean(alert.stage_reached));
+          $("alertSource").textContent = alert.source_ip;
+          $("alertDest").textContent = alert.destination_ip;
+          $("alertClass").replaceChildren();
+          const classChip = document.createElement("span");
+          classChip.className = "chip chip-threat";
+          classChip.textContent = alert.attack_type;
+          classChip.style.color = attackAccent[alert.attack_type] || "#ff9879";
+          classChip.style.borderColor = attackAccent[alert.attack_type] || "#ff9879";
+          $("alertClass").appendChild(classChip);
+          $("alertConfidence").textContent = alert.confidence == null ? "not recorded" : `${(Number(alert.confidence) * 100).toFixed(1)}%`;
+          $("alertStage").textContent = alert.stage_reached || "Stage not recorded";
+          $("stageField").hidden = !alert.stage_reached;
+          $("alertCopy").textContent = `${alert.protocol || "Protocol not recorded"} · Recorded ${alert.timestamp}`;
+        } else {
+          setAlertScheme("safe");
+          $("inspectAlert").hidden = true;
+          $("attackMeaning").classList.add("hidden");
+          $("alertLabel").textContent = "No alerts in selected records";
+          $("alertGrid").classList.add("hidden");
+          $("alertCopy").textContent = "No attack labels among the selected saved flows.";
+        }
+
+        // --- Selected-flow chart: processing time or attack count by flow sequence ---
         const logs = [...data.logs].reverse();
-        latencyChart.data.labels = logs.map((log) => log.id);
-        latencyChart.data.datasets[0].data = logs.map((log) => log.latency_ms);
-        latencyChart.data.datasets[1].data = logs.map(() => 250);
-        latencyChart.update("none");
-        const labels = Object.keys(data.threat_mix);
-        const values = labels.map((label) => data.threat_mix[label]);
+        const chartLogs = logs.length > 600 ? logs.filter((_, index) => index % Math.ceil(logs.length / 600) === 0) : logs;
+        const measured = logs.map((log) => Number(log.latency_ms)).filter(Number.isFinite);
+        const sorted = [...measured].sort((a, b) => a - b);
+        $("chartFlowCount").textContent = logs.length.toLocaleString();
+        latencyChart.options.plugins.legend.display = chartMode === "latency";
+        latencyChart.options.scales.y.title.text = chartMode === "latency" ? "Processing time (ms)" : "Threats per group of flows";
+        latencyChart.options.scales.x.title.text = "Flow sequence ID";
+        if (chartMode === "latency") {
+          chartPointLogs = chartLogs;
+          latencyChart.data.labels = chartLogs.map((log) => log.id);
+          latencyChart.data.datasets[0].data = chartLogs.map((log) => log.latency_ms);
+          latencyChart.data.datasets[0].label = "Processing time";
+          latencyChart.data.datasets[1].data = chartLogs.map(() => 250);
+          $("latencyHeading").textContent = "Processing time by flow";
+          $("latencyDescription").textContent = "Each point is one sampled flow · click to inspect";
+          $("chartMiddleLabel").textContent = "Median processing";
+          $("chartMiddleValue").textContent = sorted.length ? `${Math.round(sorted[Math.floor(sorted.length / 2)])} ms` : "--";
+          $("chartLastLabel").textContent = "Slowest flow";
+          $("chartLastValue").textContent = sorted.length ? `${Math.round(sorted[sorted.length - 1])} ms` : "--";
+          $("chartInsightNote").textContent = "Click a point to inspect the corresponding saved flow.";
+        } else {
+          const groupSize = Math.max(1, Math.ceil(logs.length / 36));
+          const groups = [];
+          for (let i = 0; i < logs.length; i += groupSize) groups.push(logs.slice(i, i + groupSize));
+          chartPointLogs = groups.map((group) => group[0]);
+          latencyChart.data.labels = groups.map((group) => group[0].id);
+          latencyChart.data.datasets[0].data = groups.map((group) => group.filter((log) => log.attack_type && !normalLabels.has(log.attack_type)).length);
+          latencyChart.data.datasets[0].label = "Threats detected";
+          latencyChart.data.datasets[1].data = [];
+          const counts = latencyChart.data.datasets[0].data;
+          const totalThreats = counts.reduce((sum, value) => sum + value, 0);
+          $("latencyHeading").textContent = "Threat activity across recent flows";
+          $("latencyDescription").textContent = `Groups of up to ${groupSize} flows · sequence order`;
+          $("chartMiddleLabel").textContent = "Threats in view";
+          $("chartMiddleValue").textContent = totalThreats.toLocaleString();
+          $("chartLastLabel").textContent = "Highest group";
+          $("chartLastValue").textContent = Math.max(0, ...counts).toLocaleString();
+          $("chartInsightNote").textContent = "Groups follow saved flow sequence, not elapsed time. Hover to inspect each group.";
+        }
+        latencyChart.update();
+
+        // Count the selected records so the donut always matches the chosen range.
+        const distribution = new Map();
+        for (const log of data.logs) {
+          const label = log.attack_type || "Unclassified";
+          distribution.set(label, (distribution.get(label) || 0) + 1);
+        }
+        const labels = [...distribution.keys()];
+        const values = labels.map((label) => distribution.get(label));
         const total = values.reduce((sum, value) => sum + value, 0);
         threatChart.data.labels = labels;
         threatChart.data.datasets[0].data = values;
-        threatChart.data.datasets[0].backgroundColor = labels.map(
-          (label) => colors[label] || "#71717a",
-        );
-        threatChart.update("none");
-        $("threatTotal").textContent = `${total.toLocaleString()} events`;
-        $("threatPercent").textContent = total
-          ? `${((values.filter((value, index) => !normalLabels.has(labels[index])).reduce((sum, value) => sum + value, 0) / total) * 100).toFixed(1)}% threat`
+        threatChart.data.datasets[0].backgroundColor = labels.map((label) => colors[label] || "#7C8699");
+        threatChart.update();
+        $("threatTotal").textContent = `${total.toLocaleString()} selected flows`;
+        $("threatPercentValue").textContent = total
+          ? `${((values.filter((value, index) => !normalLabels.has(labels[index]) && labels[index] !== "Unclassified").reduce((sum, value) => sum + value, 0) / total) * 100).toFixed(1)}%`
           : "--";
+        $("classLegend").replaceChildren();
+        labels.forEach((label, index) => {
+          const button = document.createElement("button");
+          button.type = "button";
+          button.className = "class-filter";
+          button.setAttribute("aria-pressed", String(activeClass === label));
+          button.setAttribute("aria-label", `${label}, ${values[index].toLocaleString()} flows, ${((values[index] / total) * 100).toFixed(1)}%. Filter detections`);
+          const swatch = document.createElement("span");
+          swatch.className = "class-swatch";
+          swatch.style.backgroundColor = colors[label] || "#7C8699";
+          const name = document.createElement("span");
+          name.className = "class-name";
+          name.textContent = label;
+          const share = document.createElement("span");
+          share.className = "class-share";
+          share.textContent = `${((values[index] / total) * 100).toFixed(1)}%`;
+          button.append(swatch, name, share);
+          button.addEventListener("click", () => selectClass(label));
+          $("classLegend").appendChild(button);
+        });
+        $("classFilterHint").textContent = activeClass
+          ? `Showing ${activeClass} below · select again to clear`
+          : "Select a category to see its detection records.";
+
+        // --- Recent detections table: data.logs ---
         $("logBody").replaceChildren();
-        $("empty").classList.toggle("hidden", logs.length > 0);
-        const visibleLogs = logs.slice(-25);
-        if (
-          expandedLogId !== null &&
-          !visibleLogs.some((log) => log.id === expandedLogId) &&
-          expandedLogSnapshot
-        ) {
+        const matchingLogs = logs.filter((log) =>
+          (!activeClass || log.attack_type === activeClass) &&
+          [log.attack_type, log.source_ip, log.destination_ip, log.protocol]
+            .some((value) => String(value ?? "").toLowerCase().includes(searchTerm)));
+        const visibleLogs = matchingLogs.slice(-50);
+        const focusedLog = focusedLogId === null ? null : data.logs.find((log) => log.id === focusedLogId) || (expandedLogSnapshot?.id === focusedLogId ? expandedLogSnapshot : null);
+        $("selectedContext").hidden = !focusedLog;
+        if (focusedLog) {
+          $("selectedTitle").textContent = `${focusedLog.attack_type || "Unclassified"} detected`;
+          $("selectedFlowId").textContent = `FLOW #${focusedLog.id}`;
+          $("selectedSource").textContent = `${focusedLog.source_ip || "Unknown"}:${focusedLog.source_port ?? "—"}`;
+          $("selectedDestination").textContent = `${focusedLog.destination_ip || "Unknown"}:${focusedLog.destination_port ?? "—"}`;
+          $("selectedConfidence").textContent = focusedLog.confidence == null ? "Not recorded" : `${(Number(focusedLog.confidence) * 100).toFixed(1)}%`;
+          $("selectedLatency").textContent = `${focusedLog.latency_ms ?? "—"} ms`;
+          $("selectedTimestamp").textContent = focusedLog.timestamp || "Not recorded";
+        }
+        if (focusedLog && !visibleLogs.some((log) => log.id === focusedLogId)) visibleLogs.push(focusedLog);
+        $("focusedNotice").hidden = !focusedLog;
+        if (focusedLog) {
+          $("focusTitle").textContent = `Selected alert · Flow #${focusedLog.id}`;
+          $("focusMeta").textContent = `${focusedLog.attack_type || "Unclassified"} · ${focusedLog.source_ip || "Unknown source"} → ${focusedLog.destination_ip || "Unknown target"} · ${focusedLog.timestamp || "Time unavailable"}`;
+        }
+        $("empty").classList.toggle("hidden", visibleLogs.length > 0);
+        $("tableCount").textContent = `${matchingLogs.length.toLocaleString()} matching · newest ${visibleLogs.length} shown${activeClass ? ` · ${activeClass}` : ""}`;
+        if (!searchTerm && !activeClass && expandedLogId !== null && !visibleLogs.some((log) => log.id === expandedLogId) && expandedLogSnapshot) {
           visibleLogs.push(expandedLogSnapshot);
         }
         visibleLogs.reverse();
         if (expandedLogId !== null) {
-          const expandedIndex = visibleLogs.findIndex(
-            (log) => log.id === expandedLogId,
-          );
+          const expandedIndex = visibleLogs.findIndex((log) => log.id === expandedLogId);
           if (expandedIndex >= 0) {
             const [expandedLog] = visibleLogs.splice(expandedIndex, 1);
             visibleLogs.unshift(expandedLog);
@@ -514,61 +1873,74 @@
         }
         visibleLogs.forEach((log) => {
           const row = document.createElement("tr");
-          row.className =
-            "log-row cursor-pointer transition-colors hover:bg-zinc-900/70";
+          row.className = `log-row${log.id === focusedLogId ? " is-focused" : ""}`;
           row.tabIndex = 0;
           row.setAttribute("aria-expanded", "false");
           const threat = !normalLabels.has(log.attack_type);
-          [
-            log.timestamp,
-            log.source_ip,
-            log.destination_ip,
-            log.protocol,
-            log.attack_type,
-            `${log.latency_ms} ms`,
-          ].forEach((value, index) => {
+
+          const stageText = log.stage_reached || "Not recorded";
+          const stageChipClass = stageText.includes("Stage 2") ? "chip-stage2" : "chip-stage1";
+
+          const plainCells = [log.timestamp, log.source_ip, log.destination_ip, log.protocol];
+          plainCells.forEach((value) => {
             const cell = document.createElement("td");
             cell.textContent = value;
-            cell.className = `py-3 pr-5 ${index === 5 ? "text-right" : ""} ${index === 4 ? (threat ? "font-medium text-red-400" : "text-emerald-400") : ""}`;
             row.appendChild(cell);
           });
+
+          const classCell = document.createElement("td");
+          const classChip = document.createElement("span");
+          classChip.className = `chip ${threat ? "chip-threat" : "chip-safe"}`;
+          classChip.textContent = log.attack_type;
+          classCell.appendChild(classChip);
+          row.appendChild(classCell);
+
+          const confidenceCell = document.createElement("td");
+          confidenceCell.className = "num-cell";
+          confidenceCell.textContent = log.confidence == null ? "—" : `${(Number(log.confidence) * 100).toFixed(1)}%`;
+          row.appendChild(confidenceCell);
+
+          const latencyCell = document.createElement("td");
+          latencyCell.className = "num-cell";
+          latencyCell.textContent = `${log.latency_ms} ms`;
+          row.appendChild(latencyCell);
+
+          const stageCell = document.createElement("td");
+          const stageChip = document.createElement("span");
+          stageChip.className = `chip ${stageChipClass}`;
+          stageChip.textContent = stageText;
+          stageCell.appendChild(stageChip);
+          row.appendChild(stageCell);
+
           const detailsCell = document.createElement("td");
           detailsCell.textContent = "View";
-          detailsCell.className = "py-3 text-right text-[11px] text-blue-400";
+          detailsCell.className = "link-cell";
           row.appendChild(detailsCell);
 
           const detailRow = document.createElement("tr");
-          detailRow.className = "hidden bg-zinc-950";
+          detailRow.className = "hidden detail-row";
           const detailCell = document.createElement("td");
-          detailCell.colSpan = 7;
-          detailCell.className = "border-l border-blue-400 px-4 py-4";
+          detailCell.colSpan = 9;
+          detailCell.className = "detail-cell";
           const detailGrid = document.createElement("div");
-          detailGrid.className =
-            "grid gap-x-8 gap-y-3 text-xs sm:grid-cols-2 lg:grid-cols-4";
+          detailGrid.className = "detail-grid";
           const detailValues = [
             ["Timestamp", log.timestamp],
             ["Source", `${log.source_ip}:${log.source_port ?? "not recorded"}`],
-            [
-              "Destination",
-              `${log.destination_ip}:${log.destination_port ?? "not recorded"}`,
-            ],
+            ["Target", `${log.destination_ip}:${log.destination_port ?? "not recorded"}`],
             ["Protocol", log.protocol],
-            ["Classification", log.attack_type],
-            [
-              "Confidence",
-              log.confidence == null
-                ? "not recorded"
-                : `${(Number(log.confidence) * 100).toFixed(1)}%`,
-            ],
-            ["Latency", `${log.latency_ms} ms`],
+            ["Detected class", log.attack_type],
+            ["Confidence", log.confidence == null ? "not recorded" : `${(Number(log.confidence) * 100).toFixed(1)}%`],
+            ["Processing time", `${log.latency_ms} ms`],
+            ["Pipeline stage", stageText],
           ];
           detailValues.forEach(([label, value]) => {
             const item = document.createElement("div");
             const itemLabel = document.createElement("span");
-            itemLabel.className = "mr-2 text-zinc-600";
-            itemLabel.textContent = `${label}:`;
+            itemLabel.className = "detail-label";
+            itemLabel.textContent = `${label}: `;
             const itemValue = document.createElement("span");
-            itemValue.className = "text-zinc-300";
+            itemValue.className = "detail-value";
             itemValue.textContent = value;
             item.append(itemLabel, itemValue);
             detailGrid.appendChild(item);
@@ -598,47 +1970,115 @@
           $("logBody").appendChild(row);
           $("logBody").appendChild(detailRow);
         });
-        $("footer").textContent =
-          `API connected / ${kpi.window_size} flows in view / model accuracy ${kpi.model_accuracy == null ? "--" : `${(kpi.model_accuracy * 100).toFixed(1)}%`}`;
+
+        $("footer").textContent = `Dashboard API connected · ${Number(kpi.window_size).toLocaleString()} saved flows in selected records · simulated Docker network`;
+
+        // Client-side clock only — not part of the API response.
+        $("lastRefreshed").textContent = `Last updated ${new Date().toLocaleTimeString()}`;
       }
+
       async function fetchTelemetry() {
+        const serial = ++requestSerial;
+        $("refreshNow").disabled = true;
+        $("refreshAgent").classList.add("is-fetching");
         try {
-          const response = await fetch("/api/telemetry?limit=500", {
-            cache: "no-store",
-          });
-          updateDashboard(await response.json());
+          const response = await fetch(`/api/telemetry?limit=${selectedLimit}`, { cache: "no-store" });
+          if (!response.ok) throw new Error(`Telemetry request failed (${response.status})`);
+          const result = await response.json();
+          if (serial === requestSerial) updateDashboard(result);
         } catch {
+          if (serial !== requestSerial) return;
+          setAlertScheme("warning");
+          $("alertGrid").classList.add("hidden");
+          $("inspectAlert").hidden = true;
+          $("attackMeaning").classList.add("hidden");
           $("alertLabel").textContent = "Offline";
-          $("alertLabel").className =
-            "shrink-0 text-[10px] font-semibold uppercase tracking-[0.16em] text-red-400";
-          $("alertCopy").textContent =
-            "API unavailable / waiting for backend connection.";
-          $("alertCopy").className = "alert-copy text-red-300";
-          $("alert").className =
-            "my-7 flex min-h-14 items-center gap-4 border border-red-900/70 bg-red-950/20 px-4 py-3 text-sm";
+          $("alertCopy").textContent = "API unavailable — waiting for backend connection.";
+          $("status").textContent = "UNAVAILABLE";
+          $("statusPill").className = "status-pill is-warning";
+          $("statusCaption").textContent = "Dashboard cannot reach telemetry API";
+          $("refreshAgent").classList.remove("is-running");
+        } finally {
+          if (serial === requestSerial) {
+            $("refreshNow").disabled = false;
+            $("refreshAgent").classList.remove("is-fetching");
+          }
         }
       }
       function setLive(enabled) {
-        $("toggleLabel").textContent = enabled
-          ? "Live refresh"
-          : "Refresh paused";
-        $("status").textContent = enabled ? "LIVE" : "PAUSED";
-        $("status").className =
-          `w-14 border-l border-zinc-800 pl-5 text-center font-medium ${enabled ? "text-emerald-400" : "text-zinc-500"}`;
+        $("refreshAgent").classList.remove("is-running");
+        $("toggleLabel").textContent = enabled ? "Live refresh" : "Refresh paused";
+        $("status").textContent = enabled ? "CONNECTING" : "PAUSED";
+        $("statusPill").className = `status-pill ${enabled ? "is-live" : "is-paused"}`;
         clearInterval(pollTimer);
         if (enabled) {
           fetchTelemetry();
           pollTimer = setInterval(fetchTelemetry, refreshSeconds * 1000);
+        } else {
+          requestSerial++;
+          $("refreshNow").disabled = false;
+          $("refreshAgent").classList.remove("is-fetching");
+          $("statusCaption").textContent = "Refresh paused · saved records remain visible";
         }
       }
-      $("liveToggle").addEventListener("change", (event) =>
-        setLive(event.target.checked),
-      );
+      document.querySelectorAll("[data-limit]").forEach((button) => button.addEventListener("click", () => {
+        selectedLimit = Number(button.dataset.limit);
+        document.querySelectorAll("[data-limit]").forEach((item) => {
+          const selected = item === button;
+          item.classList.toggle("is-selected", selected);
+          item.setAttribute("aria-pressed", String(selected));
+        });
+        fetchTelemetry();
+      }));
+      document.querySelectorAll("[data-chart-mode]").forEach((button) => button.addEventListener("click", () => {
+        chartMode = button.dataset.chartMode;
+        document.querySelectorAll("[data-chart-mode]").forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+        if (latestTelemetry) updateDashboard(latestTelemetry);
+      }));
+      latencyChart.options.onClick = (_event, elements) => {
+        if (chartMode !== "latency" || !elements.length || elements[0].datasetIndex !== 0) return;
+        const log = chartPointLogs[elements[0].index];
+        if (!log) return;
+        $("chartInsightNote").textContent = `Flow #${log.id}: ${log.source_ip || "Unknown source"} → ${log.destination_ip || "Unknown target"} · ${log.attack_type || "Unclassified"} · ${log.latency_ms ?? "--"} ms`;
+      };
+      $("logSearch").addEventListener("input", (event) => {
+        focusedLogId = null;
+        searchTerm = event.target.value.trim().toLowerCase();
+        if (latestTelemetry) updateDashboard(latestTelemetry);
+      });
+      $("clearFilter").addEventListener("click", () => {
+        focusedLogId = null;
+        activeClass = null;
+        searchTerm = "";
+        $("logSearch").value = "";
+        if (latestTelemetry) updateDashboard(latestTelemetry);
+      });
+      $("clearFocus").addEventListener("click", () => {
+        clearSelectedFlow();
+      });
+      function selectClass(label) {
+        focusedLogId = null;
+        activeClass = activeClass === label ? null : label;
+        if (latestTelemetry) updateDashboard(latestTelemetry);
+        showView("investigate", true);
+      }
+      threatChart.options.onClick = (_event, elements) => {
+        if (elements.length) selectClass(threatChart.data.labels[elements[0].index]);
+      };
+      $("liveToggle").addEventListener("change", (event) => setLive(event.target.checked));
+      $("refreshNow").addEventListener("click", () => fetchTelemetry());
       $("refreshRate").addEventListener("change", (event) => {
-        refreshSeconds = Number(event.target.value);
+        const custom = event.target.value === "custom";
+        $("customRefresh").hidden = !custom;
+        refreshSeconds = custom ? Math.max(1, Math.min(3600, Number($("customRefresh").value) || 45)) : Number(event.target.value);
         if ($("liveToggle").checked) {
           setLive(true);
         }
+      });
+      $("customRefresh").addEventListener("change", (event) => {
+        refreshSeconds = Math.max(1, Math.min(3600, Math.round(Number(event.target.value) || 45)));
+        event.target.value = refreshSeconds;
+        if ($("liveToggle").checked) setLive(true);
       });
       setLive(true);
     </script>
