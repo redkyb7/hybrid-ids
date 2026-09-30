@@ -9,7 +9,76 @@
       "max_actions": 12,
       "max_outbound_bytes": 2048,
       "parameters": {
-        "ports": [21, 22, 23, 25, 53, 80, 110, 143, 443, 3306, 8080, 8443]
+        "ports": [
+          21,
+          22,
+          23,
+          25,
+          53,
+          80,
+          110,
+          143,
+          443,
+          3306,
+          8080,
+          8443
+        ]
+      }
+    },
+    "scan_connect": {
+      "class_label": "Portscan",
+      "reference_label": "Portscan",
+      "scenario_label": "lab-tcp-connect-mixed-ports",
+      "max_seconds": 25,
+      "max_actions": 16,
+      "max_outbound_bytes": 4096,
+      "parameters": {
+        "ports": [
+          20,
+          21,
+          22,
+          25,
+          53,
+          80,
+          110,
+          139,
+          143,
+          443,
+          445,
+          993,
+          995,
+          3306,
+          8080,
+          8443
+        ],
+        "technique": "connect",
+        "timing_template": 3
+      }
+    },
+    "scan_sparse": {
+      "class_label": "Portscan",
+      "reference_label": "Portscan",
+      "scenario_label": "lab-syn-sparse-ports",
+      "max_seconds": 30,
+      "max_actions": 12,
+      "max_outbound_bytes": 2048,
+      "parameters": {
+        "ports": [
+          22,
+          80,
+          1111,
+          2222,
+          3333,
+          4444,
+          5555,
+          6666,
+          7777,
+          8888,
+          9999,
+          12345
+        ],
+        "technique": "syn",
+        "timing_template": 2
       }
     },
     "botnet": {
@@ -19,7 +88,40 @@
       "max_seconds": 15,
       "max_actions": 8,
       "max_outbound_bytes": 4096,
-      "parameters": {"count": 8, "interval_seconds": 0.4, "response_bytes": 129, "delay_ms": 10}
+      "parameters": {
+        "count": 8,
+        "interval_seconds": 0.4,
+        "response_bytes": 129,
+        "delay_ms": 10
+      }
+    },
+    "botnet_fast": {
+      "class_label": "Botnet",
+      "reference_label": "Botnet",
+      "scenario_label": "lab-c2-rapid-small-checkins",
+      "max_seconds": 15,
+      "max_actions": 20,
+      "max_outbound_bytes": 8192,
+      "parameters": {
+        "count": 20,
+        "interval_seconds": 0.08,
+        "response_bytes": 64,
+        "delay_ms": 0
+      }
+    },
+    "botnet_slow": {
+      "class_label": "Botnet",
+      "reference_label": "Botnet",
+      "scenario_label": "lab-c2-slow-large-checkins",
+      "max_seconds": 25,
+      "max_actions": 10,
+      "max_outbound_bytes": 8192,
+      "parameters": {
+        "count": 10,
+        "interval_seconds": 0.8,
+        "response_bytes": 224,
+        "delay_ms": 60
+      }
     },
     "ssh_bruteforce": {
       "class_label": "Bruteforce",
@@ -28,7 +130,36 @@
       "max_seconds": 20,
       "max_actions": 5,
       "max_outbound_bytes": 4096,
-      "parameters": {"count": 5, "interval_seconds": 0.4}
+      "parameters": {
+        "count": 5,
+        "interval_seconds": 0.4
+      }
+    },
+    "ssh_bruteforce_fast": {
+      "class_label": "Bruteforce",
+      "reference_label": "Bruteforce-SSH",
+      "scenario_label": "lab-ssh-fast-auth-failures",
+      "max_seconds": 35,
+      "max_actions": 7,
+      "max_outbound_bytes": 4096,
+      "parameters": {
+        "count": 7,
+        "interval_seconds": 0.15,
+        "username": "root"
+      }
+    },
+    "ssh_bruteforce_slow": {
+      "class_label": "Bruteforce",
+      "reference_label": "Bruteforce-SSH",
+      "scenario_label": "lab-ssh-slow-auth-failures",
+      "max_seconds": 40,
+      "max_actions": 7,
+      "max_outbound_bytes": 4096,
+      "parameters": {
+        "count": 7,
+        "interval_seconds": 0.9,
+        "username": "operator"
+      }
     },
     "web_login": {
       "class_label": "Webattack",
@@ -37,7 +168,10 @@
       "max_seconds": 15,
       "max_actions": 8,
       "max_outbound_bytes": 4096,
-      "parameters": {"count": 8, "interval_seconds": 0.2}
+      "parameters": {
+        "count": 8,
+        "interval_seconds": 0.2
+      }
     },
     "web_sqli": {
       "class_label": "Webattack",
@@ -46,7 +180,10 @@
       "max_seconds": 10,
       "max_actions": 5,
       "max_outbound_bytes": 4096,
-      "parameters": {"count": 5, "interval_seconds": 0.3}
+      "parameters": {
+        "count": 5,
+        "interval_seconds": 0.3
+      }
     },
     "web_xss": {
       "class_label": "Webattack",
@@ -55,7 +192,10 @@
       "max_seconds": 10,
       "max_actions": 3,
       "max_outbound_bytes": 4096,
-      "parameters": {"count": 3, "interval_seconds": 0.3}
+      "parameters": {
+        "count": 3,
+        "interval_seconds": 0.3
+      }
     },
     "dos_http": {
       "class_label": "DoS",
@@ -64,7 +204,12 @@
       "max_seconds": 20,
       "max_actions": 40,
       "max_outbound_bytes": 24000,
-      "parameters": {"count": 40, "concurrency": 4, "response_bytes": 935, "delay_ms": 20}
+      "parameters": {
+        "count": 40,
+        "concurrency": 4,
+        "response_bytes": 935,
+        "delay_ms": 20
+      }
     },
     "dos_slow": {
       "class_label": "DoS",
@@ -73,7 +218,11 @@
       "max_seconds": 25,
       "max_actions": 4,
       "max_outbound_bytes": 8192,
-      "parameters": {"connections": 4, "duration_seconds": 20, "fragment_interval_seconds": 0.6}
+      "parameters": {
+        "connections": 4,
+        "duration_seconds": 20,
+        "fragment_interval_seconds": 0.6
+      }
     },
     "dos_syn": {
       "class_label": "DoS",
@@ -82,7 +231,10 @@
       "max_seconds": 5,
       "max_actions": 60,
       "max_outbound_bytes": 4096,
-      "parameters": {"count": 60, "interval_microseconds": 20000}
+      "parameters": {
+        "count": 60,
+        "interval_microseconds": 20000
+      }
     },
     "ddos_http_loic": {
       "class_label": "DDoS",
@@ -91,7 +243,12 @@
       "max_seconds": 15,
       "max_actions": 12,
       "max_outbound_bytes": 8192,
-      "parameters": {"count": 12, "concurrency": 2, "response_bytes": 728, "delay_ms": 1500}
+      "parameters": {
+        "count": 12,
+        "concurrency": 2,
+        "response_bytes": 728,
+        "delay_ms": 1500
+      }
     },
     "ddos_http_hoic": {
       "class_label": "DDoS",
@@ -100,7 +257,12 @@
       "max_seconds": 12,
       "max_actions": 20,
       "max_outbound_bytes": 12000,
-      "parameters": {"count": 20, "concurrency": 4, "response_bytes": 935, "delay_ms": 10}
+      "parameters": {
+        "count": 20,
+        "concurrency": 4,
+        "response_bytes": 935,
+        "delay_ms": 10
+      }
     },
     "ddos_udp": {
       "class_label": "DDoS",
@@ -109,7 +271,12 @@
       "max_seconds": 8,
       "max_actions": 40,
       "max_outbound_bytes": 20000,
-      "parameters": {"flows": 10, "packets_per_flow": 4, "payload_bytes": 389, "interval_ms": 30}
+      "parameters": {
+        "flows": 10,
+        "packets_per_flow": 4,
+        "payload_bytes": 389,
+        "interval_ms": 30
+      }
     },
     "infiltration": {
       "class_label": "Infiltration",
@@ -118,7 +285,22 @@
       "max_seconds": 15,
       "max_actions": 4,
       "max_outbound_bytes": 8192,
-      "parameters": {"canary_bytes": 1024}
+      "parameters": {
+        "canary_bytes": 1024
+      }
+    },
+    "benign_slow_http": {
+      "class_label": "Benign",
+      "reference_label": null,
+      "scenario_label": "lab-legitimate-slow-completed-headers",
+      "max_seconds": 25,
+      "max_actions": 4,
+      "max_outbound_bytes": 8192,
+      "parameters": {
+        "connections": 4,
+        "duration_seconds": 20,
+        "fragment_interval_seconds": 0.6
+      }
     }
   }
 }

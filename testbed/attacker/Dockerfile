@@ -19,6 +19,7 @@ RUN pip install --no-cache-dir requests scapy paramiko
 
 COPY attack_campaigns.py /app/attack_campaigns.py
 COPY campaign_runtime.py /app/campaign_runtime.py
+COPY slow_http.py /app/slow_http.py
 COPY profiles.json /app/profiles.json
 
 ENTRYPOINT ["python", "/app/attack_campaigns.py", "--attack", "continuous"]

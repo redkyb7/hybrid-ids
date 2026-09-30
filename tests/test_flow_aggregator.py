@@ -90,7 +90,9 @@ class TestFlowAggregator(unittest.TestCase):
         self.assertEqual(flow_features["Total Length of Fwd Packets"], 64 + 54 + 350 + 54)
         self.assertEqual(flow_features["Bwd Packet Length Max"], 1420)
         self.assertEqual(flow_features["Init_Win_bytes_forward"], 64240)
-        self.assertEqual(flow_features["Init_Win_bytes_backward"], 65160)
+        # The backward window follows the latest backward packet, matching
+        # the training extractor; the response above uses the default zero.
+        self.assertEqual(flow_features["Init_Win_bytes_backward"], 0)
         self.assertEqual(flow_features["FIN Flag Count"], 1)
         self.assertEqual(flow_features["PSH Flag Count"], 2)
         self.assertEqual(flow_features["ACK Flag Count"], 5)

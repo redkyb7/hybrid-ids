@@ -1,18 +1,29 @@
 param(
     [Parameter(Mandatory = $true)]
     [ValidateSet(
-        'scan', 'botnet', 'ssh_bruteforce', 'web_login', 'web_sqli', 'web_xss',
-        'dos_http', 'dos_slow', 'dos_syn', 'infiltration',
-        'ddos_http_loic', 'ddos_http_hoic', 'ddos_udp'
+        'scan', 'scan_connect', 'scan_sparse',
+        'botnet', 'botnet_fast', 'botnet_slow',
+        'ssh_bruteforce', 'ssh_bruteforce_fast', 'ssh_bruteforce_slow',
+        'web_login', 'web_sqli', 'web_xss',
+        'dos_http', 'dos_slow', 'benign_slow_http', 'dos_syn', 'infiltration',
+        'ddos_http_loic', 'ddos_http_hoic', 'ddos_udp',
+        'benign_http', 'benign_http_api', 'benign_http_burst'
     )]
     [string]$Attack,
-    [int]$Seed = 42
+    [int]$Seed = 42,
+    [ValidateRange(2,25)][double]$SlowDuration = 20,
+    [ValidateRange(0.2,2)][double]$SlowInterval = 0.6,
+    [ValidateRange(1,8)][int]$SlowConnections = 4,
+    [ValidateRange(0,128)][int]$SlowPadding = 0,
+    [ValidateRange(0,0.2)][double]$SlowJitter = 0,
+    [switch]$PassThru
 )
 
 $ErrorActionPreference = 'Stop'
 $repoRoot = (Resolve-Path -LiteralPath (Join-Path $PSScriptRoot '..')).Path
 $campaignId = [DateTime]::UtcNow.ToString('yyyyMMddTHHmmssZ') + '-' + [Guid]::NewGuid().ToString('N').Substring(0, 8)
 $isDdos = $Attack.StartsWith('ddos_')
+$isBenign = $Attack.StartsWith('benign_http')
 $restoreAttacker = $false
 $restoreBenign = $false
 $workersStarted = $false
@@ -35,11 +46,25 @@ try {
         if ($LASTEXITCODE -ne 0) { throw 'Could not pause the benign generator.' }
     }
 
-    docker compose build --quiet attacker
-    if ($LASTEXITCODE -ne 0) { throw 'Attacker image build failed.' }
+    if ($isBenign) {
+        docker compose build --quiet benign_client
+        if ($LASTEXITCODE -ne 0) { throw 'Benign client image build failed.' }
+    }
+    else {
+        docker compose build --quiet attacker
+        if ($LASTEXITCODE -ne 0) { throw 'Attacker image build failed.' }
+    }
     Write-Host "Campaign: $campaignId ($Attack)"
 
-    if ($isDdos) {
+    if ($isBenign) {
+        $scenario = 'mixed'
+        if ($Attack -eq 'benign_http_api') { $scenario = 'api' }
+        if ($Attack -eq 'benign_http_burst') { $scenario = 'burst' }
+        docker compose run --rm --no-deps -T --entrypoint python benign_client /app/benign_campaign.py `
+            --campaign-id $campaignId --seed $Seed --scenario $scenario
+        if ($LASTEXITCODE -ne 0) { throw "Benign campaign $campaignId failed; inspect its manifest." }
+    }
+    elseif ($isDdos) {
         $oldId = $env:IDS_CAMPAIGN_ID
         $oldMode = $env:IDS_DDOS_MODE
         $oldStart = $env:IDS_CAMPAIGN_START_EPOCH
@@ -70,14 +95,21 @@ try {
         }
     }
     else {
+        $slowArguments = @()
+        if ($Attack -in @('dos_slow', 'benign_slow_http')) {
+            $culture = [Globalization.CultureInfo]::InvariantCulture
+            $slowArguments = @('--slow-duration', $SlowDuration.ToString($culture),
+                '--slow-interval', $SlowInterval.ToString($culture),
+                '--slow-connections', "$SlowConnections", '--slow-padding', "$SlowPadding",
+                '--slow-jitter', $SlowJitter.ToString($culture))
+        }
         docker compose run --rm --no-deps -T --entrypoint python attacker /app/attack_campaigns.py `
-            --attack $Attack --campaign-id $campaignId --seed $Seed
+            --attack $Attack --campaign-id $campaignId --seed $Seed @slowArguments
         if ($LASTEXITCODE -ne 0) { throw "Campaign $Attack failed; inspect its manifest." }
     }
 
     Start-Sleep -Seconds 3
     Write-Host "Manifests: data/campaigns/$campaignId-*.json"
-    Write-Host "Evaluate: uv tool run --from duckdb python scripts/evaluate_attack_campaigns.py --campaign-id $campaignId"
 }
 finally {
     if ($workersStarted) {
@@ -91,3 +123,5 @@ finally {
     }
     Pop-Location
 }
+
+if ($PassThru) { Write-Output $campaignId }

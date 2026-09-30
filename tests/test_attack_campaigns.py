@@ -23,7 +23,7 @@ class TestAttackCampaigns(unittest.TestCase):
         self.assertEqual(set(profiles), set(attack_campaigns.HANDLERS))
         self.assertEqual(
             {value.class_label for value in profiles.values()},
-            {"Botnet", "Bruteforce", "DDoS", "DoS", "Infiltration", "Portscan", "Webattack"},
+            {"Benign", "Botnet", "Bruteforce", "DDoS", "DoS", "Infiltration", "Portscan", "Webattack"},
         )
         self.assertEqual(profiles["ssh_bruteforce"].reference_label, "Bruteforce-SSH")
         self.assertEqual(profiles["web_login"].reference_label, "Webattack-bruteforce")
@@ -41,12 +41,29 @@ class TestAttackCampaigns(unittest.TestCase):
                 ("botnet", "count", 0),
                 ("ddos_udp", "packets_per_flow", -1),
                 ("dos_slow", "fragment_interval_seconds", 0),
+                ("scan_connect", "technique", "udp"),
+                ("ssh_bruteforce_fast", "username", "bad name"),
+                ("botnet_slow", "response_bytes", 512),
             ):
                 changed = json.loads(json.dumps(source))
                 changed["profiles"][mode]["parameters"][key] = invalid
                 profile_path.write_text(json.dumps(changed), encoding="utf-8")
                 with self.subTest(mode=mode, key=key), self.assertRaises(ValueError):
                     load_profiles(profile_path)
+
+    def test_scan_variants_use_bounded_lab_commands(self):
+        profiles = load_profiles()
+        with tempfile.TemporaryDirectory() as directory:
+            campaign = Campaign(profiles["scan_connect"], "test-scan", 42,
+                                "worker-1", Path(directory))
+            result = SimpleNamespace(returncode=0, stdout="scan complete")
+            with patch.object(attack_campaigns.subprocess, "run", return_value=result) as run:
+                attack_campaigns.scan(campaign, random.Random(42))
+            command = run.call_args.args[0]
+            self.assertEqual(command[1], "-sT")
+            self.assertIn("-T3", command)
+            self.assertEqual(command[-1], VICTIM_IP)
+            self.assertEqual(campaign.actions_succeeded, 16)
 
     def test_budget_and_manifest(self):
         profile = Profile("test", "Portscan", "Portscan", "lab-test", 5, 2, 100, {})

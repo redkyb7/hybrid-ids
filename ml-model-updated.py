@@ -13,8 +13,11 @@ types remain positive even when Stage 2 focuses on five named attack types.
 """
 
 import argparse
+import hashlib
+import json
 import os
 import time
+from pathlib import Path
 
 import joblib
 import matplotlib.pyplot as plt
@@ -458,22 +461,25 @@ def evaluate_model(
     model,
     X_test,
     y_test,
+    attack_threshold=None,
 ):
     """
     Measures accuracy, precision, recall, Macro F1,
     and per-flow prediction latency in milliseconds.
     """
 
-    # Warm-up prediction.
-    _ = model.predict(
-        X_test.iloc[:50]
-    )
+    if attack_threshold is None:
+        _ = model.predict(X_test.iloc[:50])
+    else:
+        _ = model.predict_proba(X_test.iloc[:50])
 
     t0 = time.perf_counter()
 
-    preds = model.predict(
-        X_test
-    )
+    if attack_threshold is None:
+        preds = model.predict(X_test)
+    else:
+        attack_index = list(model.classes_).index(1)
+        preds = (model.predict_proba(X_test)[:, attack_index] >= attack_threshold).astype(int)
 
     t1 = time.perf_counter()
 
@@ -592,6 +598,19 @@ def main():
         ),
     )
 
+    parser.add_argument(
+        "--lab-plan", type=str, default=None,
+        help="Training-only campaign split plan from the Colab bundle.",
+    )
+    parser.add_argument(
+        "--lab-weight", type=float, default=100.0,
+        help="Sample weight for each lab training row when --lab-plan is used.",
+    )
+    parser.add_argument(
+        "--stage1-threshold", type=float, default=0.10,
+        help="Attack probability threshold for lab validation and runtime.",
+    )
+
     args = parser.parse_args()
 
     sample_size = (
@@ -611,6 +630,39 @@ def main():
     ) = load_and_prepare_data(
         sample_size=sample_size
     )
+
+    sample_weight = None
+    selection_X, selection_y = X_val, y_val
+    if args.lab_plan:
+        from lab_training_data import load_lab_split, file_sha256
+
+        if not np.isfinite(args.lab_weight) or args.lab_weight <= 0:
+            parser.error("--lab-weight must be a finite positive number")
+        if not np.isfinite(args.stage1_threshold) or not 0 <= args.stage1_threshold <= 1:
+            parser.error("--stage1-threshold must be between 0 and 1")
+        lab_train, lab_features = load_lab_split(args.lab_plan, "train")
+        lab_val, val_features = load_lab_split(args.lab_plan, "validation")
+        if lab_features != val_features or not set(feature_names).issubset(lab_features):
+            raise ValueError("Lab and CIC feature schemas do not align")
+        cic_count = len(X_train)
+        X_train = pd.concat(
+            [X_train, lab_train[feature_names]], ignore_index=True
+        )
+        y_train = pd.concat(
+            [y_train, (lab_train["ClassLabel"] != "Benign").astype(int)],
+            ignore_index=True,
+        )
+        sample_weight = np.concatenate([
+            np.ones(cic_count, dtype=np.float32),
+            np.full(len(lab_train), args.lab_weight, dtype=np.float32),
+        ])
+        selection_X = lab_val[feature_names]
+        selection_y = (lab_val["ClassLabel"] != "Benign").astype(int)
+        print(
+            f"[+] Added {len(lab_train):,} lab train snapshots at weight "
+            f"{args.lab_weight:g}; selecting on {len(lab_val):,} "
+            "campaign-separated lab validation snapshots."
+        )
 
     results = []
 
@@ -634,16 +686,24 @@ def main():
     rf.fit(
         X_train,
         y_train,
+        sample_weight=sample_weight,
     )
 
     results.append(
         evaluate_model(
             "Random Forest",
             rf,
-            X_test,
-            y_test,
+            selection_X,
+            selection_y,
+            attack_threshold=args.stage1_threshold if args.lab_plan else None,
         )
     )
+
+    if args.lab_plan:
+        results[-1]["cic_validation"] = evaluate_model(
+            "Random Forest (CIC validation)", rf, X_val, y_val,
+            attack_threshold=args.stage1_threshold,
+        )["f1_macro"]
 
     # ========================================================
     # MODEL B: XGBOOST
@@ -666,16 +726,24 @@ def main():
     xgb_clf.fit(
         X_train,
         y_train,
+        sample_weight=sample_weight,
     )
 
     results.append(
         evaluate_model(
             "XGBoost",
             xgb_clf,
-            X_test,
-            y_test,
+            selection_X,
+            selection_y,
+            attack_threshold=args.stage1_threshold if args.lab_plan else None,
         )
     )
+
+    if args.lab_plan:
+        results[-1]["cic_validation"] = evaluate_model(
+            "XGBoost (CIC validation)", xgb_clf, X_val, y_val,
+            attack_threshold=args.stage1_threshold,
+        )["f1_macro"]
 
     # ========================================================
     # SELECT BEST MODEL
@@ -683,9 +751,7 @@ def main():
 
     best = max(
         results,
-        key=lambda result: result[
-            "f1_macro"
-        ],
+        key=lambda result: min(result["f1_macro"], result.get("cic_validation", result["f1_macro"])),
     )
 
     print("\n" + "=" * 55)
@@ -697,6 +763,12 @@ def main():
     )
 
     print("=" * 55)
+
+    evaluate_model(
+        best["name"] + " (CIC reference test)",
+        best["model"], X_test, y_test,
+        attack_threshold=args.stage1_threshold if args.lab_plan else None,
+    )
 
     # ========================================================
     # EXPORT ARTIFACTS
@@ -721,6 +793,31 @@ def main():
         feature_names,
         features_save_path,
     )
+
+    if args.lab_plan:
+        plan_hash = hashlib.sha256(Path(args.lab_plan).read_bytes()).hexdigest()
+        metadata = {
+            "training_mode": "CIC plus campaign-separated lab",
+            "cic_dataset_sha256": file_sha256(DATA_PATH),
+            "lab_plan_sha256": plan_hash,
+            "cic_train_rows": cic_count,
+            "lab_train_rows": len(lab_train),
+            "lab_validation_rows": len(lab_val),
+            "lab_sample_weight": args.lab_weight,
+            "stage1_threshold": args.stage1_threshold,
+            "selected_model": best["name"],
+            "lab_validation_macro_f1": best["f1_macro"],
+            "cic_validation_macro_f1": best["cic_validation"],
+            "selection_policy": "maximum of minimum CIC/live validation macro F1",
+            "feature_names": feature_names,
+        }
+        (Path(MODEL_DIR) / "training_metadata.json").write_text(
+            json.dumps(metadata, indent=2) + "\n", encoding="utf-8"
+        )
+        (Path(MODEL_DIR) / "stage1_threshold.json").write_text(
+            json.dumps({"attack_threshold": args.stage1_threshold}, indent=2) + "\n",
+            encoding="utf-8",
+        )
 
     print(
         f"[+] Saved Stage 1 Model   -> "

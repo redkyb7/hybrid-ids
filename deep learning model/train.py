@@ -1,3 +1,4 @@
+import argparse
 import json
 import random
 
@@ -19,6 +20,7 @@ import config
 
 from model import build_nids_model
 from preprocess import load_and_preprocess
+from validation_policy import macro_scores, select_runtime_threshold
 
 
 # ============================================================
@@ -51,10 +53,16 @@ class ValidationMacroF1(
     def __init__(
         self,
         validation_data,
+        labels=None,
+        domains=None,
+        domain_labels=None,
     ):
         super().__init__()
 
         self.validation_data = validation_data
+        self.labels = labels
+        self.domains = domains
+        self.domain_labels = domain_labels
 
     def on_epoch_end(
         self,
@@ -89,8 +97,16 @@ class ValidationMacroF1(
             y_true,
             y_pred,
             average="macro",
+            labels=self.labels,
             zero_division=0,
         )
+
+        if self.domains:
+            scores = macro_scores(y_true, y_pred, self.domains, self.domain_labels)
+            for name, score in scores.items():
+                logs[f"val_{name}_macro_f1"] = score
+            macro_f1 = min(scores.values())
+            print(f"Validation domains: {scores}")
 
         logs["val_macro_f1"] = macro_f1
 
@@ -157,6 +173,7 @@ def tune_unknown_threshold(
     X_val: np.ndarray,
     y_val: np.ndarray,
     label_encoder,
+    domains=None,
 ) -> dict:
     """
     Tune a global confidence threshold using validation data.
@@ -169,18 +186,6 @@ def tune_unknown_threshold(
         batch_size=config.BATCH_SIZE,
         verbose=0,
     )
-
-    y_pred = np.argmax(
-        probabilities,
-        axis=1,
-    )
-
-    confidences = probabilities[
-        np.arange(
-            len(probabilities)
-        ),
-        y_pred,
-    ]
 
     benign_matches = np.where(
         label_encoder.classes_ == "Benign"
@@ -198,63 +203,10 @@ def tune_unknown_threshold(
         benign_matches[0]
     )
 
-    y_val_attack = (
-        y_val != benign_index
-    ).astype(
-        np.int32
-    )
+    return select_runtime_threshold(probabilities, y_val, benign_index,
+                                    config.THRESHOLD_GRID, domains)
 
-    best_threshold = (
-        config.DEFAULT_UNKNOWN_THRESHOLD
-    )
-
-    best_score = -1.0
-
-    for threshold in config.THRESHOLD_GRID:
-        accepted_predictions = y_pred.copy()
-
-        accepted_predictions[
-            confidences < threshold
-        ] = benign_index
-
-        y_pred_attack = (
-            accepted_predictions != benign_index
-        ).astype(
-            np.int32
-        )
-
-        score = f1_score(
-            y_val_attack,
-            y_pred_attack,
-            zero_division=0,
-        )
-
-        if score > best_score:
-            best_score = score
-            best_threshold = threshold
-
-    print(
-        f"\nBest validation Unknown threshold: "
-        f"{best_threshold:.2f}"
-    )
-
-    print(
-        f"Validation attack-vs-benign F1: "
-        f"{best_score:.4f}"
-    )
-
-    return {
-        "global_threshold": float(
-            best_threshold
-        ),
-        "metric": "binary_attack_f1",
-        "validation_score": float(
-            best_score
-        ),
-    }
-
-
-def train():
+def train(lab_plan: str | None = None, lab_repeat: int = 100):
     print("=" * 70)
     print(
         "TRAINING TABULAR RESIDUAL "
@@ -274,11 +226,16 @@ def train():
         y_val,
         y_test,
         label_encoder,
-    ) = load_and_preprocess()
+    ) = load_and_preprocess(lab_plan=lab_plan, lab_repeat=lab_repeat)
 
     num_classes = len(
         label_encoder.classes_
     )
+
+    validation_domains = None
+    if lab_plan:
+        with open(config.METADATA_SAVE_PATH, encoding="utf-8") as metadata_file:
+            validation_domains = json.load(metadata_file)["lab_adaptation"]["validation_domains"]
 
     input_shape = X_train.shape[1:]
 
@@ -469,6 +426,13 @@ def train():
     callbacks = [
         ValidationMacroF1(
             validation_data=val_dataset,
+            domains=validation_domains,
+            domain_labels=({"cic": list(range(num_classes)), "live": label_encoder.transform([
+                "Benign", "Botnet", "Bruteforce", "DDoS", "DoS", "Portscan"
+            ])} if lab_plan else None),
+            labels=(label_encoder.transform([
+                "Benign", "Botnet", "Bruteforce", "DDoS", "DoS", "Portscan"
+            ]) if lab_plan else None),
         ),
         EarlyStopping(
             monitor="val_macro_f1",
@@ -555,6 +519,7 @@ def train():
             X_val=X_val,
             y_val=y_val,
             label_encoder=label_encoder,
+            domains=validation_domains,
         )
     else:
         threshold_config = {
@@ -580,7 +545,7 @@ def train():
     # ========================================================
 
     print("\n" + "=" * 70)
-    print("FINAL UNSEEN TEST SET")
+    print("CIC REFERENCE TEST SET" if lab_plan else "FINAL UNSEEN TEST SET")
     print("=" * 70)
 
     test_loss, test_accuracy = model.evaluate(
@@ -613,4 +578,10 @@ def train():
 
 
 if __name__ == "__main__":
-    train()
+    parser = argparse.ArgumentParser(description="Train the seven-class DL stage")
+    parser.add_argument("--lab-plan", default=None,
+                        help="Training-only campaign split plan")
+    parser.add_argument("--lab-repeat", type=int, default=100,
+                        help="How many times to include each lab training row")
+    args = parser.parse_args()
+    train(lab_plan=args.lab_plan, lab_repeat=args.lab_repeat)

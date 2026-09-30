@@ -1,6 +1,8 @@
 import json
+import hashlib
 import os
 import pickle
+from pathlib import Path
 
 import numpy as np
 import pandas as pd
@@ -264,6 +266,8 @@ def _print_class_distribution(
 
 def load_and_preprocess(
     data_path: str = config.DATA_PATH,
+    lab_plan: str | None = None,
+    lab_repeat: int = 100,
 ):
     """
     Load and preprocess the CIC collection Parquet dataset.
@@ -498,6 +502,43 @@ def load_and_preprocess(
     del X_holdout
     del y_holdout
 
+    lab_adaptation = None
+    if lab_plan is not None:
+        if lab_repeat < 1:
+            raise ValueError("lab_repeat must be at least 1")
+        import sys
+        if config.PROJECT_ROOT not in sys.path:
+            sys.path.insert(0, config.PROJECT_ROOT)
+        from lab_training_data import load_lab_split, file_sha256
+
+        lab_train, lab_features = load_lab_split(lab_plan, "train")
+        lab_val, val_features = load_lab_split(lab_plan, "validation")
+        if lab_features != feature_cols or val_features != feature_cols:
+            raise ValueError("Lab and CIC 57-feature order differs")
+        lab_X = lab_train[feature_cols].to_numpy(dtype=np.float32)
+        lab_y = label_encoder.transform(lab_train[config.LABEL_COLUMN]).astype(np.int32)
+        X_train = np.concatenate((X_train, np.repeat(lab_X, lab_repeat, axis=0)))
+        y_train = np.concatenate((y_train, np.repeat(lab_y, lab_repeat)))
+        cic_validation_count = len(X_val)
+        X_val = np.concatenate((X_val, lab_val[feature_cols].to_numpy(dtype=np.float32)))
+        y_val = np.concatenate((y_val, label_encoder.transform(lab_val[config.LABEL_COLUMN]).astype(np.int32)))
+        lab_adaptation = {
+            "plan": os.path.abspath(lab_plan),
+            "cic_dataset_sha256": file_sha256(data_path),
+            "lab_plan_sha256": hashlib.sha256(Path(lab_plan).read_bytes()).hexdigest(),
+            "training_snapshots": int(len(lab_train)),
+            "validation_snapshots": int(len(lab_val)),
+            "training_repeat_factor": int(lab_repeat),
+            "validation_source": "CIC followed by live validation; report domains separately",
+            "validation_domains": {"cic": int(cic_validation_count), "live": int(len(lab_val))},
+            "test_source": "CIC reference row split; new final live evaluation required after candidate freeze",
+        }
+        print(
+            f"      Added {len(lab_train):,} lab train snapshots "
+            f"x {lab_repeat}; validation uses {len(lab_val):,} "
+            "campaign-separated lab snapshots."
+        )
+
     print(
         f"      Train      : "
         f"{len(X_train):,}"
@@ -679,6 +720,8 @@ def load_and_preprocess(
             ),
         },
     }
+    if lab_adaptation is not None:
+        metadata["lab_adaptation"] = lab_adaptation
 
     with open(
         config.METADATA_SAVE_PATH,

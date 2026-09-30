@@ -15,6 +15,7 @@ Key Features:
 import math
 import time
 import threading
+from collections import OrderedDict
 from typing import Dict, List, Optional, Tuple, Any
 import numpy as np
 
@@ -43,7 +44,8 @@ class Flow:
         self.fwd_packet_lengths: List[int] = []
         self.fwd_timestamps: List[float] = []
         self.fwd_header_bytes = 0
-        self.init_win_bytes_fwd = 0
+        # CICFlowMeter uses -1 when TCP window fields do not apply (UDP).
+        self.init_win_bytes_fwd = -1 if self.protocol != "TCP" else 0
         self.min_seg_size_fwd: Optional[int] = None
         self.act_data_pkt_fwd = 0
         self.fwd_psh_count = 0
@@ -54,7 +56,7 @@ class Flow:
         self.bwd_packet_lengths: List[int] = []
         self.bwd_timestamps: List[float] = []
         self.bwd_header_bytes = 0
-        self.init_win_bytes_bwd = 0
+        self.init_win_bytes_bwd = -1 if self.protocol != "TCP" else 0
 
         # Global Flow Trackers
         self.all_packet_lengths: List[int] = []
@@ -66,6 +68,8 @@ class Flow:
 
         # TCP Flags Counters
         self.fin_count = 0
+        self.fwd_fin_seen = False
+        self.bwd_fin_seen = False
         self.syn_count = 0
         self.rst_count = 0
         self.psh_count = 0
@@ -106,7 +110,7 @@ class Flow:
             self.fwd_packet_lengths.append(pkt_len)
             self.fwd_timestamps.append(timestamp)
             self.fwd_header_bytes += header_len
-            if self.fwd_packets == 1:
+            if self.fwd_packets == 1 and self.protocol == "TCP":
                 self.init_win_bytes_fwd = win_size
             segment_size = header_len if header_len > 0 else 20
             if self.min_seg_size_fwd is None:
@@ -115,7 +119,9 @@ class Flow:
                 self.min_seg_size_fwd = min(self.min_seg_size_fwd, segment_size)
             if payload_len > 0:
                 self.act_data_pkt_fwd += 1
-            if tcp_flags and tcp_flags.get("P", False):
+            # CICFlowMeter's directional PSH field records the first packet's
+            # flag; PSH Flag Count below records every packet in the flow.
+            if self.fwd_packets == 1 and tcp_flags and tcp_flags.get("P", False):
                 self.fwd_psh_count += 1
         else:
             self.bwd_packets += 1
@@ -123,13 +129,20 @@ class Flow:
             self.bwd_packet_lengths.append(pkt_len)
             self.bwd_timestamps.append(timestamp)
             self.bwd_header_bytes += header_len
-            if self.bwd_packets == 1:
+            # The CICFlowMeter export updates this field on every backward
+            # packet, despite the "Init" name. The saved training values and
+            # a paired-PCAP comparison follow that last-window behavior.
+            if self.protocol == "TCP":
                 self.init_win_bytes_bwd = win_size
 
         # Update TCP Flags
         if tcp_flags:
             if tcp_flags.get("F", False):
                 self.fin_count += 1
+                if is_forward:
+                    self.fwd_fin_seen = True
+                else:
+                    self.bwd_fin_seen = True
             if tcp_flags.get("S", False):
                 self.syn_count += 1
             if tcp_flags.get("R", False):
@@ -142,7 +155,9 @@ class Flow:
                 self.urg_count += 1
 
             # Fully terminated when both endpoints FIN-teardown or RST occurs
-            self.is_terminated = (self.fin_count >= 2) or (self.rst_count >= 1)
+            self.is_terminated = (
+                (self.fwd_fin_seen and self.bwd_fin_seen) or self.rst_count >= 1
+            )
 
     @staticmethod
     def _compute_stats(arr: List[float | int]) -> Tuple[float, float, float, float, float]:
@@ -213,10 +228,9 @@ class Flow:
         idle_std = 0.0
         idle_max = 0.0
         idle_min = 0.0
-        active_periods = list(self.active_periods_us)
-        final_active_us = (self.active_end_time - self.active_start_time) * 1e6
-        if final_active_us > 0:
-            active_periods.append(final_active_us)
+        # CICFlowMeter publishes completed active intervals only. The current
+        # interval has not ended at a streaming snapshot or short flow close.
+        active_periods = self.active_periods_us
         active_min, active_max, active_mean, active_std, _ = self._compute_stats(active_periods)
         idle_min, idle_max, idle_mean, idle_std, _ = self._compute_stats(self.idle_periods_us)
 
@@ -329,6 +343,11 @@ class FlowAggregator:
         self.max_pkts_micro_batch = max_packets_per_micro_batch
 
         self.flows: Dict[Tuple, Flow] = {}
+        # After both FINs, a final pure ACK belongs to the closed connection.
+        # Remember only the expected ACK direction for a short, bounded time.
+        self.recently_closed_ack: OrderedDict[Tuple, float] = OrderedDict()
+        self.closed_ack_grace_sec = 1.0
+        self.max_recently_closed_ack = 10_000
         self.lock = threading.Lock()
         self.emitted_flows_queue: List[Dict[str, Any]] = []
 
@@ -353,6 +372,23 @@ class FlowAggregator:
         emitted_feature_dict = None
 
         with self.lock:
+            while self.recently_closed_ack:
+                oldest_key = next(iter(self.recently_closed_ack))
+                if self.recently_closed_ack[oldest_key] >= now:
+                    break
+                self.recently_closed_ack.popitem(last=False)
+            closed_until = self.recently_closed_ack.get(fwd_key)
+            if closed_until is not None:
+                pure_ack = (
+                    protocol.upper() == "TCP" and tcp_flags is not None
+                    and tcp_flags.get("A", False)
+                    and not any(tcp_flags.get(flag, False) for flag in ("F", "S", "R", "P", "U"))
+                    and pkt_len == 0 and payload_len == 0
+                )
+                if pure_ack and now <= closed_until:
+                    return None
+                # A SYN, payload, or non-ACK packet starts a new conversation.
+                self.recently_closed_ack.pop(fwd_key, None)
             if fwd_key in self.flows:
                 flow = self.flows[fwd_key]
                 is_fwd = True
@@ -399,6 +435,11 @@ class FlowAggregator:
                 flow.last_emitted_at = now
                 flow.last_emitted_packet_count = pkt_count
             if flow.is_terminated:
+                if protocol.upper() == "TCP" and flow.fin_count >= 2 and flow.rst_count == 0:
+                    self.recently_closed_ack.pop(bwd_key, None)
+                    self.recently_closed_ack[bwd_key] = now + self.closed_ack_grace_sec
+                    if len(self.recently_closed_ack) > self.max_recently_closed_ack:
+                        self.recently_closed_ack.popitem(last=False)
                 # Remove terminated flows cleanly from the 5-tuple table.
                 self.flows.pop(fwd_key, None)
                 self.flows.pop(bwd_key, None)

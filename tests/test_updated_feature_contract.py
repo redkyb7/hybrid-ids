@@ -44,7 +44,8 @@ class TestUpdatedFeatureContract(unittest.TestCase):
         self.assertEqual(features["Total Backward Packets"], 1)
         self.assertEqual(features["Fwd Packets Length Total"], 30)
         self.assertEqual(features["Bwd Packets Length Total"], 30)
-        self.assertEqual(features["Fwd PSH Flags"], 2)
+        self.assertEqual(features["Fwd PSH Flags"], 1)
+        self.assertEqual(features["PSH Flag Count"], 2)
         self.assertEqual(features["SYN Flag Count"], 1)
         self.assertEqual(features["URG Flag Count"], 1)
         self.assertEqual(features["Init Fwd Win Bytes"], 512)
@@ -61,7 +62,14 @@ class TestUpdatedFeatureContract(unittest.TestCase):
         self.assertEqual(features["Packet Length Mean"], 18)
         self.assertEqual(features["Packet Length Variance"], 72)
         self.assertEqual(features["Avg Packet Size"], 24)
-        self.assertAlmostEqual(features["Active Mean"], 20_000, places=3)
+        self.assertEqual(features["Active Mean"], 0)
+
+        # A later forward PSH does not change CICFlowMeter's directional flag.
+        late_psh = Flow("10.0.0.1", "10.0.0.2", 1235, 80, "TCP", 100.0)
+        late_psh.add_packet(0, 100.0, True, {"S": True})
+        late_psh.add_packet(12, 100.01, True, {"P": True})
+        self.assertEqual(late_psh.extract_features()["Fwd PSH Flags"], 0)
+        self.assertEqual(late_psh.extract_features()["PSH Flag Count"], 1)
 
 
     def test_active_and_idle_intervals(self):
@@ -76,6 +84,26 @@ class TestUpdatedFeatureContract(unittest.TestCase):
         self.assertAlmostEqual(features["Active Max"], 1_500_000)
         self.assertAlmostEqual(features["Idle Min"], 6_500_000)
         self.assertAlmostEqual(features["Idle Max"], 7_000_000)
+
+    def test_udp_tcp_window_fields_are_unavailable(self):
+        flow = Flow("10.0.0.1", "10.0.0.2", 1234, 53, "UDP", 100.0)
+        flow.add_packet(20, 100.0, True, header_len=8)
+        flow.add_packet(30, 100.01, False, header_len=8)
+        features = flow.extract_features()
+        self.assertEqual(features["Init Fwd Win Bytes"], -1)
+        self.assertEqual(features["Init Bwd Win Bytes"], -1)
+        self.assertEqual(features["Init_Win_bytes_forward"], -1)
+        self.assertEqual(features["Init_Win_bytes_backward"], -1)
+
+    def test_backward_window_uses_last_tcp_packet(self):
+        flow = Flow("10.0.0.1", "10.0.0.2", 1234, 80, "TCP", 100.0)
+        flow.add_packet(0, 100.0, True, {"S": True}, win_size=64240)
+        flow.add_packet(0, 100.01, False, {"S": True, "A": True},
+                        win_size=65160)
+        flow.add_packet(8, 100.02, False, {"A": True}, win_size=508)
+        features = flow.extract_features()
+        self.assertEqual(features["Init Fwd Win Bytes"], 64240)
+        self.assertEqual(features["Init Bwd Win Bytes"], 508)
 
     def test_updated_aggregator_emits_complete_schema_on_timeout(self):
         aggregator = FlowAggregator(micro_batch_timeout_sec=0.1)

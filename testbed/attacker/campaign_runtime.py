@@ -64,7 +64,7 @@ def load_profiles(path: Path = PROFILE_PATH) -> dict[str, Profile]:
         raise ValueError("unsupported campaign profile schema")
     profiles = {}
     allowed_classes = {
-        "Botnet", "Bruteforce", "DDoS", "DoS", "Infiltration", "Portscan", "Webattack"
+        "Benign", "Botnet", "Bruteforce", "DDoS", "DoS", "Infiltration", "Portscan", "Webattack"
     }
     for mode, values in raw["profiles"].items():
         if not re.fullmatch(r"[a-z][a-z0-9_]*", mode):
@@ -117,14 +117,27 @@ def load_profiles(path: Path = PROFILE_PATH) -> dict[str, Profile]:
                 minimum = 0 if key == "interval_seconds" else 0.001
                 if type(value) not in (int, float) or not minimum <= value <= values["max_seconds"]:
                     raise ValueError(f"{mode}.{key} must be {minimum}..{values['max_seconds']}")
-        if mode == "botnet" and parameters.get("delay_ms", 0) > 500:
-            raise ValueError("botnet response delay exceeds C2 fixture limit")
-        if mode == "scan":
+        if mode.startswith("botnet"):
+            if parameters.get("delay_ms", 0) > 500:
+                raise ValueError("botnet response delay exceeds C2 fixture limit")
+            if parameters.get("response_bytes", 0) > 256:
+                raise ValueError("botnet response size exceeds C2 fixture limit")
+        if mode.startswith("scan"):
             ports = parameters.get("ports")
             if not isinstance(ports, list) or len(ports) > values["max_actions"]:
                 raise ValueError("scan ports exceed action budget")
             if not ports or any(type(port) is not int or not 1 <= port <= 65535 for port in ports):
                 raise ValueError("invalid scan port")
+            if parameters.get("technique", "syn") not in ("syn", "connect"):
+                raise ValueError("scan technique must be syn or connect")
+            if parameters.get("timing_template", 3) not in (2, 3, 4):
+                raise ValueError("scan timing template must be 2, 3 or 4")
+        if mode.startswith("ssh_bruteforce"):
+            if parameters.get("count", 0) > 10:
+                raise ValueError("SSH guess count exceeds the 10 lab credentials")
+            username = parameters.get("username", "admin")
+            if not isinstance(username, str) or not re.fullmatch(r"[a-z][a-z0-9_-]{0,23}", username):
+                raise ValueError("invalid SSH lab username")
         if mode == "ddos_udp":
             packets = int(parameters["flows"]) * int(parameters["packets_per_flow"])
             if packets > values["max_actions"]:
@@ -203,6 +216,7 @@ class Campaign:
         actions_completed: int = 1,
         response_bytes: int = 0,
         detail: str = "",
+        evidence: dict | None = None,
     ) -> None:
         if actions_completed < 1:
             raise ValueError("actions_completed must be positive")
@@ -216,6 +230,8 @@ class Campaign:
             "response_bytes": response_bytes,
             "detail": detail[:120],
         }
+        if evidence is not None:
+            event["evidence"] = evidence
         with self._lock:
             if success:
                 self.actions_succeeded += actions_completed
@@ -250,6 +266,7 @@ class Campaign:
             "reference_label": self.profile.reference_label,
             "scenario_label": self.profile.scenario_label,
             "seed": self.seed,
+            "parameters": self.profile.parameters,
             "target_ip": VICTIM_IP,
             "source_ip": self.source_ip,
             "started_epoch": round(self.started_epoch, 3),
