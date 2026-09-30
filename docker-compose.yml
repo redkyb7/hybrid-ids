@@ -14,7 +14,7 @@ services:
       ids-network:
         ipv4_address: 192.168.100.10
     ports:
-      - "127.0.0.1:8080:80"     # Web application on this host only
+      - "${IDS_HTTP_BIND:-127.0.0.1}:8080:80"     # Web application on this host only
       - "127.0.0.1:2222:22"     # Testbed SSH on this host only
     restart: unless-stopped
 
@@ -34,6 +34,8 @@ services:
         ipv4_address: 192.168.100.101
     depends_on:
       - victim
+    volumes:
+      - ./data/campaigns:/app/campaigns
     restart: unless-stopped
 
   # ----------------------------------------------------------------------------

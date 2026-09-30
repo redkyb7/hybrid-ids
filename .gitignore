@@ -24,4 +24,17 @@ logs/
 data/*.db
 /data/live_eval_windows.json
 /data/campaigns/
+/data/labeled_testbed/
+/data/real_pcap_eval/
+/data/pcaps/
+*.pcap
+*.pcapng
+/updated_models/candidates/
 /graphify-out/
+
+# Local agent tooling and caches
+/data/
+/.codex/
+/AGENTS.md
+/.uv-cache/
+/.uv-python/

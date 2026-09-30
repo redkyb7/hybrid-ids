@@ -34,25 +34,22 @@ Press `Ctrl+C` to stop following logs; the containers continue running. To inspe
 
 ## Models used by Docker
 
-The monitor defaults to the five-attack XGBoost ML and residual-MLP DL
-models in `updated_models/five_attack/{ml,dl}`. Stage 1 uses the engine's 0.10
-attack threshold because this ML bundle has no saved threshold file. Stage 2
-uses its saved 0.90 confidence threshold. The 0.10 Stage 1 threshold was not
-evaluated for this new pairing. A flow below that threshold stops at
-Stage 1 as benign. An attack candidate reaches Stage 2, where DL assigns the
-class or can return benign. If an artifact is missing or has the wrong schema,
-the monitor exits and reports the error in
-`docker compose logs monitor`.
+The monitor loads **Random Forest ML → residual MLP DL** from
+`updated_models/five_attack/{ml,dl}`. Stage 1 uses the saved **0.10** attack
+threshold. Flows below it stop as benign; the rest reach Stage 2. DL uses
+its saved **0.30** confidence threshold and can return a named attack,
+Benign, or Unknown Attack. Only model verdicts produce alerts.
 
-The monitor image includes the Python, scikit-learn, TensorFlow, XGBoost, and
-pandas dependencies needed by these models.
+The dashboard displays DL standalone classification macro F1 **0.8372**.
+The combined pipeline achieved **0.8650 macro F1** on 432 previously used live
+validation snapshots. It detected all 308 attack snapshots but falsely named
+97 of 101 legitimate slow HTTP snapshots as DoS. This limitation remains in
+the selected deployment; these results are not an unseen final live test.
+See [the model comparison](MODEL_IMPLEMENTATION_COMPARISON.md) and
+[deployment provenance](updated_models/deployment_manifest.json).
 
-The deployed ML and DL models were evaluated on different test splits, so
-there is no measured combined attack F1 for this pairing. The dashboard shows
-the DL model's standalone classification macro F1 (`0.8328`) from
-`updated_models/five_attack/dl/evaluation_metrics.json`. This is an offline
-seven-class test-set result, not a combined pipeline or live-traffic score.
-Their standalone scores cannot be combined into one pipeline score.
+Missing or incompatible artifacts stop the monitor with an error. Inspect
+`docker compose logs monitor` to diagnose startup failures.
 
 ## Retrain for five named attack types
 
@@ -61,28 +58,18 @@ Stage 1 remains binary across **all** attack rows. Stage 2 keeps Benign and
 these five attack labels, and combines the source Infiltration and Webattack
 rows into `Other Attack`. Build the self-contained Colab upload archive with
 `python scripts/build_five_attack_colab_zip.py`, then follow
-[the Colab retraining guide](colab_five_attack_retrain/README.md). The archive
-includes the Parquet dataset and excludes old model artifacts.
+[the Colab retraining guide](colab_five_attack_retrain/README.md). The resulting
+`five_attack_colab_slow_retrain_checked.zip` includes the CIC Parquet and verified
+live partitions: 879 training and 432 validation snapshots, including matched
+slow-header attacks and legitimate slow clients. Extract into the fresh Colab
+folder specified in the guide and verify those counts before training. The
+exporter rejects models trained against a different live split plan.
 
-Evaluate the combined pipeline before reporting a new hybrid score. The
-automatic single-source attacker rotation now covers the
-five selected types through four local scenarios; DDoS requires the separate
-two-worker campaign described in the testbed guide. Out-of-scope manual
-campaigns remain available to check `Other Attack` behavior.
-
-In the first bounded live check of the five-attack bundle, a 12-port Nmap
-campaign produced 12 captured connections, 10 Stage 2 connections, one
-`Unknown Attack` alert, and zero `Port Scan` predictions. A separate
-two-source UDP DDoS campaign produced 20 captured connections and 20 correct
-`DDoS` model alerts. These are lab scenarios, not a combined pipeline F1.
-The new DL report also shows `Portscan` F1 of 0.7135 on 225 offline test
-examples and `Other Attack` F1 of 0.1752 on 9,785 examples.
-
-The attacker evaluation records a historical 13-scenario rule-assisted baseline
-and two model-only follow-up campaigns. The scan had no model alerts, while the
-two-source UDP campaign produced 20 correct DDoS alerts. See
-[ATTACKER_IMPLEMENTATION_AND_EVALUATION.md](ATTACKER_IMPLEMENTATION_AND_EVALUATION.md)
-for the measured results and limitations.
+Only `updated_models/five_attack/` is retained as the deployed bundle.
+Uploaded model ZIPs and extracted candidates are removed after installation.
+The current Colab archive and datasets remain local and excluded from Git.
+A future upload must be evaluated and explicitly installed before it changes
+Docker's selected bundle.
 
 The displayed DL macro F1 does not measure Stage 1 gating or live traffic.
 The monitor now records only ML/DL verdicts. The dashboard presents the saved
@@ -99,6 +86,20 @@ displays `--` unless that bundle has a matching
 `dl/evaluation_metrics.json` report.
 Clear any `IDS_STAGE1_THRESHOLD` override to use the threshold belonging to
 the selected bundle.
+
+## Optional phone access to the victim
+
+By default HTTP is published only on localhost. For an authorized phone on
+the same Wi-Fi, set your current Windows IPv4 address before starting Compose:
+
+```powershell
+$env:IDS_HTTP_BIND = 'YOUR_WINDOWS_IPV4'
+docker compose up -d victim
+docker compose up -d --no-deps --force-recreate monitor
+```
+
+Browse to `http://YOUR_WINDOWS_IPV4:8080` on the phone. Clear the variable to
+restore the localhost default on the next victim recreation.
 
 ## Open the dashboard
 
@@ -135,6 +136,6 @@ docker compose logs --tail=100 victim monitor dashboard
 If you see `exec /app/entrypoint.sh: no such file or directory` for `victim`, rebuild it with `docker compose up -d --build victim`. The victim Dockerfile normalizes Windows line endings in its entrypoint during the build.
 
 See [testbed/README.md](testbed/README.md) for campaign commands and
-[ATTACKER_IMPLEMENTATION_AND_EVALUATION.md](ATTACKER_IMPLEMENTATION_AND_EVALUATION.md)
-for the historical seven-class baseline and model-only follow-up. Rerun the
-remaining campaigns to measure the current pipeline.
+[MODEL_IMPLEMENTATION_COMPARISON.md](MODEL_IMPLEMENTATION_COMPARISON.md)
+for the original 1D-CNN comparison, current deployment results and known
+slow-client false alarms.

@@ -64,32 +64,31 @@ The infiltration fixture accesses only a synthetic in-memory canary and sends
 it back to a lab-only endpoint. Profile limits are in
 [`attacker/profiles.json`](attacker/profiles.json).
 
-The helper prints the generated campaign ID. After it finishes, evaluate that
-run against the monitor's SQLite records:
+## Benign controls and slow requests
+
+Run legitimate client traffic with:
 
 ```powershell
-uv tool run --from duckdb python scripts/evaluate_attack_campaigns.py --campaign-id 20260925T082613Z-85c7c3f1
+.\scripts\run_testbed_campaign.ps1 -Attack benign_http -Seed 43
 ```
 
-The JSON result is written to `data/campaigns/<ID>-evaluation.json`. It reports
-source IPs, action and connection counts, Stage 2 reach, model alerts,
-correct model classes and latency. With `IDS_LOG_FEATURES=1`,
-it also compares the fullest captured snapshot per connection with the raw CIC
-subtype's 10th to 90th percentile band. A snapshot is a model verdict, not a
-unique connection.
+`dos_slow` sends bounded unfinished requests; `benign_slow_http` completes
+requests and verifies a successful response. The current model frequently
+flags the legitimate slow client as DoS. See
+[the model comparison](../MODEL_IMPLEMENTATION_COMPARISON.md).
+Campaign manifests describe independently recorded actions, not predictions.
+Local captures, manifests, datasets and evaluation databases are excluded from Git.
 
-See [`ATTACKER_IMPLEMENTATION_AND_EVALUATION.md`](../ATTACKER_IMPLEMENTATION_AND_EVALUATION.md)
-for historical rule-assisted lab results, two model-only follow-up campaigns,
-and limitations. Rerun the remaining campaigns to measure the current monitor.
+## Retraining and deployment
 
-## Inspect and stop
+Follow [the Colab guide](../colab_five_attack_retrain/README.md). The current
+bundle belongs in `updated_models/five_attack/`; an upload alone does not
+switch deployment. After installing a verified bundle, recreate its consumers:
 
 ```powershell
-docker compose logs --tail 100 monitor
-docker compose logs --tail 100 victim
-docker compose stop
+docker compose up -d --no-deps --force-recreate monitor dashboard
 ```
 
-`docker compose stop` preserves containers, SQLite telemetry and campaign
-manifests. Use `docker compose down` only when you also want to remove the lab
-containers and network.
+Recreate the monitor whenever the victim is recreated so it reconnects to
+the victim network namespace. The dashboard score is standalone offline DL
+macro F1; live detections are saved model verdicts.
