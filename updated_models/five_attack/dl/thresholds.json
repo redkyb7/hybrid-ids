@@ -1,5 +1,9 @@
 {
-    "global_threshold": 0.9,
-    "metric": "binary_attack_f1",
-    "validation_score": 0.9655988308705838
+    "global_threshold": 0.3,
+    "validation_score": 0.8603351955307262,
+    "domain_scores": {
+        "cic": 0.9549388392688427,
+        "live": 0.8603351955307262
+    },
+    "metric": "minimum_domain_runtime_binary_attack_f1"
 }
