@@ -1584,8 +1584,8 @@
       const pipelineInfo = [
         ["01 · Live Traffic", "Captures simulated network traffic and groups packets into flows. Capture status is not available here."],
         ["02 · Flow Features", "Turns each captured flow into features for model inference."],
-        ["03 · ML Triage", "Screens flows for suspicious activity. Per-stage decisions are not recorded in this view."],
-        ["04 · DL Classification", "Classifies suspicious traffic by attack type. The Macro F1 above comes from offline validation."],
+        ["03 · ML Triage", "Stops low-scoring flows as benign and sends attack candidates to DL. Expand a saved flow to inspect its Stage 1 attack score."],
+        ["04 · DL Classification", "Classifies routed flows as benign, a named attack, or Unknown Attack. The Macro F1 above is the standalone offline DL test score."],
         ["05 · Alert", "Saves detected threats with source, target, class, confidence and timestamp."],
       ];
       document.querySelectorAll("[data-pipeline]").forEach((button) => button.addEventListener("click", () => {
@@ -1612,7 +1612,7 @@
         "Web Attack":"Classified as an attack on a web service",
         Botnet:"Classified as botnet-related traffic",
       };
-      const score = (value) => (value == null ? "--" : Number(value).toFixed(3));
+      const score = (value) => (value == null ? "--" : Number(value).toFixed(4));
       function flashUpdate(el) {
         el.classList.remove("flash-update");
         void el.offsetWidth; // restart the animation
@@ -1696,15 +1696,15 @@
         $("totalFlows").textContent = Number(kpi.total_flows).toLocaleString();
         $("totalAttacks").textContent = Number(kpi.total_attacks).toLocaleString();
 
-        // Five-attack API uses dl_macro_f1; older projects may expose current_f1.
-        const displayedF1 = kpi.dl_macro_f1 ?? kpi.current_f1;
+        // Display only the selected DL model's standalone classification score.
+        const displayedF1 = kpi.dl_macro_f1;
         $("f1").textContent = score(displayedF1);
         $("f1").parentElement.style.setProperty("--f1-progress", displayedF1 == null ? "0%" : `${Math.min(100, Math.max(0, Number(displayedF1) * 100))}%`);
         flashUpdate($("f1"));
         $("f1").className = "kpi-number-quiet text-violet";
         $("f1Note").textContent = displayedF1 == null
           ? (kpi.evaluation_status || "Offline DL report unavailable for selected model")
-          : "Held-out data · Stage 2 only";
+          : (kpi.evaluation_status || "Offline DL test set · Stage 2 only");
 
         // --- Current status card: data.latest_alert ---
         const alert = data.latest_alert;
@@ -1930,6 +1930,10 @@
             ["Target", `${log.destination_ip}:${log.destination_port ?? "not recorded"}`],
             ["Protocol", log.protocol],
             ["Detected class", log.attack_type],
+            ["Model result", log.model_attack_type || "not recorded"],
+            ["Model verdict", log.model_verdict || "not recorded"],
+            ["Model confidence", log.model_confidence == null ? "not recorded" : `${(Number(log.model_confidence) * 100).toFixed(1)}%`],
+            ["Stage 1 attack score", log.stage1_attack_probability == null ? "not recorded" : `${(Number(log.stage1_attack_probability) * 100).toFixed(1)}%`],
             ["Confidence", log.confidence == null ? "not recorded" : `${(Number(log.confidence) * 100).toFixed(1)}%`],
             ["Processing time", `${log.latency_ms} ms`],
             ["Pipeline stage", stageText],

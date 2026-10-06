@@ -1,0 +1,2 @@
+# Preserve deployed artifact bytes so provenance hashes match on every OS.
+updated_models/five_attack/** -text

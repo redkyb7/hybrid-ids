@@ -22,8 +22,8 @@ RUN pip install --no-cache-dir flask
 
 COPY app.py /app/app.py
 COPY entrypoint.sh /app/entrypoint.sh
-RUN chmod +x /app/entrypoint.sh
+RUN sed -i 's/\r$//' /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
-EXPOSE 80 22
+EXPOSE 80 22 9999/udp
 
 ENTRYPOINT ["/app/entrypoint.sh"]

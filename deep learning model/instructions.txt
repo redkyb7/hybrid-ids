@@ -1,69 +1,21 @@
-INSTALLATION
-============
+DEEP LEARNING SOURCE
+====================
 
-Activate virtual environment first (ONLY IF YOU WANT, NOT A MUST):
+The Docker runtime loads the selected DL artifact from
+updated_models/five_attack/dl and passes its paths to predict.NIDSClassifier.
+The saved_model/ directory beside this source is a local training output and
+is excluded from Git.
 
-source .venv/bin/activate
+To train the DL model, install requirements.txt from this directory and run
+train.py from this directory. config.py reads
+clean_data/cic-collection.parquet at the repository root and writes artifacts
+to this directory's saved_model/. The ML training script is
+ml-model-updated.py at the repository root. These independent runs do not
+measure the combined ML-to-DL decision rule. Validate the feature schema and
+full pipeline before replacing the deployed artifacts.
 
-
-Install dependencies:
-
-pip install tensorflow scikit-learn pandas numpy matplotlib
-
-
-TRAINING
-========
-
-Run:
-
-python3 train.py
-
-
-Training will:
-
-1. Load the CICIDS2017 cleaned dataset
-2. Clean invalid values
-3. Encode attack labels
-4. Split data:
-      80% training
-      10% validation
-      10% testing
-5. Scale features using training data only
-6. Save preprocessing artifacts
-7. Train the 1D CNN using class weighting
-8. Use early stopping
-9. Save the model with the best validation loss
-10. Evaluate briefly on the unseen test set
-
-
-FULL EVALUATION
-===============
-
-Run:
-
-python3 evaluate.py
-
-
-This produces:
-
-saved_model/classification_report.json
-saved_model/evaluation_metrics.json
-saved_model/confusion_matrix.png
-
-
-INFERENCE TEST
-==============
-
-Run:
-
-python3 predict.py
-
-
-IMPORTANT
-=========
-
-Do not use RandomOverSampler.
-
-The model handles class imbalance using class weights.
-
-The test set must not be used during training or model selection.
+The retraining target has five named attacks: Botnet, Bruteforce, DDoS,
+DoS, and Portscan, plus Benign and Other Attack. Infiltration and Webattack
+source rows become Other Attack before the train/validation/test split.
+The selected Docker artifact is the seven-class five-attack model.
+See ../colab_five_attack_retrain/README.md for retraining.

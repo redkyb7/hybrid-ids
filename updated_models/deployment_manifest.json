@@ -1,0 +1,127 @@
+{
+  "deployment_date": "2026-10-01",
+  "bundle": "updated_models/five_attack",
+  "source_upload_sha256": "4d6073982e1da0705ce8a3965fd1c1ccc60cf63ae7936f1d23a788aaed08dd6e",
+  "selection": "User selected corrected slow-traffic candidate for current deployment",
+  "ml_model": "Random Forest",
+  "ml_attack_threshold": 0.1,
+  "dl_model": "Residual MLP",
+  "dl_confidence_threshold": 0.3,
+  "live_training_snapshots": 879,
+  "live_validation_snapshots": 432,
+  "live_pipeline_validation": {
+    "rows": 432,
+    "accuracy": 0.7754629629629629,
+    "macro_f1_observed_classes": 0.8650142782524486,
+    "macro_f1_all_six": 0.8650142782524486,
+    "per_class": {
+      "Benign": {
+        "support": 124,
+        "predicted": 27,
+        "precision": 1.0,
+        "recall": 0.21774193548387097,
+        "f1": 0.3576158940397351
+      },
+      "Botnet": {
+        "support": 20,
+        "predicted": 20,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "Bruteforce": {
+        "support": 15,
+        "predicted": 15,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "DDoS": {
+        "support": 20,
+        "predicted": 20,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      },
+      "DoS": {
+        "support": 241,
+        "predicted": 338,
+        "precision": 0.7130177514792899,
+        "recall": 1.0,
+        "f1": 0.8324697754749568
+      },
+      "Portscan": {
+        "support": 12,
+        "predicted": 12,
+        "precision": 1.0,
+        "recall": 1.0,
+        "f1": 1.0
+      }
+    },
+    "binary": {
+      "tp": 308,
+      "fp": 97,
+      "fn": 0,
+      "tn": 27,
+      "precision": 0.7604938271604939,
+      "recall": 1.0,
+      "false_alarms_per_1000_benign_snapshots": 782.258064516129
+    },
+    "unknown_attack_predictions": 0,
+    "confusion": {
+      "Benign": {
+        "Benign": 27,
+        "DoS": 97
+      },
+      "Botnet": {
+        "Botnet": 20
+      },
+      "Bruteforce": {
+        "Bruteforce": 15
+      },
+      "DDoS": {
+        "DDoS": 20
+      },
+      "DoS": {
+        "DoS": 241
+      },
+      "Portscan": {
+        "Portscan": 12
+      }
+    },
+    "latency_ms": {
+      "mean": 39.33101851851852,
+      "p95": 48.0
+    }
+  },
+  "validation_limitations": [
+    "Validation captures participated in model/threshold selection; not an unseen final test",
+    "97/101 legitimate slow HTTP snapshots falsely labeled DoS; 5/5 slow benign connections had alerts",
+    "0/23 ordinary phone snapshots falsely alerted across 10 verified connections",
+    "Snapshots within connections are correlated"
+  ],
+  "compression": {
+    "original_bytes": 107431561,
+    "compressed_bytes": 32080751,
+    "compression": "joblib zlib level 3; lossless",
+    "all_tree_states_identical": true,
+    "validation_predictions_exact_match_with_serial_reduction": true,
+    "validation_rows": 432,
+    "original_sha256": "4c68263bf1ce90f42043ec9ff89d9a75b1958ec801dbf99e73de6d5326e7b27a",
+    "compressed_sha256": "3479ccf04c8962b23b9eb8304c75caf19f237737c8a7e35cec6dfe7dddd4f98d"
+  },
+  "artifact_sha256": {
+    "dl/classification_report.json": "06dc2950b7cf4dbe6254b90d03bbbf244e3fd290400f08d4296b40b0d0ef55ad",
+    "dl/evaluation_metrics.json": "96aa2ef8da504e3bcce1e63bcf4ac2388599ecbcf0dccb1f6371ca341c0f9138",
+    "dl/feature_names.pkl": "27ea048099e4e9f66e880b241e4a274487bdb2ce182bb030b2cd6b2e87322281",
+    "dl/label_encoder.pkl": "90ad81a2210d1b247a0f022fbfe149fea7bc88f1b95a3bdb52e7a7002c1d09c6",
+    "dl/metadata.json": "4f8dc2e31019991ec86f368b72c3da7fb5ced4b0526ff91e5db8dd15a4f6706e",
+    "dl/nids_model.keras": "20d9a0e62d1e2dae91e8161a16cb6bed07bfad68ca34fd9330af46ac77edab23",
+    "dl/scaler.pkl": "2e03f3950a379086e4d7f0242fa6af706d0cb7c868bf372a231640aa6d2ba5cf",
+    "dl/thresholds.json": "3e827c4c350848b8fcef790a3d925d3cfcf6c5f1f7ef8ab66b471432df6c17d1",
+    "ml/stage1_binary_filter.joblib": "3479ccf04c8962b23b9eb8304c75caf19f237737c8a7e35cec6dfe7dddd4f98d",
+    "ml/stage1_feature_list.joblib": "16fb6ad8c9d1f044c6c0b3b03c229f562381ad70f1677a0bada688b093689a8c",
+    "ml/stage1_threshold.json": "66afb643d071c156c2249dce5112315c97a535fdd8cea3939242b5499270fccc",
+    "ml/training_metadata.json": "32f8124258fd6b2f0200cfd5143e7f701750f9054ab823d469251279743d97c6"
+  }
+}

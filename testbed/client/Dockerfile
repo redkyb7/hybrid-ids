@@ -6,5 +6,6 @@ WORKDIR /app
 RUN pip install --no-cache-dir requests
 
 COPY benign_generator.py /app/benign_generator.py
+COPY benign_campaign.py /app/benign_campaign.py
 
 ENTRYPOINT ["python", "/app/benign_generator.py"]

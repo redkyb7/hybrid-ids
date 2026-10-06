@@ -9,4 +9,6 @@ scikit-learn
 xgboost
 joblib
 tensorflow
-imbalanced-learn
+pyarrow
+matplotlib
+seaborn
