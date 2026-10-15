@@ -589,7 +589,89 @@
       .cell-value { font-size: 1.4rem; }
       .hero-headline { font-size: 1.05rem; }
     }
-  </style>
+  
+.support > [aria-labelledby="pipelineHeading"]{grid-column:1/-1}
+/* Final presentation: concise summary, a distinct evidence workspace, stable charts. */
+#main > .scopebar{margin:1rem 0 1.1rem;padding:0 .2rem}.scopebar p{font-size:.88rem;color:var(--ink-2)}
+#overviewView .hero{min-height:0;padding:clamp(1.4rem,3vw,2.4rem);gap:2rem}
+#overviewView #alert[data-state="threat"] .hero-name{font-size:min(calc(var(--name-size) * .67),12vw);line-height:1.08}
+#overviewView .hero-copy{gap:.8rem}#overviewView .hero-headline{font-size:1.05rem;font-weight:500;line-height:1.6}
+#overviewView .hero-meaning{max-width:40rem}#overviewView .hero-cta{margin-top:.65rem}
+.overview-analysis{display:grid;grid-template-columns:minmax(0,4fr) minmax(0,6fr);gap:1.1rem;align-items:stretch}
+.overview-analysis .grp{grid-template-columns:auto minmax(0,1fr) auto;gap:.7rem;padding:1rem 0}.overview-analysis .grp-count{grid-column:2;grid-row:2;text-align:left}.overview-analysis .grp .btn{grid-column:3;grid-row:1/3}.overview-analysis .grp-route{font-size:.85rem;overflow-wrap:anywhere}
+.strip{grid-template-columns:repeat(3,minmax(0,1fr))}.strip .cell{min-width:0}
+#selectedContext.sel{grid-template-columns:minmax(0,1fr);padding:1.6rem 1.8rem;background:linear-gradient(125deg,rgba(255,106,61,.075),rgba(16,19,32,.95) 60%);border-top:2px solid var(--accent-line);gap:1rem}
+#selectedContext .sel-top{padding-right:5rem}#selectedContext .sel-scene{display:none}#selectedContext .sel-name{font-size:clamp(1.8rem,2.8vw,2.5rem);filter:none}#selectedContext .sel-meaning{display:none}
+#selectedContext .hero-headline{font-size:1rem;font-weight:450;line-height:1.7}#selectedContext .sel-facts{grid-template-columns:repeat(auto-fit,minmax(155px,1fr));gap:.7rem}#selectedContext .fact dt{font-size:.73rem}#selectedContext .fact dd{font-size:.95rem}
+#selectedContext .sel-actions{padding-top:.4rem}.sel-details{animation:none}#selectedContext .sel-close{top:1.3rem}
+#investigateView .lead{display:flex;flex-wrap:wrap;align-items:center;gap:.25rem 1rem}#investigateView .lead p{flex-basis:65%;font-size:.95rem}#backToCharts{margin-left:auto}
+#processingPanel{position:relative;padding:1.35rem 1.5rem;min-width:0}#processingPanel .chart-body{position:relative;flex:none;width:100%;height:320px;min-height:320px;max-height:320px;contain:layout}
+#processingPanel .chart-body canvas{position:absolute;inset:0;width:100%!important;height:100%!important}
+#processingPanel .chart-takeaway{display:block;color:#ffcf9b;font-size:.88rem;margin:.5rem 0 .2rem}
+#processingPanel #chartReadout{display:block;font-size:.83rem;color:var(--ink-2);min-height:1.5em;margin:.6rem 0 0}
+#classificationReadout{display:flex;font-size:.8rem;min-height:2.6rem;margin-top:.65rem}#classFilterHint{display:block!important;font-size:.8rem;color:var(--ink-2)}
+#processingPanel .distribution-insight{display:none}#processingPanel h2,.overview-analysis h2{font-size:1.1rem}
+.flow-explorer{display:flex;justify-content:space-between;align-items:center;gap:1rem;padding:.8rem 1rem;margin-top:.7rem;border:1px solid rgba(79,216,245,.24);border-radius:12px;background:rgba(79,216,245,.045)}
+.flow-explorer>div:first-child{display:grid;gap:.3rem;min-width:0}.explorer-label{font-size:.66rem;letter-spacing:.12em;color:var(--cyan);font-weight:650}#previewTitle{font-size:.96rem;font-weight:600}#previewRoute{font-size:.8rem;color:var(--ink-2);overflow-wrap:anywhere}
+.explorer-actions{display:flex;align-items:center;gap:.5rem;flex-wrap:wrap}.explorer-actions .mono{font-size:.8rem;color:var(--ink-2)}#inspectPoint{border-color:rgba(255,154,85,.6);color:#ffd4b1}.plot-update{display:block;margin-top:.5rem;font-size:.78rem;color:#ffcf9b}
+.panel,.btn,.legend-item{transition:border-color .2s,background-color .2s,box-shadow .2s}.btn:hover{box-shadow:0 0 20px -10px rgba(79,216,245,.6)}
+@media(max-width:900px){.overview-analysis{grid-template-columns:minmax(0,1fr)}.flow-explorer{align-items:stretch;flex-direction:column}.explorer-actions{justify-content:flex-start}}
+@media(max-width:600px){.strip{grid-template-columns:1fr}.strip .cell{border-left:0;border-top:1px solid var(--line-soft)}.strip .cell:first-child{border-top:0}#selectedContext.sel{padding:1rem}#selectedContext .sel-facts{grid-template-columns:repeat(2,minmax(0,1fr))}#processingPanel{padding:1rem}#processingPanel .chart-body{height:260px;min-height:260px;max-height:260px}.overview-analysis .grp{grid-template-columns:auto minmax(0,1fr)}.overview-analysis .grp .btn{grid-column:2;grid-row:3;justify-self:start}#backToCharts{margin-left:0}#investigateView .lead p{flex-basis:100%}}
+@media(prefers-reduced-motion:reduce){.panel,.btn,.legend-item{transition:none}}
+[hidden]{display:none!important}
+
+
+/* Overview is the analytics home. Emphasis belongs to the latest saved attack. */
+.overview-analysis{grid-template-columns:minmax(0,5fr) minmax(0,7fr);align-items:stretch}
+#overviewView #alert[data-state="threat"]{background:radial-gradient(ellipse at 88% 78%,rgba(227,67,26,.26),transparent 66%),linear-gradient(120deg,#431e23 0%,#2d1720 44%,#20141d 100%);border:1px solid rgba(255,130,75,.64);box-shadow:inset 0 1px 0 rgba(255,194,154,.18),0 16px 50px -22px rgba(239,65,28,.45)}
+#alert::before{display:block;z-index:0;opacity:0;background:radial-gradient(ellipse 290px 220px at var(--mx) var(--my),rgba(255,113,45,.22),rgba(47,9,16,.23) 70%,transparent 100%);transition:opacity .22s;pointer-events:none}
+#alert::after{display:none}
+#alert .hero-copy,#alert .hero-scene{position:relative;z-index:1}
+#alert[data-state="threat"]:hover::before,#alert[data-state="threat"]:focus-within::before{opacity:1}
+#overviewView #alert[data-state="threat"]:hover,#overviewView #alert[data-state="threat"]:focus-within{border-color:rgba(255,166,100,.95);box-shadow:inset 0 0 90px rgba(104,15,14,.23),inset 0 1px 0 rgba(255,208,171,.25),0 18px 50px -22px rgba(239,65,28,.6)}
+#alert .kicker{color:#ffd6b5}#alert .kicker svg{width:1.45rem;height:1.45rem;color:#ffae78}
+#overviewView #alert[data-state="threat"] .hero-name{font-size:min(calc(var(--name-size)*.76),13vw);line-height:1.06}
+#overviewView #alert[data-state="threat"] .hero-meaning{color:#ecd7d2;font-size:1.04rem;line-height:1.6;max-width:33rem}
+#alert .node{background:linear-gradient(135deg,rgba(49,43,60,.92),rgba(26,23,37,.96));border-color:rgba(204,177,188,.3)}
+#alert .node-dst{background:linear-gradient(135deg,rgba(105,42,34,.75),rgba(43,25,31,.96));border-color:rgba(255,135,88,.55)}
+#alert .node:hover,#alert .node:focus-visible{background:linear-gradient(135deg,rgba(103,44,38,.96),rgba(40,22,31,.98));border-color:#ffa76c;box-shadow:0 0 28px -12px rgba(255,115,59,.7)}
+#processingPanel .chart-body{height:310px;min-height:310px;max-height:310px}
+#processingPanel .chart-switch{flex-wrap:wrap;max-width:100%}.flow-explorer{flex-wrap:wrap}.explorer-actions{gap:.4rem}
+#overviewView>[aria-labelledby="recentHeading"] .grp{grid-template-columns:9rem minmax(0,1fr) auto auto;gap:1rem}
+@media(max-width:1000px){.overview-analysis{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){ #overviewView>[aria-labelledby="recentHeading"] .grp{grid-template-columns:minmax(0,1fr) auto;gap:.6rem}.grp-route{grid-column:1/-1;overflow-wrap:anywhere}#processingPanel .chart-body{height:260px;min-height:260px;max-height:260px}}
+
+
+/* Presentation polish: brighter focal point, precise charts and balanced supporting panels. */
+#overviewView #alert[data-state="threat"]{background:radial-gradient(ellipse at 12% 25%,rgba(255,133,64,.24),transparent 58%),radial-gradient(ellipse at 95% 100%,rgba(235,72,35,.25),transparent 65%),linear-gradient(112deg,#632b26,#3b1d26 53%,#271824);border-color:#db8052;box-shadow:inset 0 1px 0 rgba(255,219,168,.32),0 20px 65px -30px rgba(255,93,38,.7)}
+#alert .kicker{width:fit-content;padding:.5rem .8rem;border:1px solid rgba(255,201,144,.5);border-radius:9px;background:linear-gradient(115deg,rgba(255,178,91,.24),rgba(255,104,52,.1));color:#ffe4c3;font-size:.85rem;letter-spacing:.11em}
+#alert .kicker svg{width:1.6rem;height:1.6rem;filter:drop-shadow(0 0 8px rgba(255,181,100,.5))}
+#overviewView #alert[data-state="threat"] .hero-name{background:linear-gradient(180deg,#fff0d5 0%,#ffc58b 46%,#ff8351 100%);-webkit-background-clip:text;background-clip:text;color:transparent;filter:drop-shadow(0 5px 24px rgba(255,130,65,.3));font-weight:750;letter-spacing:-.045em}
+#overviewView #alert[data-state="threat"] .hero-meaning{color:#f5e5de}#alert .scene-hint{color:#d7bfc1}
+#alert .hero-cta{gap:1rem}#alert .btn-hero{box-shadow:0 8px 32px -8px rgba(255,130,54,.85),inset 0 1px 0 #ffe3b1}
+.overview-analysis>.chart-card{background:radial-gradient(ellipse at 100% 0%,rgba(91,79,158,.09),transparent 60%),#10121f;border-color:rgba(157,163,200,.19)}
+.donut-box{width:100%;max-width:19rem;align-self:center;height:17rem;flex-basis:17rem;margin:1.2rem auto .5rem;isolation:isolate}
+.donut-box::before{content:"";position:absolute;inset:8%;border-radius:50%;background:radial-gradient(circle,rgba(112,92,195,.1),transparent 70%);box-shadow:0 0 35px -19px rgba(166,140,255,.5);pointer-events:none;z-index:-1}
+.donut-center strong{font-size:2.35rem;font-weight:650;letter-spacing:-.045em}.donut-center span{max-width:10rem;margin:.35rem auto 0;font-size:.8rem;color:#c3cbe0;line-height:1.3}
+.legend-item{position:relative;overflow:hidden;padding:.7rem .8rem .8rem;border:1px solid rgba(255,255,255,.065);border-radius:10px;background:rgba(255,255,255,.025)}
+.legend-item::after{content:"";position:absolute;left:0;bottom:0;width:var(--share,0%);height:3px;background:var(--class-color);opacity:.7;transition:width .35s}
+.legend-item:hover,.legend-item:focus-visible{background:rgba(255,255,255,.075);border-color:var(--class-color)}.legend-pct{font-weight:600;color:#edf1ff}.legend-count{color:#b9c2d7}
+#classificationReadout{justify-content:center;text-align:center;background:rgba(133,111,213,.06);border-color:rgba(164,145,223,.18)}
+#overviewView #distributionInsight:not([hidden]){display:flex!important;align-items:baseline;gap:.3rem .7rem;padding:.7rem .9rem;margin:.8rem 0 .2rem;border-radius:10px;border-color:rgba(255,190,117,.22);background:linear-gradient(100deg,rgba(255,159,73,.11),rgba(255,159,73,.025))}
+#distributionInsight .insight-eyebrow{flex-basis:auto;font-size:.64rem;color:#e7c8a6}#distributionInsight strong{font-size:1.22rem;color:#ffce95}#distributionInsight>span:last-child{font-size:.79rem;color:#e0cdbd}
+#processingPanel .chart-takeaway{font-size:.8rem;color:#b9c5d8;margin:.5rem 0}.chart-card .stat-row{background:rgba(255,255,255,.025);border:1px solid rgba(255,255,255,.07);border-radius:12px;padding:.85rem}.stat-row strong{font-size:1.4rem}.stat-row span{font-size:.78rem}
+#investigateView .support{grid-template-columns:repeat(2,minmax(0,1fr));width:100%;max-width:76rem;margin-inline:auto;gap:1.15rem}
+.support>.panel{padding:1.6rem}.support h2{text-align:center}.support .block-head{justify-content:center;text-align:center}
+.support .totals{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:1rem;text-align:center;margin:1.8rem 0}
+.support .totals>div{padding:1rem .5rem;background:rgba(255,255,255,.025);border-radius:12px}.support .totals strong{font-size:clamp(1.5rem,2.6vw,2.3rem)}.support .totals-note{text-align:center}
+.support .steps{justify-content:center;gap:.5rem;margin-top:1.4rem}.support .step-detail{max-width:62rem;margin:1.2rem auto 0;text-align:center;padding:1.1rem 1.5rem}.support .step[aria-pressed="true"]{background:linear-gradient(135deg,rgba(80,205,230,.18),rgba(137,103,230,.18));box-shadow:0 0 22px -13px #7ce4f8}
+.record-actions{display:flex;gap:.5rem;flex-wrap:wrap;align-items:center}.more{display:flex;justify-content:center;gap:.7rem;flex-wrap:wrap}#recordsHiddenNote{padding:.5rem 0}.records .block-head{gap:1rem}
+.project-footer{text-align:center;padding:2rem 1rem 1rem;margin-top:2.2rem;background:radial-gradient(ellipse at 50% 0%,rgba(107,86,184,.1),transparent 65%)}
+.footer-mark{display:flex;gap:.15rem;align-items:center;justify-content:center;font-size:1rem;letter-spacing:.14em;font-weight:650;color:#edf2ff}.footer-mark>span:first-child{color:#ffae7a}.footer-divider{margin:0 .8rem;color:#646b83}.footer-team{font-size:.85rem;color:#b9adf0}.footer-project{margin:.7rem 0 .5rem;color:#d4d9e8;font-size:.88rem}.footer-school{font-size:.83rem;color:#adb8cf}.footer-school span{margin:0 .6rem;color:#716785}.footer-note{font-size:.72rem;color:#8f9cb8;margin-top:.8rem}
+@media(max-width:800px){.support .steps{flex-wrap:wrap}#investigateView .support{grid-template-columns:minmax(0,1fr)}.support>.panel{padding:1.2rem}.record-actions{width:100%}.donut-box{max-width:18rem}.support .totals strong{font-size:1.7rem}}
+@media(prefers-reduced-motion:reduce){.legend-item::after{transition:none}}
+
+</style>
 </head>
 <body>
   <a class="skip-link" href="#main">Skip to main content</a>
@@ -652,6 +734,14 @@
     </div>
 
     <main id="main">
+        <div class="scopebar">
+          <p id="viewSummary" aria-live="polite">Latest 500 saved flows</p>
+          <div class="segmented" role="group" aria-label="Number of recent flows to load">
+            <button type="button" class="seg" data-limit="100" aria-pressed="false">Latest 100</button>
+            <button type="button" class="seg" data-limit="500" aria-pressed="true">Latest 500</button>
+            <button type="button" class="seg" data-limit="2500" aria-pressed="false">Latest 2,500</button>
+          </div>
+        </div>
       <!-- ===================== OVERVIEW ===================== -->
       <section id="overviewView" class="view stack" role="tabpanel" aria-labelledby="tabOverview">
         <h1 class="sr-only">SentinelFlow overview</h1>
@@ -666,14 +756,8 @@
               <span id="alertKicker">Latest detected attack</span><span id="alertNew" class="new-tag" hidden>New</span>
             </p>
             <h2 id="alertLabel" class="hero-name">Loading…</h2>
-            <p id="alertHeadline" class="hero-headline" hidden></p>
+
             <p id="alertCopy" class="hero-meaning">Reading saved detections from the dashboard API.</p>
-            <div id="alertGrid" class="hero-meta" hidden>
-              <div><span class="meta-k">Confidence</span><span id="alertConfidence" class="meta-v">--</span><span class="meter" aria-hidden="true"><span id="alertMeter" style="width:0%"></span></span></div>
-              <div><span class="meta-k">Same attack from this source</span><span id="alertSourceCount" class="meta-v">--</span></div>
-              <div><span class="meta-k">Recorded</span><span id="alertTime" class="meta-v">--</span></div>
-              <div id="stageField" hidden><span class="meta-k">Pipeline stage</span><span id="alertStage" class="meta-v">--</span></div>
-            </div>
             <div id="alertActions" class="hero-cta" hidden>
               <button id="inspectAlert" class="btn btn-hero" type="button">Investigate flow <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h11M11 5.5 15.5 10 11 14.5"/></svg></button>
               <span id="alertFlowId" class="flow-id"></span>
@@ -690,12 +774,7 @@
             <p id="windowAttacksNote" class="cell-note">in the selected records</p>
             <svg id="sparkThreats" class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" role="img" aria-label="Attack flows across the selection"></svg>
           </div>
-          <div class="cell">
-            <h3 class="cell-label">Attack share</h3>
-            <p id="attackShare" class="cell-value">--</p>
-            <p class="cell-note">of the selected flows</p>
-            <div id="shareBar" class="share-bar" role="img" aria-label="Class mix of the selected flows"></div>
-          </div>
+
           <div class="cell">
             <h3 class="cell-label">Processing time <span class="info" tabindex="0" role="img" aria-label="Saved classification time per flow. Not the full delay from attack to alert. The line shows the median across the selection, oldest to newest." data-tip="Saved classification time per flow, not the full delay from attack to alert. Line: median across the selection, oldest → newest.">i</span></h3>
             <p id="latency" class="cell-value">--</p>
@@ -710,17 +789,9 @@
           </div>
         </section>
 
-        <div class="scopebar">
-          <p id="viewSummary" aria-live="polite">Latest 500 saved flows</p>
-          <div class="segmented" role="group" aria-label="Number of recent flows to load">
-            <button type="button" class="seg" data-limit="100" aria-pressed="false">Latest 100</button>
-            <button type="button" class="seg" data-limit="500" aria-pressed="true">Latest 500</button>
-            <button type="button" class="seg" data-limit="2500" aria-pressed="false">Latest 2,500</button>
-          </div>
-        </div>
 
-        <div class="charts">
-          <section class="panel chart-card" aria-labelledby="classHeading">
+
+        <div class="overview-analysis"><section class="panel chart-card" aria-labelledby="classHeading">
             <h2 id="classHeading">What the model classified</h2>
             <p id="threatTotal" class="sub">Share of the selected flows</p>
             <div class="donut-box">
@@ -732,51 +803,45 @@
             <div id="classificationReadout" class="classification-readout" aria-live="polite"><span class="readout-dot"></span><span id="classificationReadoutText">Hover a segment or category to see its count and share.</span></div>
             <div id="classLegend" class="legend" role="group" aria-label="Filter detection records by class"></div>
             <p id="classFilterHint" class="filter-hint">Select a class to filter the records table.</p>
-          </section>
-
-          <section class="panel chart-card" aria-labelledby="latencyHeading">
+          </section><section id="processingPanel" class="panel chart-card" aria-labelledby="latencyHeading">
             <div class="processing-head"><div><h2 id="latencyHeading">How long classification took <span class="info" tabindex="0" role="img" aria-label="Saved classification time, not the full delay from attack to alert." data-tip="Saved classification time · not the full delay from attack to alert.">i</span></h2><p id="processingSubtitle" class="sub">Choose a view to explore the same measured flows.</p></div>
               <div class="chart-switch" role="group" aria-label="Processing time chart view"><button type="button" data-chart-mode="distribution" aria-pressed="true">Distribution</button><button type="button" data-chart-mode="scatter" aria-pressed="false">Individual flows</button></div>
             </div>
-            <div id="distributionInsight" class="distribution-insight" hidden><span class="insight-eyebrow">MOST COMMON RANGE</span><strong id="commonRange">--</strong><span id="commonRangeCount">--</span></div>
+            <div id="distributionInsight" class="distribution-insight" hidden><span class="insight-eyebrow">MOST FLOWS TOOK</span><strong id="commonRange">--</strong><span id="commonRangeCount">--</span></div>
             <p id="processingTakeaway" class="chart-takeaway" aria-live="polite">Waiting for records…</p>
             <div class="chart-body">
               <canvas id="latencyChart" role="img" aria-label="Scatter of processing time in milliseconds for each selected flow, oldest to newest"></canvas>
               <div id="latencyEmpty" class="chart-empty" hidden>No processing times to chart yet</div>
               <div class="chart-fallback" hidden></div>
             </div>
-            <div class="stat-row" aria-label="Processing time summary">
+            <div id="flowExplorer" class="flow-explorer" hidden>
+ <div><span class="explorer-label">POINT PREVIEW</span><strong id="previewTitle">Select a dot</strong><span id="previewRoute">Use the arrows to explore every measured flow.</span></div>
+ <div class="explorer-actions"><button id="previousPoint" class="btn btn-sm" type="button" aria-label="Previous measured flow">←</button><span id="previewPosition" class="mono"></span><button id="nextPoint" class="btn btn-sm" type="button" aria-label="Next measured flow">→</button><button id="inspectPoint" class="btn btn-sm" type="button">Inspect flow ↗</button></div>
+ </div><span id="plotUpdate" class="plot-update" hidden>New data ready · move off the chart to update</span>
+ <div class="stat-row" aria-label="Processing time summary">
               <div><strong id="chartFlowCount">--</strong><span>Measured flows</span></div>
               <div><strong id="chartMedian">--</strong><span>Typical time · median</span></div>
               <div><strong id="chartSlowest">--</strong><span>Slowest</span></div>
             </div>
             <p id="chartReadout" class="readout" aria-live="polite">Select a bar to inspect flows in that time range.</p>
             <p class="processing-caveat">Saved classification time · not the full delay from attack to alert.</p>
-          </section>
-        </div>
+          </section></div>
 
-        <div class="lower">
-          <section class="panel block" aria-labelledby="recentHeading">
+        <section class="panel block" aria-labelledby="recentHeading">
             <div class="block-head">
               <div><h2 id="recentHeading">Recent detections</h2><p class="sub">Grouped by attack, source and target</p></div>
               <button id="openInvestigate" class="link-btn" type="button">Open all records →</button>
             </div>
             <ol id="overviewEvidence"></ol>
           </section>
-          <section class="panel block" aria-labelledby="topHeading">
-            <div class="block-head">
-              <div><h2 id="topHeading">Top attacking sources</h2><p class="sub">Attack-labelled flows per source in the selection</p></div>
-            </div>
-            <ol id="topSources" class="top-list"></ol>
-          </section>
-        </div>
+
       </section>
 
       <!-- ===================== INVESTIGATE ===================== -->
       <section id="investigateView" class="view stack" role="tabpanel" aria-labelledby="tabInvestigate" hidden>
         <div class="lead">
           <h1>Investigate</h1>
-          <p>Follow a detection from source to target, then check the evidence behind it.</p><button id="backToCharts" class="btn btn-sm btn-quiet" type="button" style="margin-top:.7rem">← Window analytics</button>
+          <p>Inspect the saved evidence behind a detection.</p><button id="backToCharts" class="btn btn-sm btn-quiet" type="button" style="margin-top:.7rem">← Threat overview</button>
         </div>
 
         <!-- v4: detection card — header badges, plain-English headline, fact tiles, and an in-card technical details panel -->
@@ -824,8 +889,9 @@
         </section>
         <div id="selectionNotice" class="notice" role="status" hidden><span id="selectionNoticeText"></span><button id="dismissNotice" class="btn btn-sm" type="button">Dismiss</button></div>
 
+
         <section id="recordsSection" class="panel records" aria-labelledby="recordsHeading" tabindex="-1">
-          <div class="block-head"><h2 id="recordsHeading">Detection records</h2><span class="sub">Newest first · open “Details” for technical evidence</span></div>
+          <div class="block-head"><h2 id="recordsHeading">Detection records</h2><div class="record-actions"><button id="collapseDetails" class="btn btn-sm btn-quiet" type="button">Close expanded rows</button><button id="toggleRecords" class="btn btn-sm" type="button" aria-expanded="true" aria-controls="recordsBody">Hide records ↑</button></div></div><div id="recordsBody">
           <div class="toolbar">
             <div class="segmented" role="group" aria-label="Which records to show">
               <button type="button" class="seg" data-scope="all" aria-pressed="true">All records</button>
@@ -851,11 +917,17 @@
             </table>
           </div>
           <p id="empty" hidden>No records to show.</p>
-          <div class="more"><button id="showMore" class="btn" type="button" hidden>Show 50 more</button></div>
+          <div class="more"><button id="showMore" class="btn" type="button" hidden>Show 50 more</button><button id="hideRecordsBottom" class="btn btn-quiet" type="button">Hide records ↑</button></div></div><p id="recordsHiddenNote" class="sub" hidden>Records are hidden. Filters and expanded details are preserved.</p>
         </section>
 
         <div class="support">
-          <section class="panel block" aria-labelledby="historyHeading">
+          <section class="panel block" aria-labelledby="topHeading">
+            <div class="block-head">
+              <div><h2 id="topHeading">Top attacking sources</h2><p class="sub">Attack-labelled flows per source in the selection</p></div>
+            </div>
+            <ol id="topSources" class="top-list"></ol>
+          </section>
+<section class="panel block" aria-labelledby="historyHeading">
             <h2 id="historyHeading" style="font-size:1.1875rem">All-time saved records</h2>
             <div class="totals">
               <div><strong id="totalFlows">--</strong><span>Saved flows</span></div>
@@ -878,7 +950,7 @@
       </section>
     </main>
 
-    <footer id="footer">Reads saved detections from the telemetry API · simulated Docker testbed · timestamps are shown exactly as saved.</footer>
+    <footer id="footer" class="project-footer"><div class="footer-mark">SENTINEL<span>FLOW</span><span class="footer-divider">/</span><span class="footer-team">MDS02</span></div><p class="footer-project">Intrusion Detection System using a Hybrid Machine Learning-based Approach</p><p class="footer-school">Monash University Malaysia <span>·</span> Final Year Project <span>·</span> 2026</p><p class="footer-note">Simulated network testbed · saved model detections · timestamps shown as recorded</p></footer>
   </div>
 
 <script>
@@ -1050,9 +1122,9 @@
     const tooltip = { backgroundColor: '#0b0e1a', borderColor: 'rgba(79,216,245,.5)', borderWidth: 1, padding: 12, titleColor: '#f5f7fc', bodyColor: '#f5f7fc', titleFont: { size: 14, weight: '600' }, bodyFont: { size: 13 } };
     donut = new Chart($('threatChart'), {
       type: 'doughnut',
-      data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderColor: '#0f1220', borderWidth: 3, hoverOffset: 6 }] },
+      data: { labels: [], datasets: [{ data: [], backgroundColor: [], borderColor: '#0f1220', borderWidth: 3, borderRadius: 5, spacing: 2, hoverOffset: 9 }] },
       options: {
-        responsive: true, maintainAspectRatio: false, cutout: '68%', animation,
+        responsive: true, maintainAspectRatio: false, cutout: '74%', animation,
         plugins: { legend: { display: false }, tooltip: { enabled: false } },
         onClick: (_e, els) => { if (els.length) toggleClass(donutKeys[els[0].index]); },
         onHover: (e, els) => { if(e.native?.target)e.native.target.style.cursor = els.length ? 'pointer' : 'default'; if(els.length)showClassificationReadout(els[0].index); },
@@ -1062,40 +1134,56 @@
   }
   function showClassificationReadout(index) {
     if(!donut)return;const n=donut.data.datasets[0].data[index],label=donut.data.labels[index],total=donut.data.datasets[0].data.reduce((a,b)=>a+b,0);if(n===undefined)return;state.hoverClassLabel=label;
+    setText($('threatPercentValue'),`${total?(100*n/total).toFixed(1):0}%`);setText($('threatPercentLabel'),label);
     setText($('classificationReadoutText'),`${label} · ${n.toLocaleString()} flows · ${total?(100*n/total).toFixed(1):0}% of ${total.toLocaleString()}`);
     $('classificationReadout').querySelector('.readout-dot').style.background=donut.data.datasets[0].backgroundColor[index];
   }
-  const distributionLabels={id:'distributionLabels',afterDatasetsDraw(chart){
-    if(state.chartMode!=='distribution')return;const ctx=chart.ctx,meta=chart.getDatasetMeta(0);ctx.save();ctx.textAlign='center';ctx.textBaseline='bottom';
-    meta.data.forEach((bar,i)=>{const bin=timeBins[i];if(!bin?.n)return;const pct=latencyLogs.length?100*bin.n/latencyLogs.length:0,x=bar.x,y=Math.max(chart.chartArea.top+27,bar.y-7);
-      ctx.font='600 12px '+getComputedStyle(document.body).fontFamily;ctx.fillStyle='#f5f7fc';ctx.fillText(bin.n.toLocaleString(),x,y-12);
-      ctx.font='11px '+getComputedStyle(document.body).fontFamily;ctx.fillStyle='#a9c5d5';ctx.fillText(pct.toFixed(1)+'%',x,y);
-    });ctx.restore();
+  let timeBins = [], chartSignature = '', chartModeRendered = '', plotRecords = [], plotBusy = false, plotPending = false, previewIndex = -1;
+  const plotDecorations = {id:'plotDecorations',afterDatasetsDraw(chart) {
+    const ctx=chart.ctx; ctx.save();
+    if(chartModeRendered==='distribution') {
+      const total=plotRecords.length;
+      chart.getDatasetMeta(0).data.forEach((bar,i)=>{ const n=chart.data.datasets[0].data[i]; if(!n)return;
+        const y=Math.max(chart.chartArea.top+28,bar.y-8);ctx.textAlign='center';ctx.textBaseline='bottom';
+        ctx.font='600 12px '+getComputedStyle(document.body).fontFamily;ctx.fillStyle='#f5f7fc';ctx.fillText(n.toLocaleString(),bar.x,y-12);
+        ctx.font='11px '+getComputedStyle(document.body).fontFamily;ctx.fillStyle='#afbed5';ctx.fillText((100*n/total).toFixed(1)+'%',bar.x,y);
+      });
+    } else if(chart.$median!==null && chart.$median!==undefined) {
+      const y=chart.scales.y.getPixelForValue(chart.$median),area=chart.chartArea;
+      ctx.strokeStyle='#ffc65c';ctx.lineWidth=1.5;ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(area.left,y);ctx.lineTo(area.right,y);ctx.stroke();
+    }
+    ctx.restore();
   }};
-  let timeBins = [], chartSignature = '', chartModeRendered = '';
+  function showPoint(index) {
+    if(!plotRecords.length)return;previewIndex=Math.max(0,Math.min(plotRecords.length-1,index));
+    const l=plotRecords[previewIndex], info=classify(l.attack_type);
+    setText($('previewTitle'),`Flow #${l.id} · ${info.label} · ${fmtMs(l.latency_ms)}`);
+    setText($('previewRoute'),`${text(l.source_ip)} → ${text(l.destination_ip)} · ${text(l.timestamp)}`);
+    setText($('previewPosition'),`${previewIndex+1} / ${plotRecords.length}`);
+    $('previousPoint').disabled=previewIndex===0;$('nextPoint').disabled=previewIndex===plotRecords.length-1;
+    $('inspectPoint').disabled=false;
+    if(latencyChart && chartModeRendered==='scatter') {latencyChart.setActiveElements([{datasetIndex:0,index:previewIndex}]);latencyChart.draw();}
+  }
   function createProcessingChart() {
-    if (!chartsOk) return;
-    if (latencyChart) latencyChart.destroy();
+    if(!chartsOk)return;
+    latencyChart?.destroy();chartModeRendered=state.chartMode;chartSignature='';
     const distribution=state.chartMode==='distribution';
     const axis={grid:{color:'rgba(255,255,255,.07)'},border:{display:false},ticks:{color:'#c9d2e6',font:{size:12}}};
-    latencyChart=new Chart($('latencyChart'),{
-      type:distribution?'bar':'line',data:{labels:[],datasets:[]},plugins:[distributionLabels],
-      options:{responsive:true,maintainAspectRatio:false,animation:reduceMotion?false:{duration:650,easing:'easeOutQuart'},
-        interaction:{mode:'nearest',intersect:distribution},
-        plugins:{legend:{display:!distribution,labels:{color:'#c9d2e6',boxWidth:12,font:{size:12}}},tooltip:{backgroundColor:'#0b0e1a',titleColor:'#fff',bodyColor:'#e5edf8',borderColor:'rgba(79,216,245,.4)',borderWidth:1,padding:12,filter:c=>c.datasetIndex===0,callbacks:{
-          title:items=>distribution?(timeBins[items[0].dataIndex]?.overflow?'Longer times: '+timeBins[items[0].dataIndex]?.lo+' ms and above':timeBins[items[0].dataIndex]?.label+' ms'):`Flow #${latencyLogs[items[0].dataIndex]?.id}`,
-          label:c=>distribution?`${c.raw} flows · ${latencyLogs.length?(100*c.raw/latencyLogs.length).toFixed(1):0}% of measured flows`:`${fmtMs(c.raw)} · ${classify(latencyLogs[c.dataIndex]?.attack_type).label}`,
-          afterLabel:c=>distribution?'Click to inspect this range':`${text(latencyLogs[c.dataIndex]?.source_ip)} → ${text(latencyLogs[c.dataIndex]?.destination_ip)}\nClick to open exact evidence`,
-        }}},
-        scales:{x:{...axis,ticks:{...axis.ticks,maxTicksLimit:8,maxRotation:0},title:{display:true,text:distribution?'Classification time range (ms)':'Flow order · earlier → later',color:'#c9d2e6'}},y:{...axis,beginAtZero:true,ticks:{...axis.ticks,precision:distribution?0:undefined},title:{display:true,text:distribution?'Number of flows':'Classification time (ms)',color:'#c9d2e6'}}},
-        onHover:(e,els)=>{if(e.native?.target)e.native.target.style.cursor=els.some(x=>x.datasetIndex===0)?'pointer':'default';},
-        onClick:(_e,els)=>{const hit=els.find(x=>x.datasetIndex===0);if(!hit)return;
-          if(distribution){const bin=timeBins[hit.index];if(!bin||!bin.n)return;state.latencyRange={lo:bin.lo,hi:bin.hi};state.activeClass=null;state.attacksOnly=false;state.search='';$('logSearch').value='';state.tableLimit=50;clearSelection();showView('investigate',{scroll:false});$('recordsSection').scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'start'});}
-          else {const l=latencyLogs[hit.index];if(l)selectFlow(l);}
-        }
+    latencyChart=new Chart($('latencyChart'),{type:distribution?'bar':'scatter',data:{labels:[],datasets:[]},plugins:[plotDecorations],options:{
+      responsive:true,maintainAspectRatio:false,animation:false,
+      interaction:{mode:'nearest',intersect:distribution},
+      plugins:{legend:{display:false},tooltip:{enabled:false}},
+      scales:{x:{...axis,type:distribution?'category':'linear',ticks:{...axis.ticks,maxTicksLimit:9,maxRotation:0,precision:0},title:{display:true,text:distribution?'Classification time range (ms)':'Flow order · earlier → later',color:'#c9d2e6'}},y:{...axis,beginAtZero:true,ticks:{...axis.ticks,precision:distribution?0:undefined},title:{display:true,text:distribution?'Number of flows':'Classification time (ms)',color:'#c9d2e6'}}},
+      onHover:(e,els)=>{const hit=els.find(x=>x.datasetIndex===0);if(e.native?.target)e.native.target.style.cursor=hit?'pointer':'default';
+        if(!hit)return;
+        if(distribution){const bin=timeBins[hit.index];if(bin)setText($('chartReadout'),`${bin.label} ms · ${bin.n.toLocaleString()} flows · click to inspect this range`);}
+        else showPoint(hit.index);
+      },
+      onClick:(_e,els)=>{const hit=els.find(x=>x.datasetIndex===0);if(!hit)return;
+        if(distribution){const bin=timeBins[hit.index];if(!bin?.n)return;state.latencyRange={lo:bin.lo,hi:bin.hi};state.activeClass=null;state.attacksOnly=false;state.search='';$('logSearch').value='';state.tableLimit=50;clearSelection();showView('investigate',{scroll:false});revealRecords();$('recordsSection').scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'start'});}
+        else if(plotRecords[hit.index]) {showPoint(hit.index);selectFlow({...plotRecords[hit.index]});}
       }
-    });
-    chartModeRendered=state.chartMode; chartSignature='';
+    }});
   }
 
   /* ---------------------------------------------------------------- refresh indicator */
@@ -1198,8 +1286,13 @@
     return current && fingerprint(current)===s.fingerprint ? { log: current, live: true } : { log: s.snapshot, live: false };
   }
   function selectFlow(log) {
+    const current=state.logs.find(l=>String(l.id)===String(log.id));
+    if(current&&fingerprint(current)!==fingerprint(log)) {
+      state.selected=null;state.notice=`Flow #${log.id} now refers to a different saved record. Refresh the selection; no replacement record was opened.`;
+      render();showView('investigate',{reveal:true});return;
+    }
     state.selected = { id: String(log.id), fingerprint: fingerprint(log), snapshot: { ...log } };
-    state.notice = ''; state.activeClass = null; state.attacksOnly = false; state.search = ''; state.tableLimit = 50;
+    state.notice = ''; state.selDetailsOpen = true; state.activeClass = null; state.attacksOnly = false; state.search = ''; state.tableLimit = 50;
     $('logSearch').value = ''; state.latencyRange=null;   // v5: the card has its own technical details now, so the table row is no longer auto-opened
     render();
     showView('investigate', { reveal: true });
@@ -1208,7 +1301,9 @@
   function clearSelection() { if (state.selected) state.expanded.delete(state.selected.id); state.selected = null; state.notice = ''; render(); }
   $('inspectAlert').addEventListener('click', () => {
     const btn = $('inspectAlert'), id = btn.dataset.flowId, fp = btn.dataset.fp;
-    const match = id ? state.logs.find((l) => String(l.id) === id && fingerprint(l) === fp) : null;
+    const current = id ? state.logs.find((l) => String(l.id) === id) : null;
+    const saved = btn._record;
+    const match = current ? (fingerprint(current) === fp ? current : null) : (saved && String(saved.id) === id && fingerprint(saved) === fp ? saved : null);
     if (!match) {
       state.selected=null;
       state.notice = id ? `Flow #${id} could not be matched to a saved record in the data currently loaded, so no detection was opened. Try “Refresh”.` : 'This alert has no flow ID, so the matching saved record cannot be identified. No detection was opened.';
@@ -1229,7 +1324,7 @@
   function renderHero() {
     const card = $('alert');
     const show = (s) => { if (card.dataset.state !== s) card.dataset.state = s; };
-    $('alertRetryWrap').hidden = true; $('alertGrid').hidden = true; $('alertActions').hidden = true; $('alertHeadline').hidden = true;
+    $('alertRetryWrap').hidden = true; $('alertActions').hidden = true;
     if (!state.data) {
       if (state.status === 'error') { show('error'); setText($('alertKicker'), 'Dashboard status'); setText($('alertLabel'), 'Can’t read detections'); setText($('alertCopy'), state.errorText); $('alertRetryWrap').hidden = false; }
       else { show('loading'); setText($('alertKicker'), 'Latest detected attack'); setText($('alertLabel'), 'Loading…'); setText($('alertCopy'), 'Reading saved detections from the dashboard API.'); }
@@ -1246,21 +1341,10 @@
     show('threat'); setText($('alertKicker'), 'Latest detected attack');
     setText($('alertLabel'), info.label); $('alertLabel').style.setProperty('--name-size', `${nameSize(info.label)}rem`);
     setText($('alertCopy'), info.meaning);
-    // v3: one sentence that says who did what to whom, built from the saved record only
-    const verb = HEADLINE_VERB[info.key] || 'sent attack-labelled traffic to';
-    $('alertHeadline').replaceChildren(el('span', 'ip', text(a.source_ip)), document.createTextNode(` ${verb} `), el('span', 'ip', text(a.destination_ip)));
-    $('alertHeadline').hidden = false;
-    // v3: how many flows of the same attack this source has in the loaded selection
-    const sameSource = state.logs.filter((l) => l.source_ip === a.source_ip && classify(l.attack_type).key === info.key).length;
-    setText($('alertSourceCount'), `${sameSource.toLocaleString()} of ${fmtInt(state.logs.length)} flows`);
-    $('alertGrid').hidden = false; $('alertActions').hidden = false;
-    setText($('alertConfidence'), fmtPct(a.confidence));
-    $('alertMeter').style.width = num(a.confidence) === null ? '0%' : `${Math.max(0, Math.min(100, num(a.confidence) * 100))}%`;
-    setText($('alertTime'), text(a.timestamp));
-    $('stageField').hidden = !a.stage_reached; setText($('alertStage'), a.stage_reached ? String(a.stage_reached) : DASH);   // only a stage the pipeline recorded
+    $('alertActions').hidden = false;
     setText($('alertFlowId'), a.id !== null && a.id !== undefined ? `Flow #${a.id}` : '');
     $('inspectAlert').dataset.flowId = a.id !== null && a.id !== undefined ? String(a.id) : '';
-    $('inspectAlert').dataset.fp = fingerprint(a);
+    $('inspectAlert').dataset.fp = fingerprint(a); $('inspectAlert')._record = {...a};
     updateScene($('heroScene'), a);
     // Emphasis only for a genuinely new record that arrived during a refresh — never for saved history.
     const at = state.fresh.get(idStr);
@@ -1277,7 +1361,6 @@
     setText($('windowAttacks'), have && n ? fmtInt(threats) : DASH);
     setText($('windowAttacksNote'), have && n ? `of ${fmtInt(n)} selected flows` : 'in the selected records');
     // v2: attack share tile (same number as the donut centre)
-    setText($('attackShare'), have && n ? `${((threats / n) * 100).toFixed(1)}%` : DASH);
     // v2: processing tile shows the median (typical flow); the backend mean moves to the note
     const ms = state.logs.map((l) => num(l.latency_ms)).filter((v) => v !== null && v >= 0).sort((a, b) => a - b);
     const med = have && ms.length ? (ms.length % 2 ? ms[(ms.length - 1) / 2] : (ms[ms.length / 2 - 1] + ms[ms.length / 2]) / 2) : null;
@@ -1297,7 +1380,7 @@
     drawSpark($('sparkThreats'), attackCounts, 'bars', '#ff9a55');
     $('sparkThreats').setAttribute('aria-label', parts.length ? `Attack flows across the selection, oldest to newest; peak ${Math.max(...attackCounts)} in one chunk` : 'No trend yet');
     drawSpark($('sparkLatency'), parts.map((p) => median(p.map((l) => num(l.latency_ms)).filter((v) => v !== null && v >= 0))), 'line', '#4fd8f5');
-    renderShareBar(have ? state.logs : []);
+
     const f1 = num(k.dl_macro_f1);
     $('f1Bar').style.width = f1 === null ? '0%' : `${Math.max(0, Math.min(1, f1)) * 100}%`;
   }
@@ -1328,18 +1411,6 @@
       svg.append(make('path', { d: line, fill: 'none', stroke: color, 'stroke-width': 1.6, 'stroke-linejoin': 'round', 'vector-effect': 'non-scaling-stroke' }));
     }
   }
-  // Stacked bar under "Attack share": one coloured segment per attack class, grey for non-attack traffic.
-  function renderShareBar(logs) {
-    const bar = $('shareBar'); bar.replaceChildren();
-    if (!logs.length) return;
-    const counts = new Map(); let calm = 0;
-    for (const l of logs) { const i = classify(l.attack_type); if (!i.attack) { calm++; continue; } const c = counts.get(i.key) || { info: i, n: 0 }; c.n++; counts.set(i.key, c); }
-    const segs = [...counts.values()].sort((a, b) => b.n - a.n).map((c) => ({ label: c.info.label, color: c.info.color, n: c.n }));
-    if (calm) segs.push({ label: 'Not an attack', color: 'rgba(255,255,255,.12)', n: calm });
-    segs.forEach((s) => { const span = el('span'); const pct = (s.n / logs.length) * 100; span.style.width = `${pct}%`; span.style.background = s.color; span.title = `${s.label} · ${s.n.toLocaleString()} flows · ${pct.toFixed(1)}%`; bar.append(span); });
-    bar.setAttribute('aria-label', 'Class mix: ' + segs.map((s) => `${s.label} ${((s.n / logs.length) * 100).toFixed(1)}%`).join(', '));
-  }
-
   /* ---------------------------------------------------------------- v3: status chip in the top bar */
   function renderThreatChip() {
     const chip = $('threatChip'), n = state.logs.length, atk = state.logs.filter(isAttack).length;
@@ -1498,18 +1569,19 @@
     donutKeys = rows.map((r) => r.info.key);
     setText($('threatTotal'), state.data ? `Share of the latest ${fmtInt(total)} saved flows` : 'Share of the selected flows');
     setText($('threatPercentValue'), total ? `${((attacks / total) * 100).toFixed(1)}%` : DASH);
+    setText($('threatPercentLabel'),'attack-labelled');
     $('donutEmpty').hidden = !state.data || total > 0;
     if (donut) {
       donut.data.labels = rows.map((r) => r.info.label);
       donut.data.datasets[0].data = rows.map((r) => r.n);
       donut.data.datasets[0].backgroundColor = rows.map((r) => r.info.color);
-      const hi=donut.data.labels.indexOf(state.hoverClassLabel);if(hi>=0)showClassificationReadout(hi);else{state.hoverClassLabel=null;setText($('classificationReadoutText'),total?'Hover a segment or category to see its count and share.':'No saved flows to classify.');}
-      donut.update();
+      const hi=donut.data.labels.indexOf(state.hoverClassLabel);if(hi>=0)showClassificationReadout(hi);else{state.hoverClassLabel=null;setText($('classificationReadoutText'),total?`${attacks.toLocaleString()} attack-labelled · ${(total-attacks).toLocaleString()} benign flows`:'No saved flows to classify.');}
+      donut.update('none');
     }
     const legend = $('classLegend'), focusKey = document.activeElement?.dataset?.focusKey;
     legend.replaceChildren();
     rows.forEach((r) => {
-      const b = el('button', 'legend-item'); b.type = 'button'; b.dataset.focusKey = `class-${r.info.key}`;
+      const b = el('button', 'legend-item'); b.type = 'button'; b.dataset.focusKey = `class-${r.info.key}`;b.style.setProperty('--share',`${100*r.n/total}%`);b.style.setProperty('--class-color',r.info.color);
       b.setAttribute('aria-pressed', String(state.activeClass === r.info.key));
       b.setAttribute('aria-label', `${r.info.label}: ${r.n.toLocaleString()} flows, ${((r.n / total) * 100).toFixed(1)} percent. Filter records by this class.`);
       const sw = el('span', 'swatch'); sw.style.background = r.info.color;
@@ -1522,54 +1594,53 @@
       const label = (rows.find((r) => r.info.key === state.activeClass)?.info.label) || state.activeClass;
       hint.append(document.createTextNode(`Records are filtered to ${label}.`));
       const clear = el('button', 'btn btn-sm', 'Clear class filter'); clear.type = 'button'; clear.addEventListener('click', () => toggleClass(state.activeClass));
-      const jump = el('button', 'link-btn', 'View records ↓'); jump.type = 'button'; jump.addEventListener('click', () => {showView('investigate',{scroll:false});$('recordsSection').scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'start'});});
+      const jump = el('button', 'link-btn', 'View records ↓'); jump.type = 'button'; jump.addEventListener('click', () => {showView('investigate',{scroll:false});revealRecords();$('recordsSection').scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'start'});});
       hint.append(clear, jump);
     } else hint.append(document.createTextNode('Select a class to filter the records table.'));
   }
 
-  function renderLatency() {
-    const logs=[...state.logs].reverse().filter(l=>num(l.latency_ms)!==null&&num(l.latency_ms)>=0);
-    const measured=logs.map(l=>num(l.latency_ms)).sort((a,b)=>a-b),n=measured.length;
-    const median=n?(n%2?measured[(n-1)/2]:(measured[n/2-1]+measured[n/2])/2):null;
-    latencyLogs=logs;
-    setText($('chartFlowCount'),state.data?String(n):DASH);setText($('chartMedian'),median===null?DASH:fmtMs(median));setText($('chartSlowest'),n?fmtMs(measured[n-1]):DASH);
-    const p90=n?measured[Math.max(0,Math.ceil(.9*n)-1)]:null;
-    setText($('processingTakeaway'),n?`90% of measured flows were classified within ${fmtMs(p90)}.`:(state.data?'No processing times are recorded yet.':'Waiting for records…'));
-    const dist=state.chartMode==='distribution';
-    $('distributionInsight').hidden=!dist||!n;
-    setText($('processingSubtitle'),dist?'Flows grouped by processing time · each bar shows count and share.':'Each dot is one flow · higher dots took longer. Colors match the traffic categories.');
-    setText($('chartReadout'),dist?'Select a bar to inspect flows in that time range.':'Select a dot to open that exact record and its evidence.');
-    $('latencyEmpty').hidden=!state.data||n>0;
-    document.querySelectorAll('[data-chart-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.chartMode===state.chartMode)));
-    $('latencyChart').setAttribute('aria-label',dist?'Distribution of saved classification times; bars count flows in each time range.':'Classification time for each measured flow, earlier to later.');
+  function renderLatency(force=false) {
     if(!chartsOk)return;
-    if(chartModeRendered!==state.chartMode)createProcessingChart();
+    if($('overviewView').hidden)return; // Keep charts stable while Overview is hidden.
+    const logs=[...state.logs].reverse().filter(l=>num(l.latency_ms)!==null&&num(l.latency_ms)>=0);
+    const signature=state.chartMode+'|'+logs.map(l=>`${l.id}:${fingerprint(l)}:${l.latency_ms}:${l.attack_type}`).join(';');
+    if(plotBusy&&!force&&chartModeRendered===state.chartMode){if(signature!==chartSignature){plotPending=true;$('plotUpdate').hidden=false;}return;}
+    plotPending=false;$('plotUpdate').hidden=true;
+    const modeChanged=chartModeRendered!==state.chartMode;
+    if(modeChanged)createProcessingChart();
     if(!latencyChart)return;
+    const dist=state.chartMode==='distribution', measured=logs.map(l=>num(l.latency_ms)).sort((a,b)=>a-b),n=logs.length;
+    const med=median(measured),p90=n?measured[Math.ceil(.9*n)-1]:null;
+    $('flowExplorer').hidden=dist||!n;$('distributionInsight').hidden=!dist||!n;$('latencyEmpty').hidden=!state.data||n>0;
+    setText($('processingSubtitle'),dist?'Taller bars mean more flows. Select a range to inspect its records.':'Each dot is one saved flow. Hover to preview; click to inspect.');
+    setText($('processingTakeaway'),n?`90% classified within ${fmtMs(p90)} · saved processing time, not attack-to-alert delay.`:'No processing times are recorded yet.');
+    setText($('chartFlowCount'),state.data?fmtInt(n):DASH);setText($('chartMedian'),med===null?DASH:fmtMs(med));setText($('chartSlowest'),n?fmtMs(measured[n-1]):DASH);
+    document.querySelectorAll('[data-chart-mode]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.chartMode===state.chartMode)));
+    $('latencyChart').setAttribute('aria-label',dist?'Number of saved flows in each classification time range.':'Each dot represents one saved flow. Use the previous and next controls to inspect every point.');
+    if(signature===chartSignature){latencyChart.resize();return;}
+    const old=previewIndex>=0?plotRecords[previewIndex]:null;
+    plotRecords=logs.map(l=>({...l}));latencyLogs=plotRecords;
+    latencyChart.stop();latencyChart.setActiveElements([]);
     if(dist){
-      const p95=n?measured[Math.max(0,Math.ceil(.95*n)-1)]:0;
-      const raw=Math.max(p95,.1)/7,power=10**Math.floor(Math.log10(Math.max(raw,.01))),v=raw/power;
-      const step=Math.max(.1,(v<=1?1:v<=2?2:v<=2.5?2.5:v<=5?5:10)*power);
-      const nb=n?Math.max(4,Math.floor(p95/step)+1):0,cap=nb*step;
-      const f=v=>String(+v.toFixed(2));
-      timeBins=Array.from({length:nb},(_,i)=>({lo:i*step,hi:(i+1)*step,n:0,label:`${f(i*step)}–${f((i+1)*step)}`}));
-      const tail=measured.filter(v=>v>=cap).length;
-      if(tail)timeBins.push({lo:cap,hi:Infinity,n:0,label:`${f(cap)}+`,overflow:true});
+      const p95=n?measured[Math.ceil(.95*n)-1]:0,raw=Math.max(p95,.1)/7,power=10**Math.floor(Math.log10(Math.max(raw,.01))),v=raw/power;
+      const step=Math.max(.1,(v<=1?1:v<=2?2:v<=2.5?2.5:v<=5?5:10)*power),nb=n?Math.max(4,Math.floor(p95/step)+1):0,cap=nb*step;
+      const f=v=>String(+v.toFixed(2));timeBins=Array.from({length:nb},(_,i)=>({lo:i*step,hi:(i+1)*step,n:0,label:`${f(i*step)}–${f((i+1)*step)}`}));
+      if(n&&measured[n-1]>=cap)timeBins.push({lo:cap,hi:Infinity,n:0,label:`${f(cap)}+`,overflow:true});
       measured.forEach(v=>timeBins[v>=cap?nb:Math.min(nb-1,Math.floor(v/step))].n++);
-      const common=timeBins.reduce((a,b)=>b.n>a.n?b:a,{n:0});
-      setText($('commonRange'),n?`${common.label} ms`:DASH);setText($('commonRangeCount'),n?`${common.n.toLocaleString()} flows · ${(100*common.n/n).toFixed(1)}% of measured flows`:'');
-      setText($('chartReadout'),tail?`Longer times (${f(cap)}+ ms) are grouped in the final bar. Select any bar to inspect its flows.`:'Select a bar to inspect flows in that time range.');
+      const common=timeBins.reduce((a,b)=>b.n>a.n?b:a,{n:0});setText($('commonRange'),n?`${common.label} ms`:DASH);setText($('commonRangeCount'),n?`${common.n.toLocaleString()} of ${n.toLocaleString()} measured flows (${(100*common.n/n).toFixed(1)}%)`:'');
       latencyChart.data.labels=timeBins.map(b=>b.label);
-      latencyChart.options.scales.y.suggestedMax=Math.max(1,Math.ceil(Math.max(0,...timeBins.map(b=>b.n))*1.27));
-      latencyChart.options.scales.x.ticks.maxTicksLimit=timeBins.length;
-      const selected=selectedInfo(),selMs=selected&&selected.live?num(selected.log.latency_ms):null;
-      latencyChart.data.datasets=[{label:'Measured flows',data:timeBins.map(b=>b.n),backgroundColor:timeBins.map(b=>selMs!==null&&selMs>=b.lo&&selMs<b.hi?'#ffae70':b.overflow?'rgba(162,139,255,.8)':b===common?'rgba(79,216,245,.95)':'rgba(79,216,245,.58)'),hoverBackgroundColor:'#ffbe8c',borderRadius:6,borderSkipped:false,maxBarThickness:54,minBarLength:0}];
+      latencyChart.data.datasets=[{label:'Measured flows',data:timeBins.map(b=>b.n),backgroundColor:context=>{const b=timeBins[context.dataIndex],area=context.chart.chartArea;if(!area)return '#4fd8f5';const g=context.chart.ctx.createLinearGradient(0,area.top,0,area.bottom);const peak=b===common;g.addColorStop(0,b?.overflow?'#c5aaff':peak?'#ffce8d':'#84eaff');g.addColorStop(1,b?.overflow?'#6f54bd':peak?'#f7773f':'#28728f');return g;},borderColor:timeBins.map(b=>b===common?'#ffd7a3':'rgba(151,223,255,.3)'),borderWidth:1,hoverBackgroundColor:'#ffc685',borderRadius:7,borderSkipped:false,maxBarThickness:68}];
+      latencyChart.options.scales.y.suggestedMax=Math.max(1,Math.ceil(Math.max(0,...timeBins.map(b=>b.n))*1.3));
+      latencyChart.options.scales.x.ticks.maxTicksLimit=timeBins.length;latencyChart.$median=null;
+      setText($('chartReadout'),'Select a bar to inspect its records in Investigate.');
     }else{
-      latencyChart.data.labels=logs.map((_,i)=>i+1);
-      latencyChart.data.datasets=[{label:'Individual flows',data:logs.map(l=>num(l.latency_ms)),showLine:false,pointRadius:logs.map(l=>state.selected&&String(l.id)===state.selected.id&&fingerprint(l)===state.selected.fingerprint?6:(n>800?2:3)),pointHoverRadius:7,pointBackgroundColor:logs.map(l=>classify(l.attack_type).color),pointBorderColor:logs.map(l=>state.selected&&String(l.id)===state.selected.id?'#fff':'transparent'),pointBorderWidth:2},
-      {label:median===null?'Typical (median)':`Typical (median) ${fmtMs(median)}`,data:median===null?[]:logs.map(()=>median),borderColor:'#ffc65c',borderDash:[5,5],borderWidth:1.5,pointRadius:0,pointHoverRadius:0,fill:false}];
+      latencyChart.data.labels=[];delete latencyChart.options.scales.y.suggestedMax;
+      latencyChart.data.datasets=[{label:'Individual flows',data:plotRecords.map((l,i)=>({x:i+1,y:num(l.latency_ms)})),pointRadius:n>800?2:3,pointHoverRadius:7,pointHitRadius:5,pointBackgroundColor:plotRecords.map(l=>classify(l.attack_type).color),pointBorderWidth:0}];
+      latencyChart.$median=med;setText($('chartReadout'),`Dashed amber line: typical time (${fmtMs(med)}). Arrow buttons can reach every flow.`);
     }
-    const signature=state.chartMode+'|'+logs.map(l=>`${l.id}:${fingerprint(l)}:${l.latency_ms}:${l.attack_type}`).join(';')+'|'+(state.selected?.fingerprint||'');
-    latencyChart.update(signature===chartSignature?'none':undefined);chartSignature=signature;
+    latencyChart.update('none');chartSignature=signature;
+    if(!dist&&n){const retained=old?plotRecords.findIndex(l=>String(l.id)===String(old.id)&&fingerprint(l)===fingerprint(old)):-1;showPoint(retained>=0?retained:n-1);}
+    // New data does not restart the entire plot animation or re-hit-test an old tooltip.
   }
 
   function matchesFilters(l) {
@@ -1629,8 +1700,8 @@
     const setOpen = (open) => { detail.hidden = !open; btn.setAttribute('aria-expanded', String(open)); btn.querySelector('.btn-t').textContent = open ? 'Hide' : 'Details'; };
     setOpen(state.expanded.has(id));
     // Whole row is clickable for mouse users; the real button gives keyboard users Enter/Space.
-    tr.addEventListener('click', () => { const open = detail.hidden; if (open){state.expanded.add(id);state.openSnapshots.set(id,{...log});}else{state.expanded.delete(id);state.openSnapshots.delete(id);} setOpen(open); afterDetailToggle(id); });
-    hide.addEventListener('click', () => { state.expanded.delete(id); state.openSnapshots.delete(id); setOpen(false); afterDetailToggle(id); tr.querySelector('.row-btn')?.focus({ preventScroll: true }); });
+    tr.addEventListener('click', () => { const open = detail.hidden; if (open){state.expanded.add(id);state.openSnapshots.set(id,{...log});}else{state.expanded.delete(id);state.openSnapshots.delete(id);} setOpen(open); });
+    hide.addEventListener('click', () => { state.expanded.delete(id); state.openSnapshots.delete(id); setOpen(false); tr.querySelector('.row-btn')?.focus({ preventScroll: true }); });
     return [tr, detail];
   }
 
@@ -1653,7 +1724,7 @@
     $('thStage').hidden = !anyStage; $('stageNote').hidden = anyStage || !state.logs.length;
     const pinned = sel && !shown.some((l) => String(l.id) === state.selected.id) ? sel.log : null;
     const now = Date.now(), all = pinned ? [pinned, ...shown] : shown;
-    all.forEach((log) => body.append(...buildRow(log, !!sel && String(log.id) === state.selected.id, now, anyStage)));
+    all.forEach((log) => body.append(...buildRow(log, !!sel && String(log.id) === state.selected.id && fingerprint(log) === state.selected.fingerprint, now, anyStage)));
     const filtered = !!(state.activeClass || state.search || state.attacksOnly || state.latencyRange);
     const empty = $('empty'); empty.hidden = all.length > 0;
     if (!all.length) setText(empty, !state.data ? 'Waiting for the first update…' : !state.logs.length ? 'No saved flows yet. Records appear once the monitor writes detections to the database.' : 'No records match these filters.');
@@ -1664,7 +1735,7 @@
     if (state.activeClass) addChip(`Class: ${classify(state.activeClass).key === state.activeClass ? classify(state.activeClass).label : state.activeClass}`, () => toggleClass(state.activeClass));
     if (state.attacksOnly) addChip('Attacks only', () => { state.attacksOnly = false; state.tableLimit = 50; render(); });
     document.querySelectorAll('[data-scope]').forEach((x) => x.setAttribute('aria-pressed', String((x.dataset.scope === 'attacks') === state.attacksOnly)));
-    if(state.latencyRange)addChip(`Time: ${state.latencyRange.lo}–${state.latencyRange.hi} ms`,()=>{state.latencyRange=null;render();});
+    if(state.latencyRange)addChip(`Time: ${state.latencyRange.lo}${Number.isFinite(state.latencyRange.hi)?'–'+state.latencyRange.hi:'+'} ms`,()=>{state.latencyRange=null;render();});
     if (state.search) addChip(`Search: “${state.search}”`, () => { state.search = ''; $('logSearch').value = ''; state.tableLimit = 50; render(); });
     $('clearFilter').hidden = !filtered;
     restoreFocus(focusKey);
@@ -1698,13 +1769,13 @@
     if (wasHidden) { incoming.classList.remove('enter'); void incoming.offsetWidth; incoming.classList.add('enter'); }
     document.querySelectorAll('[data-view]').forEach((b) => { const on = b.dataset.view === view; b.setAttribute('aria-selected', String(on)); b.tabIndex = on ? 0 : -1; });
     positionTabs();
-    if (!inv) requestAnimationFrame(() => { if (latencyChart) latencyChart.resize(); if (donut) donut.resize(); });
+    requestAnimationFrame(() => { if(!inv){renderLatency(true);latencyChart?.resize();donut?.resize();} });
     const behavior = reduceMotion ? 'auto' : 'smooth';
     if (opts.reveal && !$('selectedContext').hidden) { $('selectedContext').scrollIntoView({ behavior, block: 'start' }); $('selectedContext').focus({ preventScroll: true }); }
     else if (opts.reveal && !$('selectionNotice').hidden) $('selectionNotice').scrollIntoView({ behavior, block: 'center' });
     else if (opts.scroll !== false) window.scrollTo({ top: 0, behavior });
   }
-  function toggleClass(key) { state.activeClass = state.activeClass === key ? null : key; state.tableLimit = 50; render(); }
+  function toggleClass(key) { state.activeClass = state.activeClass === key ? null : key; state.tableLimit = 50; render(); showView('investigate',{scroll:false});revealRecords();$('recordsSection').scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'start'}); }
 
   document.querySelectorAll('[data-view]').forEach((b) => {
     b.addEventListener('click', () => showView(b.dataset.view));
@@ -1715,14 +1786,35 @@
       e.preventDefault(); tabs[i].focus(); showView(tabs[i].dataset.view, { scroll: false });
     });
   });
-  document.querySelectorAll('[data-chart-mode]').forEach(b=>b.addEventListener('click',()=>{if(state.chartMode===b.dataset.chartMode)return;state.chartMode=b.dataset.chartMode;renderLatency();}));
+  document.querySelectorAll('[data-chart-mode]').forEach(b=>b.addEventListener('click',()=>{if(state.chartMode===b.dataset.chartMode)return;plotBusy=false;state.chartMode=b.dataset.chartMode;renderLatency(true);}));
+  const plotCanvas=$('latencyChart');
+  plotCanvas.addEventListener('pointerenter',()=>{plotBusy=true;});
+  const releasePlot=()=>{plotBusy=false;if(plotPending)renderLatency(true);};
+  plotCanvas.addEventListener('pointerleave',releasePlot);plotCanvas.addEventListener('pointercancel',releasePlot);
+  $('previousPoint').addEventListener('click',()=>showPoint(previewIndex-1));
+  $('nextPoint').addEventListener('click',()=>showPoint(previewIndex+1));
+  $('inspectPoint').addEventListener('click',()=>{if(plotRecords[previewIndex])selectFlow({...plotRecords[previewIndex]});});
+  $('flowExplorer').addEventListener('focusin',()=>{plotBusy=true;});
+  $('flowExplorer').addEventListener('focusout',e=>{if(!$('flowExplorer').contains(e.relatedTarget))releasePlot();});
+  plotCanvas.tabIndex=0;
+  plotCanvas.addEventListener('keydown',e=>{if(state.chartMode!=='scatter')return;if(e.key==='ArrowLeft'||e.key==='ArrowRight'){e.preventDefault();plotBusy=true;showPoint(previewIndex+(e.key==='ArrowRight'?1:-1));}else if(e.key==='Enter'&&plotRecords[previewIndex]){e.preventDefault();selectFlow({...plotRecords[previewIndex]});}});
+  plotCanvas.addEventListener('blur',releasePlot);
+  function resetDonutPreview(){
+    state.hoverClassLabel=null;const n=state.logs.length,a=state.logs.filter(isAttack).length;
+    setText($('threatPercentValue'),n?`${(100*a/n).toFixed(1)}%`:DASH);setText($('threatPercentLabel'),'attack-labelled');
+    setText($('classificationReadoutText'),n?`${a.toLocaleString()} attack-labelled · ${(n-a).toLocaleString()} benign flows`:'No saved flows to classify.');
+  }
+  $('threatChart').addEventListener('pointerleave',resetDonutPreview);
+  $('classLegend').addEventListener('pointerleave',resetDonutPreview);
+  $('classLegend').addEventListener('focusout',e=>{if(!$('classLegend').contains(e.relatedTarget))resetDonutPreview();});
   $('classLegend').addEventListener('pointerover',e=>{const b=e.target.closest('.legend-item');if(b)showClassificationReadout([...$('classLegend').children].indexOf(b));});
   $('classLegend').addEventListener('focusin',e=>{const b=e.target.closest('.legend-item');if(b)showClassificationReadout([...$('classLegend').children].indexOf(b));});
-  $('backToCharts').addEventListener('click',()=>{showView('overview',{scroll:false});$('latencyHeading').scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'center'});});
+  $('backToCharts').addEventListener('click',()=>showView('overview'));
   $('openInvestigate').addEventListener('click', () => showView('investigate'));
   $('closeSelected').addEventListener('click', clearSelection);
   $('dismissNotice').addEventListener('click', () => { state.notice = ''; render(); });
   $('jumpToFlow').addEventListener('click', () => {
+    revealRecords();
     const row = document.querySelector('.log-row.is-selected');
     if (row) { row.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' }); row.querySelector('button')?.focus({ preventScroll: true }); }
   });
@@ -1741,6 +1833,16 @@
     setText($('copyRecordLabel'), ok ? 'Copied ✓' : 'Copy failed — select the text instead');
     clearTimeout(copyTimer); copyTimer = setTimeout(() => setText($('copyRecordLabel'), 'Copy record (JSON)'), 2500);
   });
+  function setRecordsOpen(open) {
+    $('recordsBody').hidden=!open;$('recordsHiddenNote').hidden=open;
+    $('toggleRecords').setAttribute('aria-expanded',String(open));
+    setText($('toggleRecords'),open?'Hide records ↑':'Show records ↓');
+    $('collapseDetails').hidden=!open;
+  }
+  function revealRecords(){setRecordsOpen(true);}
+  $('toggleRecords').addEventListener('click',()=>setRecordsOpen($('recordsBody').hidden));
+  $('hideRecordsBottom').addEventListener('click',()=>{setRecordsOpen(false);$('recordsSection').scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'start'});$('toggleRecords').focus({preventScroll:true});});
+  $('collapseDetails').addEventListener('click',()=>{state.expanded.clear();state.openSnapshots.clear();renderTable();});
   $('showMore').addEventListener('click', () => { state.tableLimit += 50; renderTable(); });
   $('logSearch').addEventListener('input', (e) => { state.search = e.target.value.trim().toLowerCase(); state.tableLimit = 50; renderTable(); });
   $('clearFilter').addEventListener('click', () => { state.latencyRange=null;state.activeClass = null; state.attacksOnly = false; state.search = ''; $('logSearch').value = ''; state.tableLimit = 50; render(); $('logSearch').focus(); });
