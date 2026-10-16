@@ -671,6 +671,75 @@
 @media(max-width:800px){.support .steps{flex-wrap:wrap}#investigateView .support{grid-template-columns:minmax(0,1fr)}.support>.panel{padding:1.2rem}.record-actions{width:100%}.donut-box{max-width:18rem}.support .totals strong{font-size:1.7rem}}
 @media(prefers-reduced-motion:reduce){.legend-item::after{transition:none}}
 
+
+/* Clear contrast, compact analytics and purposeful motion. */
+.bg-fx{overflow:hidden;background:linear-gradient(145deg,#100d1c,#080b13 48%,#160e17)}
+.bg-fx::before{content:"";position:absolute;inset:-18%;background:radial-gradient(ellipse at 12% 22%,rgba(130,71,230,.23),transparent 42%),radial-gradient(ellipse at 88% 75%,rgba(239,94,49,.15),transparent 40%),radial-gradient(ellipse at 65% 15%,rgba(49,157,189,.09),transparent 38%);animation:auroraDrift 24s ease-in-out infinite alternate;pointer-events:none}
+@keyframes auroraDrift{from{transform:translate3d(-2%,-1%,0) rotate(-3deg)}to{transform:translate3d(3%,2%,0) rotate(4deg)}}
+#overviewView #alert[data-state="threat"]{border:1px solid #ffad71;border-left:5px solid #ff925a;background:radial-gradient(ellipse at 0% 10%,rgba(255,119,48,.34),transparent 65%),linear-gradient(112deg,#5a231e,#28151f 62%,#181522);box-shadow:inset 0 1px 0 #ffc69166,0 14px 65px -35px #ff704b}
+#overviewView #alert[data-state="threat"] .kicker{background:linear-gradient(110deg,#ffd39b,#ff9b5e);border-color:#ffe2bd;color:#37160f;font-weight:800;box-shadow:0 5px 24px -12px #ff9b5e;letter-spacing:.085em}
+#overviewView #alert[data-state="threat"] .kicker svg{color:#602714;filter:none}
+#overviewView #alert[data-state="threat"] .hero-name{background:none;color:#fff3df;filter:drop-shadow(0 4px 20px #ff7c4633);font-size:clamp(2.7rem,4.8vw,4.6rem);line-height:1.12}
+#alert .hero-meaning{max-width:37rem;line-height:1.6}#alert .node{background:linear-gradient(135deg,#242333ed,#171622ed)}#alert .node-dst{background:linear-gradient(135deg,#522920ed,#261822ed)}
+.strip .cell{position:relative;overflow:hidden;transition:background .25s,box-shadow .25s;--metric-accent:#ffaf79}
+.strip .cell:nth-child(2){--metric-accent:#78dff5}.strip .cell:nth-child(3){--metric-accent:#c4adff}
+.strip .cell .cell-value{color:var(--metric-accent);font-size:1.9rem}.strip .cell:hover{background:rgba(255,255,255,.035);box-shadow:inset 0 2px 0 var(--metric-accent)}
+.strip .cell::after{content:"";position:absolute;inset:0;background:linear-gradient(110deg,transparent 15%,rgba(255,255,255,.075),transparent 70%);transform:translateX(-120%);pointer-events:none}
+.strip .cell.metric-updated::after{animation:metricSweep 1s ease-out}.strip .cell:hover .spark{filter:drop-shadow(0 0 5px var(--metric-accent))}.spark{transition:filter .3s}.gauge span{transition:width .8s ease}
+@keyframes metricSweep{to{transform:translateX(120%)}}
+.overview-analysis{grid-template-columns:minmax(0,5fr) minmax(0,7fr);max-width:82rem;width:100%;margin-inline:auto;align-items:stretch}
+.overview-analysis .chart-card{padding:1.15rem 1.25rem}.donut-box{height:13rem;flex-basis:13rem;max-width:15rem;margin:.8rem auto .35rem}.donut-center strong{font-size:2.05rem}
+#classLegend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.45rem}.legend-item{grid-template-columns:.6rem minmax(0,1fr) auto;gap:.35rem;padding:.55rem .65rem .65rem;min-height:3.4rem}.legend-name{font-size:.83rem}.legend-count{grid-column:2;font-size:.72rem}.legend-pct{grid-column:3;grid-row:1/3;font-size:.84rem;align-self:center}.legend-item::after{height:3px}
+#processingPanel .chart-body{height:255px;min-height:255px;max-height:255px;margin-top:.35rem}#processingPanel .stat-row{margin-top:.6rem;padding:.65rem .85rem}#processingPanel .stat-row strong{font-size:1.2rem}#processingPanel .stat-row span{font-size:.72rem}
+.chart-card{position:relative;overflow:hidden}.chart-card::before{content:"";position:absolute;top:0;left:10%;right:10%;height:1px;background:linear-gradient(90deg,transparent,#a39ad166,transparent);pointer-events:none}.chart-card:hover{border-color:#77759188}
+.refresh-runner{width:1.5rem;height:1.8rem;flex:none;color:#7ee6f8;overflow:visible}.refresh-runner .limb{transform-box:fill-box;transform-origin:top center}.status[data-state="polling"] .refresh-runner .limb,.status[data-state="fetching"] .refresh-runner .limb{animation:stride .65s ease-in-out infinite alternate}.refresh-runner .limb.back{animation-delay:-.65s!important}.status[data-state="polling"] .refresh-runner{animation:runnerBob .65s ease-in-out infinite alternate}.status[data-state="paused"] .refresh-runner{color:#c6b0f4;transform:rotate(-8deg)}.status[data-state="error"] .refresh-runner{color:#ffc65c}.status[data-state="fetching"] .refresh-runner .limb{animation-duration:.3s}
+@keyframes stride{from{transform:rotate(-25deg)}to{transform:rotate(25deg)}}@keyframes runnerBob{to{transform:translateY(-2px)}}
+#selectedContext .fact{border-top:2px solid #b4a1ef55;background:linear-gradient(135deg,#ffffff06,#ffffff02)}#selectedContext .fact:first-child{border-top-color:#ffad79}#selectedContext .fact:nth-child(2){border-top-color:#7bdef2}#selectedContext .fact:first-child dd{color:#ffd1a5}#selectedContext .fact:nth-child(2) dd{color:#95e7f6}#selectedStage{color:#cab6ff}#selectedContext .fact dt{color:#c0c9dc;font-weight:600;letter-spacing:.04em}
+.evidence-groups{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:.85rem}.evidence-group{padding:1rem;border:1px solid #ffffff12;border-radius:12px;background:linear-gradient(145deg,#ffffff04,transparent);border-top:2px solid var(--group-color,#a4b6d4)}.evidence-group h4{color:var(--group-color);font-size:.85rem;letter-spacing:.025em;margin:0 0 .85rem;display:flex;gap:.5rem;align-items:center}.evidence-group h4 span{font-size:.7rem;border:1px solid currentColor;border-radius:5px;padding:.05rem .3rem}.evidence-group .evidence{grid-template-columns:repeat(2,minmax(0,1fr));gap:.8rem}.evidence-group .evidence dt{font-size:.72rem;color:#b2bfd5}.evidence-group .evidence dd{font-size:.8rem;font-weight:500;color:#e9eef7;margin-top:.2rem}.evidence-group .evidence>div:hover dd{color:var(--group-color)}
+#selRelated{padding:.7rem;border:1px solid #ffffff0c;border-radius:10px;background:#ffffff02}#selRelated dd{color:#c6c0ef;font-size:.88rem}#selectedHeadline{color:#ccd5e7}
+@media(max-width:1100px){.evidence-groups{grid-template-columns:1fr}.evidence-group .evidence{grid-template-columns:repeat(3,minmax(0,1fr))}}
+@media(max-width:900px){.overview-analysis{grid-template-columns:minmax(0,1fr)}}
+@media(max-width:600px){.evidence-group .evidence{grid-template-columns:repeat(2,minmax(0,1fr))}.refresh-runner{width:1.2rem}.overview-analysis .chart-card{padding:1rem}.legend-item{padding:.5rem}.legend-pct{font-size:.75rem}.legend-name{font-size:.78rem}}
+@media(prefers-reduced-motion:reduce){.bg-fx::before,.refresh-runner,.refresh-runner .limb,.strip .cell.metric-updated::after{animation:none!important}.strip .cell,.spark,.gauge span{transition:none}}
+
+
+/* Alert beacon and chart balance. */
+#alert .hero-copy{position:relative}
+#overviewView #alert[data-state="threat"] .kicker .k-warn{width:2.1rem;height:2.1rem;color:#642312;filter:drop-shadow(0 0 4px #ff7c42)}
+#overviewView #alert[data-state="threat"]{animation:alertBreath 3s ease-in-out infinite}
+#overviewView #alert[data-state="threat"] .kicker .k-warn{animation:beaconBreath 2.4s ease-in-out infinite}
+#overviewView #alert.alert-arrival{animation:alertArrival 1s ease-in-out 3}
+@keyframes alertBreath{0%,100%{box-shadow:inset 0 1px 0 #ffc69155,0 0 20px -12px #ff6b43}50%{box-shadow:inset 0 1px 0 #ffd19b88,0 0 38px -10px #ff5b3555}}
+@keyframes beaconBreath{0%,100%{filter:drop-shadow(0 0 1px #ff6333);transform:scale(1)}50%{filter:drop-shadow(0 0 8px #ff6333);transform:scale(1.1)}}
+@keyframes alertArrival{0%,100%{box-shadow:inset 0 0 0 1px #ffb66e,0 0 24px -8px #ff623e66}50%{box-shadow:inset 0 0 35px #ff593b30,0 0 48px -5px #ff593b99}}
+#processingPanel{display:flex;flex-direction:column}#processingPanel .chart-body{flex:1 1 285px;height:auto;min-height:285px;max-height:none;margin-top:.6rem;margin-bottom:.6rem}
+#processingPanel #chartReadout{padding:.55rem .7rem;background:rgba(87,194,224,.045);border-left:2px solid #6dbed066;border-radius:0 7px 7px 0;margin-top:.65rem}
+@media(max-width:900px){ #processingPanel .chart-body{flex:none;height:285px;min-height:285px;max-height:285px}}
+@media(prefers-reduced-motion:reduce){ #overviewView #alert[data-state="threat"],#overviewView #alert[data-state="threat"] .kicker .k-warn,#overviewView #alert.alert-arrival{animation:none}}
+
+
+/* Dedicated alarm emblem; stable text and meaningful chart feedback. */
+.alert-heading{display:flex;align-items:center;gap:1.2rem;min-width:0;width:100%;margin:.35rem 0}
+.alarm-beacon{position:relative;width:5.7rem;height:5.7rem;flex:none;display:grid;place-items:center;border-radius:50%;color:#ffc27e;background:radial-gradient(circle,#ff6d3d33,#ff6d3d09 65%,transparent);border:1px solid #ffa06a66;box-shadow:0 0 25px #ff67362b,inset 0 0 18px #ff8d5420}
+.alarm-beacon svg{width:75%;height:75%;filter:drop-shadow(0 0 8px #ff784b88)}
+.alarm-beacon::before,.alarm-beacon::after{content:"";position:absolute;inset:-5px;border:1px solid #ff9c63;border-radius:50%;opacity:0;pointer-events:none;animation:alarmWave 2.8s ease-out infinite}.alarm-beacon::after{animation-delay:1.4s}
+@keyframes alarmWave{0%{transform:scale(.93);opacity:.65}100%{transform:scale(1.3);opacity:0}}
+#alert[data-state="threat"] .alarm-beacon svg{animation:alarmLight 2s ease-in-out infinite}
+@keyframes alarmLight{0%,100%{opacity:.65;filter:drop-shadow(0 0 3px #ff794b)}50%{opacity:1;filter:drop-shadow(0 0 12px #ff794b)}}
+#alert:not([data-state="threat"]) .alarm-beacon{display:none}
+#overviewView #alert[data-state="threat"] .kicker .k-warn{display:none}
+#alert .new-tag{background:#721e29;color:#fff5e7;border:1px solid #fff0c3;border-radius:6px;padding:.18rem .55rem;box-shadow:0 0 0 2px #ff774333,0 0 16px #ff634955;font-size:.72rem;letter-spacing:.09em;animation:tagIn .4s ease-out both}
+#alert .new-tag::before{content:"";display:inline-block;width:.35rem;height:.35rem;margin-right:.35rem;vertical-align:middle;background:#ffe9b8;border-radius:50%;box-shadow:0 0 6px #fff1c8}
+.overview-analysis .chart-card{background:radial-gradient(ellipse at 100% 0%,#7165c514,transparent 65%),linear-gradient(145deg,#121525,#0d101c);border-color:#9ca9cf33;transition:border-color .3s,box-shadow .3s}
+.overview-analysis .chart-card:hover{border-color:#7fbbcf99;box-shadow:0 10px 35px -24px #63cbe8}
+.chart-card.chart-updated::before{left:0;right:0;height:2px;background:linear-gradient(90deg,transparent,#72ddf2,transparent);animation:chartSignal 1s ease-out both}
+@keyframes chartSignal{from{transform:translateX(-90%);opacity:0}25%{opacity:1}to{transform:translateX(90%);opacity:0}}
+.donut-box{transition:filter .3s}.donut-box:hover{filter:drop-shadow(0 0 12px #9e85f333)}
+.flow-explorer{border-color:#65cde866;background:linear-gradient(115deg,#17303b66,#17203255);box-shadow:inset 2px 0 #6bdcf1}
+#previewTitle{color:#f4e7d8}#inspectPoint{background:linear-gradient(120deg,#65402b,#402731);color:#ffe2b5;box-shadow:inset 0 1px #ffcb9033}
+@media(max-width:600px){.alarm-beacon{width:3.8rem;height:3.8rem}.alert-heading{gap:.75rem}#overviewView #alert[data-state="threat"] .hero-name{font-size:clamp(1.9rem,8vw,3rem)}}
+@media(prefers-reduced-motion:reduce){.alarm-beacon::before,.alarm-beacon::after,#alert[data-state="threat"] .alarm-beacon svg,.chart-card.chart-updated::before{animation:none}.donut-box{transition:none}}
+
 </style>
 </head>
 <body>
@@ -698,7 +767,7 @@
             <svg viewBox="0 0 24 24"><circle class="ring-bg" cx="12" cy="12" r="9"/><circle class="ring-fg" cx="12" cy="12" r="9" pathLength="1"/></svg>
             <span class="ring-glyph g-pause"></span><span class="ring-glyph g-warn">!</span>
           </span>
-          <span class="status-text"><strong id="status">Connecting…</strong><span class="status-sub"><span id="statusCaption">Reading saved detections</span><span id="lastRefreshed"></span></span></span>
+          <svg class="refresh-runner" viewBox="0 0 28 34" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><circle cx="15" cy="5" r="2.5" fill="currentColor" stroke="none"/><path d="m14 11-2 10"/><path class="limb" d="m14 12 6 5 4-3"/><path class="limb back" d="m14 12-6 6-4-2"/><path class="limb back" d="m12 21 7 6 3 4"/><path class="limb" d="m12 21-5 7-3 2"/></svg><span class="status-text"><strong id="status">Connecting…</strong><span class="status-sub"><span id="statusCaption">Reading saved detections</span><span id="lastRefreshed"></span></span></span>
         </div>
         <button id="liveToggle" class="btn btn-quiet" type="button" data-live="true">
           <svg class="i-pause" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true"><rect x="5" y="4" width="3.4" height="12" rx="1"/><rect x="11.6" y="4" width="3.4" height="12" rx="1"/></svg>
@@ -750,12 +819,12 @@
         <article id="alert" class="hero enter-seq" data-state="loading" aria-live="polite">
           <div class="hero-copy">
             <p class="kicker">
-              <svg class="k-warn" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 2 20.5h20L12 3Z" stroke="#ffbe8c" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v5" stroke="#ffbe8c" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.8" r="1.1" fill="#ffbe8c"/></svg>
+              <svg class="k-warn" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3 2 20.5h20L12 3Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v5" stroke="currentColor" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="17.8" r="1.1" fill="currentColor"/></svg>
               <svg class="k-clear" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5 4 6v6c0 5 3.4 8.2 8 9.5 4.6-1.3 8-4.5 8-9.5V6l-8-3.5Z" stroke="#4fd8f5" stroke-width="1.8" stroke-linejoin="round"/><path d="M8.5 12h2.4l1.4-3.4 2.2 6.8 1.1-3.4h1.9" stroke="#4fd8f5" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg>
               <svg class="k-error" viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="12" cy="12" r="9" stroke="#ffc65c" stroke-width="1.8"/><path d="M12 7v6" stroke="#ffc65c" stroke-width="2" stroke-linecap="round"/><circle cx="12" cy="16.5" r="1.1" fill="#ffc65c"/></svg>
               <span id="alertKicker">Latest detected attack</span><span id="alertNew" class="new-tag" hidden>New</span>
             </p>
-            <h2 id="alertLabel" class="hero-name">Loading…</h2>
+            <div class="alert-heading"><div class="alarm-beacon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path d="M32 8 5 55h54L32 8Z" fill="rgba(255,105,58,.12)" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M32 25v14" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="32" cy="46" r="2.5" fill="currentColor"/></svg></div><h2 id="alertLabel" class="hero-name">Loading…</h2></div>
 
             <p id="alertCopy" class="hero-meaning">Reading saved detections from the dashboard API.</p>
             <div id="alertActions" class="hero-cta" hidden>
@@ -1017,7 +1086,7 @@
      a record is selected, or when a genuinely new record arrives — never on load or on each poll. */
   let sceneSeq = 0;
   const ICON_SRC = '<svg viewBox="0 0 32 32" fill="none" stroke="#c9d2e6" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="6" width="24" height="16" rx="2.5"/><path d="M11 27h10M16 22v5M9.5 12.5l3 2.5-3 2.5M15 17.5h5"/></svg>';
-  const ICON_DST = '<svg viewBox="0 0 32 32" fill="none" stroke="#ffbe8c" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4.5" width="22" height="8" rx="2.2"/><rect x="5" y="14.5" width="22" height="8" rx="2.2"/><path d="M9.5 8.5h.01M9.5 18.5h.01M14 8.5h8M14 18.5h8M12 27h8M16 22.5V27"/></svg>';
+  const ICON_DST = '<svg viewBox="0 0 32 32" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="5" y="4.5" width="22" height="8" rx="2.2"/><rect x="5" y="14.5" width="22" height="8" rx="2.2"/><path d="M9.5 8.5h.01M9.5 18.5h.01M14 8.5h8M14 18.5h8M12 27h8M16 22.5V27"/></svg>';
   function createScene(root) {
     const id = ++sceneSeq;
     root.className = 'scene';
@@ -1143,7 +1212,7 @@
     const ctx=chart.ctx; ctx.save();
     if(chartModeRendered==='distribution') {
       const total=plotRecords.length;
-      chart.getDatasetMeta(0).data.forEach((bar,i)=>{ const n=chart.data.datasets[0].data[i]; if(!n)return;
+      chart.getDatasetMeta(0).data.forEach((bar,i)=>{ const n=chart.data.datasets[0].data[i]; if(!n){ctx.textAlign='center';ctx.textBaseline='bottom';ctx.font='500 12px '+getComputedStyle(document.body).fontFamily;ctx.fillStyle='#aebbd1';ctx.fillText('0',bar.x,chart.chartArea.bottom-8);ctx.strokeStyle='#8999b566';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(bar.x-8,chart.chartArea.bottom);ctx.lineTo(bar.x+8,chart.chartArea.bottom);ctx.stroke();return;}
         const y=Math.max(chart.chartArea.top+28,bar.y-8);ctx.textAlign='center';ctx.textBaseline='bottom';
         ctx.font='600 12px '+getComputedStyle(document.body).fontFamily;ctx.fillStyle='#f5f7fc';ctx.fillText(n.toLocaleString(),bar.x,y-12);
         ctx.font='11px '+getComputedStyle(document.body).fontFamily;ctx.fillStyle='#afbed5';ctx.fillText((100*n/total).toFixed(1)+'%',bar.x,y);
@@ -1151,6 +1220,10 @@
     } else if(chart.$median!==null && chart.$median!==undefined) {
       const y=chart.scales.y.getPixelForValue(chart.$median),area=chart.chartArea;
       ctx.strokeStyle='#ffc65c';ctx.lineWidth=1.5;ctx.setLineDash([5,5]);ctx.beginPath();ctx.moveTo(area.left,y);ctx.lineTo(area.right,y);ctx.stroke();
+    }
+    if(chartModeRendered==='scatter'){
+      const active=chart.getActiveElements()[0];
+      if(active){const {x,y}=active.element,area=chart.chartArea;ctx.save();ctx.beginPath();ctx.rect(area.left,area.top,area.right-area.left,area.bottom-area.top);ctx.clip();ctx.strokeStyle='rgba(141,221,244,.35)';ctx.lineWidth=1;ctx.setLineDash([3,5]);ctx.beginPath();ctx.moveTo(x,area.top);ctx.lineTo(x,area.bottom);ctx.moveTo(area.left,y);ctx.lineTo(area.right,y);ctx.stroke();ctx.setLineDash([]);ctx.strokeStyle='#ffe0ad';ctx.lineWidth=2;ctx.beginPath();ctx.arc(x,y,10,0,Math.PI*2);ctx.stroke();ctx.restore();}
     }
     ctx.restore();
   }};
@@ -1350,6 +1423,7 @@
     const at = state.fresh.get(idStr);
     if (heroLastId !== null && idStr !== heroLastId && at && Date.now() - at < FRESH_MS) {
       playScene($('heroScene'), 'arrive');
+      if(!reduceMotion){card.classList.remove('alert-arrival');void card.offsetWidth;card.classList.add('alert-arrival');}
       $('alertNew').hidden = false; clearTimeout(newTagTimer); newTagTimer = setTimeout(() => { $('alertNew').hidden = true; }, 8000);
     }
     heroLastId = idStr;
@@ -1539,26 +1613,29 @@
     const body = $('selDetailsBody'), key = `${l.id}|${fingerprint(l)}`;
     if (body.dataset.key === key) return;
     body.dataset.key = key;
-    const dl = el('dl', 'evidence');
+    const groups=el('div','evidence-groups');
+    function group(title,number,color){const section=el('section','evidence-group');section.style.setProperty('--group-color',color);const heading=el('h4');heading.append(el('span','',number),document.createTextNode(title));const fields=el('dl','evidence');section.append(heading,fields);groups.append(section);return fields;}
+    const connection=group('Connection','01','#85dcef'), model=group('Model assessment','02','#ffc08b'), record=group('Record metadata','03','#c7b3f8');
+    const dl=record;
     const raw = (v, fmt) => { const n = num(v); return n === null ? DASH : `${fmt(n)} · raw ${+n.toFixed(6)}`; };
     add(dl, 'Flow ID', `#${text(l.id)}`);
     add(dl, 'Recorded (as saved)', text(l.timestamp));
-    add(dl, 'Source IP', text(l.source_ip));
-    add(dl, 'Source port', num(l.source_port) !== null ? String(num(l.source_port)) : DASH);
-    add(dl, 'Destination IP', text(l.destination_ip));
-    add(dl, 'Destination port', num(l.destination_port) !== null ? String(num(l.destination_port)) : DASH);
-    add(dl, 'Protocol', text(l.protocol));
-    add(dl, 'Label as saved', text(l.attack_type));
-    add(dl, 'Confidence', raw(l.confidence, fmtPct));
-    add(dl, 'Processing time', raw(l.latency_ms, fmtMs));
-    if (l.stage_reached) add(dl, 'Pipeline stage', String(l.stage_reached));
-    if (l.model_attack_type) add(dl, 'Model result', String(l.model_attack_type));
-    if (l.model_verdict) add(dl, 'Model verdict', String(l.model_verdict));
-    if (num(l.model_confidence) !== null) add(dl, 'Model confidence', fmtPct(l.model_confidence));
-    if (num(l.stage1_attack_probability) !== null) add(dl, 'Stage 1 attack score', fmtPct(l.stage1_attack_probability));
+    add(connection, 'Source IP', text(l.source_ip));
+    add(connection, 'Source port', num(l.source_port) !== null ? String(num(l.source_port)) : DASH);
+    add(connection, 'Destination IP', text(l.destination_ip));
+    add(connection, 'Destination port', num(l.destination_port) !== null ? String(num(l.destination_port)) : DASH);
+    add(connection, 'Protocol', text(l.protocol));
+    add(model, 'Label as saved', text(l.attack_type));
+    add(model, 'Confidence', raw(l.confidence, fmtPct));
+    add(model, 'Processing time', raw(l.latency_ms, fmtMs));
+    if (l.stage_reached) add(model, 'Pipeline stage', String(l.stage_reached));
+    if (l.model_attack_type) add(model, 'Model result', String(l.model_attack_type));
+    if (l.model_verdict) add(model, 'Model verdict', String(l.model_verdict));
+    if (num(l.model_confidence) !== null) add(model, 'Model confidence', fmtPct(l.model_confidence));
+    if (num(l.stage1_attack_probability) !== null) add(model, 'Stage 1 attack score', fmtPct(l.stage1_attack_probability));
     // Any extra field the backend adds later is still shown, as plain text.
     for (const [k, v] of Object.entries(l)) if (!KNOWN_FIELDS.has(k) && v !== null && v !== undefined && v !== '') add(dl, k, typeof v === 'object' ? JSON.stringify(v) : String(v));
-    body.replaceChildren(dl);
+    body.replaceChildren(groups);
   }
 
   function renderClasses() {
@@ -1639,6 +1716,7 @@
       latencyChart.$median=med;setText($('chartReadout'),`Dashed amber line: typical time (${fmtMs(med)}). Arrow buttons can reach every flow.`);
     }
     latencyChart.update('none');chartSignature=signature;
+    if(!reduceMotion){const panel=$('processingPanel');panel.classList.remove('chart-updated');void panel.offsetWidth;panel.classList.add('chart-updated');}
     if(!dist&&n){const retained=old?plotRecords.findIndex(l=>String(l.id)===String(old.id)&&fingerprint(l)===fingerprint(old)):-1;showPoint(retained>=0?retained:n-1);}
     // New data does not restart the entire plot animation or re-hit-test an old tooltip.
   }
@@ -1895,12 +1973,20 @@
 
   /* A soft spotlight follows the pointer over the hero (decorative; off with reduced motion). */
   if (!reduceMotion) $('alert').addEventListener('pointermove', (e) => { const r = e.currentTarget.getBoundingClientRect(); e.currentTarget.style.setProperty('--mx', `${e.clientX - r.left}px`); e.currentTarget.style.setProperty('--my', `${e.clientY - r.top}px`); });
+  $('alert').addEventListener('animationend',e=>{if(e.animationName==='alertArrival')$('alert').classList.remove('alert-arrival');});
   window.addEventListener('resize', positionTabs);
 
   createScene($('heroScene')); createScene($('selScene'));
   initCharts(); render(); positionTabs(); setLive(true);
   if (document.fonts && document.fonts.ready) document.fonts.ready.then(positionTabs);
   setTimeout(() => $('alert').classList.remove('enter-seq'), 1400);
+
+  document.querySelectorAll('.strip .cell').forEach(cell=>{
+    const value=cell.querySelector('.cell-value');let previous=value.textContent;
+    new MutationObserver(()=>{const next=value.textContent;if(next===previous)return;previous=next;if(reduceMotion)return;cell.classList.remove('metric-updated');void cell.offsetWidth;cell.classList.add('metric-updated');}).observe(value,{childList:true,characterData:true,subtree:true});
+    cell.addEventListener('animationend',()=>cell.classList.remove('metric-updated'));
+  });
+
 })();
 </script>
 </body>
