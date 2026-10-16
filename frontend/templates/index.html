@@ -740,6 +740,52 @@
 @media(max-width:600px){.alarm-beacon{width:3.8rem;height:3.8rem}.alert-heading{gap:.75rem}#overviewView #alert[data-state="threat"] .hero-name{font-size:clamp(1.9rem,8vw,3rem)}}
 @media(prefers-reduced-motion:reduce){.alarm-beacon::before,.alarm-beacon::after,#alert[data-state="threat"] .alarm-beacon svg,.chart-card.chart-updated::before{animation:none}.donut-box{transition:none}}
 
+
+/* Compact context and record-window toolbar */
+#main > .scopebar{gap:1rem;padding:.7rem 0;margin:.65rem 0 1rem}
+.scope-title{display:flex;align-items:center;gap:.8rem;min-width:0}
+.scope-title strong{display:block;font-size:1.25rem;font-weight:650;letter-spacing:-.025em;color:#f5f0ff;line-height:1.3}
+.scope-caption{display:block;color:#b9c6d8;font-size:.79rem;margin-top:.18rem}
+.scope-scanner{position:relative;display:grid;place-items:center;width:2.8rem;height:2.8rem;flex:none;overflow:hidden;border-radius:14px;color:#82dced;border:1px solid #79dbef40;background:linear-gradient(135deg,#47b9da19,#ac7dff13);box-shadow:inset 0 1px 0 #ffffff10}
+.scope-scanner svg{width:2rem;height:2rem;stroke:currentColor;stroke-width:1;opacity:.85}
+.scope-scanner i{position:absolute;inset:0;background:linear-gradient(180deg,transparent,#8ceaff55,transparent);transform:translateY(-100%);opacity:0}
+.scope-scanner[data-state="fetching"] i,.scope-scanner[data-state="connecting"] i{animation:scopeScan 1.1s ease-in-out infinite}
+.scope-choice{display:flex;align-items:center;gap:1rem;flex-wrap:wrap}
+.scope-choice-label{font-size:.8rem;color:#c7c4d7}.scope-choice-label span{color:#ffba82;margin-left:.35rem}
+@keyframes scopeScan{0%{transform:translateY(-100%);opacity:0}25%,75%{opacity:1}100%{transform:translateY(100%);opacity:0}}
+@media(max-width:800px){.scope-choice-label{display:none}}
+@media(max-width:600px){.scope-choice{width:100%}.scope-choice .segmented{width:100%;display:flex}.scope-choice .seg{flex:1}.scope-title strong{font-size:1.15rem}}
+@media(prefers-reduced-motion:reduce){.scope-scanner i{animation:none!important}}
+
+
+/* Layout cleanup: no overlapping metric tooltips or duplicate readouts. */
+.metric-help{font-size:.78rem;color:#bdc7dc;margin:0 0 .65rem;text-transform:none;letter-spacing:normal}
+.metric-help summary{cursor:pointer;color:#d4c6ff;width:fit-content;padding:.2rem 0}
+.metric-help summary:hover{color:#fff}.metric-help p{padding:.5rem .65rem;margin:.35rem 0 0;border-left:2px solid #a991ef;background:#151725;border-radius:0 7px 7px 0;line-height:1.5;color:#d8deeb}
+#classificationReadout{display:none}
+#classLegend{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.55rem;margin-top:1rem}
+#classLegend .legend-item{display:grid;grid-template-columns:14px minmax(0,1fr) auto;grid-template-rows:auto auto;column-gap:.55rem;row-gap:.25rem;align-items:center;padding:.65rem .75rem;transform:none;min-width:0;text-align:left}
+#classLegend .swatch{grid-column:1;grid-row:1;width:12px;height:12px;border-radius:4px}
+#classLegend .legend-name{grid-column:2;grid-row:1;font-size:.85rem;white-space:normal}
+#classLegend .legend-count{grid-column:2;grid-row:2;font-size:.75rem}
+#classLegend .legend-pct{grid-column:3;grid-row:1 / 3;font-size:.9rem}
+#classLegend .legend-item[aria-pressed="true"]{border-color:var(--class-color);background:rgba(255,255,255,.08);box-shadow:inset 3px 0 var(--class-color)}
+#classLegend .legend-item[aria-pressed="true"] .legend-name::before{content:none}
+#classFilterHint{display:flex!important;align-items:center;justify-content:space-between;gap:.65rem;flex-wrap:wrap;padding-top:.8rem;border-top:1px solid #ffffff12;margin-top:.8rem}
+.filter-summary{font-size:.8rem;color:#e8deff}.filter-actions{display:flex;align-items:center;flex-wrap:wrap;gap:.8rem}.filter-actions .btn{padding:.35rem .6rem;font-size:.75rem}.filter-actions .link-btn{font-size:.8rem}
+.scope-title>div{display:flex;align-items:center;gap:.8rem;flex-wrap:wrap}.scope-caption{margin:0;padding-left:.8rem;border-left:1px solid #b7a5e440}
+#investigateView>.lead{display:flex;justify-content:flex-end;margin:0}#investigateView>.lead .btn{margin-top:0!important}
+@media(max-width:600px){.scope-title>div{gap:.25rem}.scope-caption{width:100%;padding:0;border:0;font-size:.75rem}#classLegend{grid-template-columns:1fr}}
+
+
+.metric-info{display:inline-grid;place-items:center;flex:none;width:1.15rem;height:1.15rem;padding:0;border:1px solid #b8a5e480;border-radius:50%;background:transparent;color:#d0c1f1;font:italic 600 .75rem/1 Georgia,serif;cursor:pointer}
+.metric-info:hover,.metric-info[aria-expanded="true"]{background:#aa8cff22;border-color:#d4baff;color:#fff}.metric-info:focus-visible{outline:2px solid #7edff4;outline-offset:3px}
+.metric-explanation{font-size:.78rem;line-height:1.5;color:#d8deeb;border-left:2px solid #a991ef;padding:.5rem .65rem;margin:0 0 .65rem;background:#151725;border-radius:0 7px 7px 0}
+#investigateView>.lead{display:none}
+.scope-title #backToCharts{margin:0;padding:.3rem .55rem;font-size:.75rem}
+
+body>.metric-explanation{position:fixed;z-index:10000;width:18rem;max-width:calc(100vw - 24px);box-sizing:border-box;margin:0;padding:.8rem 1rem;border:1px solid #ac96e775;border-radius:12px;background:#111523;color:#eef0fa;font-size:.82rem;line-height:1.55;box-shadow:0 12px 35px #0008;text-transform:none;letter-spacing:normal}
+.metric-info{cursor:help}
 </style>
 </head>
 <body>
@@ -804,11 +850,12 @@
 
     <main id="main">
         <div class="scopebar">
-          <p id="viewSummary" aria-live="polite">Latest 500 saved flows</p>
+          <div class="scope-title"><span id="scopeScanner" class="scope-scanner" aria-hidden="true"><svg viewBox="0 0 32 32" fill="none"><circle cx="16" cy="16" r="12"/><circle cx="16" cy="16" r="6"/><path d="M16 2v28M2 16h28"/><circle cx="21" cy="11" r="2" fill="currentColor"/></svg><i></i></span><div><strong id="scopeHeading">Detection overview</strong><span class="scope-caption">Network traffic · Model verdicts</span><button id="backToCharts" class="btn btn-sm btn-quiet" type="button" hidden>← Threat overview</button></div></div><span id="viewSummary" class="sr-only" aria-live="polite"></span><div class="scope-choice"><span class="scope-choice-label">Explore recent flows <span aria-hidden="true">→</span></span>
           <div class="segmented" role="group" aria-label="Number of recent flows to load">
             <button type="button" class="seg" data-limit="100" aria-pressed="false">Latest 100</button>
             <button type="button" class="seg" data-limit="500" aria-pressed="true">Latest 500</button>
             <button type="button" class="seg" data-limit="2500" aria-pressed="false">Latest 2,500</button>
+          </div>
           </div>
         </div>
       <!-- ===================== OVERVIEW ===================== -->
@@ -845,16 +892,16 @@
           </div>
 
           <div class="cell">
-            <h3 class="cell-label">Processing time <span class="info" tabindex="0" role="img" aria-label="Saved classification time per flow. Not the full delay from attack to alert. The line shows the median across the selection, oldest to newest." data-tip="Saved classification time per flow, not the full delay from attack to alert. Line: median across the selection, oldest → newest.">i</span></h3>
+            <h3 class="cell-label">Processing time <button class="metric-info" type="button" aria-label="About Processing time" aria-expanded="false" aria-controls="latencyHelp">i</button></h3>
             <p id="latency" class="cell-value">--</p>
             <p id="latencyNote" class="cell-note">median per flow</p>
-            <svg id="sparkLatency" class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" role="img" aria-label="Processing time across the selection"></svg>
+            <p id="latencyHelp" class="metric-explanation" hidden>Saved classification time per flow, not the full delay from attack to alert. Line: median across the selection, oldest → newest.</p><svg id="sparkLatency" class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" role="img" aria-label="Processing time across the selection"></svg>
           </div>
           <div class="cell">
-            <h3 class="cell-label">Offline DL Macro F1 <span class="info" tabindex="0" role="img" aria-label="Standalone Stage 2 test score, not live accuracy or an end-to-end pipeline score. The bar shows the score out of 1." data-tip="Standalone Stage 2 test score — not live accuracy or an end-to-end pipeline score. Bar: score out of 1.0.">i</span></h3>
+            <h3 class="cell-label">Offline DL Macro F1 <button class="metric-info" type="button" aria-label="About Offline DL Macro F1" aria-expanded="false" aria-controls="f1Help">i</button></h3>
             <p id="f1" class="cell-value">--</p>
             <p id="f1Note" class="cell-note">Offline test result</p>
-            <span class="gauge" aria-hidden="true"><span id="f1Bar"></span></span>
+            <p id="f1Help" class="metric-explanation" hidden>Standalone Stage 2 test score — not live accuracy or an end-to-end pipeline score. Bar: score out of 1.0.</p><span class="gauge" aria-hidden="true"><span id="f1Bar"></span></span>
           </div>
         </section>
 
@@ -909,8 +956,7 @@
       <!-- ===================== INVESTIGATE ===================== -->
       <section id="investigateView" class="view stack" role="tabpanel" aria-labelledby="tabInvestigate" hidden>
         <div class="lead">
-          <h1>Investigate</h1>
-          <p>Inspect the saved evidence behind a detection.</p><button id="backToCharts" class="btn btn-sm btn-quiet" type="button" style="margin-top:.7rem">← Threat overview</button>
+          <h1 class="sr-only">Investigate</h1>
         </div>
 
         <!-- v4: detection card — header badges, plain-English headline, fact tiles, and an in-card technical details panel -->
@@ -1269,6 +1315,7 @@
   function renderStatus() {
     const mode = statusMode(), pill = $('statusPill');
     pill.dataset.state = mode;
+    $('scopeScanner').dataset.state = mode;
     const when = state.fetchedAt ? state.fetchedAt.toLocaleTimeString() : null;
     const labels = {
       connecting: ['Connecting…', 'Reading saved detections'],
@@ -1662,17 +1709,17 @@
       b.setAttribute('aria-pressed', String(state.activeClass === r.info.key));
       b.setAttribute('aria-label', `${r.info.label}: ${r.n.toLocaleString()} flows, ${((r.n / total) * 100).toFixed(1)} percent. Filter records by this class.`);
       const sw = el('span', 'swatch'); sw.style.background = r.info.color;
-      b.append(sw, el('span', 'legend-name', r.info.label), el('span', 'legend-count', r.n.toLocaleString()), el('span', 'legend-pct', `${((r.n / total) * 100).toFixed(1)}%`));
+      b.append(sw, el('span', 'legend-name', r.info.label), el('span', 'legend-count', r.n.toLocaleString() + ' flows'), el('span', 'legend-pct', `${((r.n / total) * 100).toFixed(1)}%`));
       b.addEventListener('click', () => toggleClass(r.info.key)); legend.append(b);
     });
     restoreFocus(focusKey);
     const hint = $('classFilterHint'); hint.replaceChildren();
     if (state.activeClass) {
       const label = (rows.find((r) => r.info.key === state.activeClass)?.info.label) || state.activeClass;
-      hint.append(document.createTextNode(`Records are filtered to ${label}.`));
-      const clear = el('button', 'btn btn-sm', 'Clear class filter'); clear.type = 'button'; clear.addEventListener('click', () => toggleClass(state.activeClass));
+      hint.append(el('span', 'filter-summary', `Filter: ${label}`));
+      const clear = el('button', 'btn btn-sm', 'Clear filter'); clear.type = 'button'; clear.addEventListener('click', () => toggleClass(state.activeClass));
       const jump = el('button', 'link-btn', 'View records ↓'); jump.type = 'button'; jump.addEventListener('click', () => {showView('investigate',{scroll:false});revealRecords();$('recordsSection').scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'start'});});
-      hint.append(clear, jump);
+      const actions=el('span','filter-actions');actions.append(clear,jump);hint.append(actions);
     } else hint.append(document.createTextNode('Select a class to filter the records table.'));
   }
 
@@ -1841,6 +1888,8 @@
   }
   function showView(view, opts = {}) {
     state.view = view; const inv = view === 'investigate';
+    setText($('scopeHeading'), inv ? 'Detection investigation' : 'Detection overview');
+    $('backToCharts').hidden = !inv;
     const incoming = $(inv ? 'investigateView' : 'overviewView'), outgoing = $(inv ? 'overviewView' : 'investigateView');
     const wasHidden = incoming.hidden;
     outgoing.hidden = true; incoming.hidden = false;
@@ -1887,6 +1936,23 @@
   $('classLegend').addEventListener('focusout',e=>{if(!$('classLegend').contains(e.relatedTarget))resetDonutPreview();});
   $('classLegend').addEventListener('pointerover',e=>{const b=e.target.closest('.legend-item');if(b)showClassificationReadout([...$('classLegend').children].indexOf(b));});
   $('classLegend').addEventListener('focusin',e=>{const b=e.target.closest('.legend-item');if(b)showClassificationReadout([...$('classLegend').children].indexOf(b));});
+  document.querySelectorAll('.metric-info').forEach(b=>{
+    const box=$(b.getAttribute('aria-controls'));document.body.append(box);
+    box.setAttribute('role','tooltip');b.setAttribute('aria-describedby',box.id);
+    let hovered=false,focused=false,overBox=false,dismissed=false;
+    function position(){if(box.hidden)return;const r=b.getBoundingClientRect(),w=box.offsetWidth,h=box.offsetHeight;
+      box.style.left=Math.max(12,Math.min(innerWidth-w-12,r.left+r.width/2-w/2))+'px';
+      box.style.top=Math.max(12,r.top-h-10>=12?r.top-h-10:Math.min(innerHeight-h-12,r.bottom+10))+'px';}
+    function sync(){box.hidden=dismissed||!(hovered||focused||overBox);b.setAttribute('aria-expanded',String(!box.hidden));position();}
+    b.addEventListener('pointerenter',()=>{hovered=true;dismissed=false;sync()});
+    b.addEventListener('pointerleave',()=>{hovered=false;setTimeout(sync,100)});
+    b.addEventListener('focus',()=>{focused=true;dismissed=false;sync()});
+    b.addEventListener('blur',()=>{focused=false;sync()});
+    box.addEventListener('pointerenter',()=>{overBox=true;sync()});
+    box.addEventListener('pointerleave',()=>{overBox=false;sync()});
+    document.addEventListener('keydown',e=>{if(e.key==='Escape'){dismissed=true;sync()}});
+    window.addEventListener('scroll',position,{passive:true,capture:true});window.addEventListener('resize',position);
+  });
   $('backToCharts').addEventListener('click',()=>showView('overview'));
   $('openInvestigate').addEventListener('click', () => showView('investigate'));
   $('closeSelected').addEventListener('click', clearSelection);
