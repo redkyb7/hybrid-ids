@@ -1534,6 +1534,13 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
 #recordsSection .bookmark-toggle[aria-pressed="true"] { color: var(--cyan); border-color: var(--cyan-line); background: var(--cyan-soft); }
 #recordsSection .bookmark-toggle[aria-pressed="true"] svg { fill: var(--cyan-soft); }
 #recordsSection .row-bookmarked { display: block; margin-top: .3rem; color: var(--cyan); }
+
+/* Explain review order without implying severity or changing the saved model outputs. */
+.priority-guide { font-size: .8rem; color: var(--ink-2); margin: .5rem 0 .75rem; }
+.priority-guide summary { cursor: pointer; color: var(--cyan); width: fit-content; }
+.priority-guide p { max-width: 64rem; font-size: .8rem; line-height: 1.7; margin-top: .55rem; }
+#selectedPriorityWhy { margin: .2rem 0; }
+#recordsSection .record-priority-reason { font-size: .8rem; color: var(--ink-2); line-height: 1.65; padding: .65rem 0 .85rem; border-top: 1px solid var(--line-soft); }
 </style>
 </head>
 <body class="sidebar-collapsed">
@@ -1684,10 +1691,10 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
         <div id="singleAnalysis" class="single-analysis" hidden></div>
         <section id="recentAlertsPanel" class="panel block" aria-labelledby="recentHeading">
             <div class="block-head">
-              <div><h2 id="recentHeading">Suggested review queue</h2><p class="sub">Review suggestions by source activity · one saved detection per source and threat type</p></div>
+              <div><h2 id="recentHeading">Suggested review queue</h2><p class="sub">Review suggestions by source activity · one saved detection per traffic pattern</p></div>
               <button id="openInvestigate" class="link-btn" type="button">View all records →</button>
             </div>
-            <ol id="overviewEvidence" aria-label="Suggested review candidates"></ol><p class="queue-note">Priority uses only the selected loaded records. Frontend review guidance, not validated incident severity.</p>
+            <ol id="overviewEvidence" aria-label="Suggested review candidates"></ol><p class="queue-note">Priority uses only the selected loaded records. Recent unreviewed representatives come first; older repeats come later. Not incident severity.</p>
           </section>
 
       <div id="singleInvestigation" class="stack" hidden></div><div id="singleRecords" class="stack" hidden></div><div id="singleSupport" class="stack" hidden></div>
@@ -1712,6 +1719,7 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
             <div id="activeFilters" class="active-filters" aria-live="polite"></div>
             <button id="clearFilter" class="btn btn-sm" type="button" hidden>Clear all filters</button>
           </div>
+          <details id="priorityGuide" class="priority-guide"><summary>How is priority assigned?</summary><p id="priorityGuideText"></p></details>
           <p id="savedReviewNote" class="saved-review-note">Saved copies and review status stay in this browser only.</p>
           <p id="recordsActionStatus" class="records-action-status" role="status" aria-live="polite"></p>
           <p id="tableCount" class="count" aria-live="polite">--</p>
@@ -1740,6 +1748,7 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
               <div class="sel-tags"><span id="selectedFlowId" class="pill mono">--</span><span id="selectedVerdict" class="pill verdict">--</span><span id="selectedPriority" class="priority-badge" data-level="unassessed">Priority: Unassessed</span><span id="selectedBadge" class="pill warn" hidden></span></div>
             </div>
             <h2 id="selectedTitle" class="sel-name">--</h2>
+            <details id="selectedPriorityWhy" class="priority-guide"><summary>Why this priority?</summary><p id="selectedPriorityReason"></p></details>
             <p id="selectedMeaning" class="sel-meaning"></p>
             <details id="threatExplanation" class="threat-explanation">
               <summary>What does this mean? <span aria-hidden="true">ⓘ</span></summary>
@@ -1973,43 +1982,63 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
   };
   let timer = null, controller = null, serial = 0, inFlight = false, heroLastId = null, newTagTimer = null;
 
-  /* Frontend-only review guidance. Presentation thresholds, NOT validated severity thresholds.
-     Counts are attack-labelled records per source in the current loaded window. Model confidence is unused.
-     Conservatively leave a retained/out-of-window record Unassessed, even if its source appears elsewhere. */
-  const REVIEW_PRIORITY_THRESHOLDS = Object.freeze({ high: 10, medium: 3 });
-  const PRIORITY_HELP = 'Suggested from repeated attack-labelled activity in the selected records. Not a confirmed incident severity.';
+  /* Frontend-only REVIEW ORDER, not incident severity. No confidence-to-severity mapping.
+     A traffic pattern shares source + saved class + destination + protocol + destination port.
+     Prioritise a recent unreviewed representative rather than colouring every repeated record High.
+     Configurable, unvalidated workflow thresholds; no impact or feature-attribution data is available. */
+  const REVIEW_PRIORITY_THRESHOLDS = Object.freeze({ high: 10, medium: 3, recentExamples: 3 });
+  const PRIORITY_HELP = 'Suggested review order, not incident severity. Uses repeated traffic patterns, record recency and review status in this browser. Low does not mean safe.';
   function sourceKey(log) { return typeof log.source_ip === 'string' ? log.source_ip.trim() : ''; }
+  function reviewPatternKey(log) { return JSON.stringify([sourceKey(log),classify(log.attack_type).key,log.destination_ip || '',log.protocol || '',num(log.destination_port)]); }
   function flaggedSourceCounts() {
-    const counts = new Map();
-    for (const log of state.logs) if (isAttack(log) && sourceKey(log)) counts.set(sourceKey(log), (counts.get(sourceKey(log)) || 0) + 1);
+    const counts = new Map(); counts.patterns = new Map(); counts.positions = new Map();
+    for (const log of state.logs) {
+      if (!isAttack(log)) continue;
+      if (sourceKey(log)) counts.set(sourceKey(log), (counts.get(sourceKey(log)) || 0) + 1);
+      const key = reviewPatternKey(log), pattern = counts.patterns.get(key) || []; pattern.push(log); counts.patterns.set(key,pattern);
+    }
+    for (const pattern of counts.patterns.values()) {
+      pattern.sort(newerSavedRecord);
+      let pending = 0;
+      for (const log of pattern) if (!isReviewed(log)) counts.positions.set(exactReviewKey(log),pending++);
+    }
     return counts;
   }
-  function reviewPriority(log, counts = flaggedSourceCounts()) {
-    const count = counts.get(sourceKey(log)) || 0;
+  function reviewPriority(log, context = flaggedSourceCounts()) {
     const current = state.loadedById.get(String(log.id));
     const loaded = !!current && fingerprint(current) === fingerprint(log) && exactReviewKey(current) === exactReviewKey(log);
-    if (!isAttack(log) || !sourceKey(log) || !loaded || !count) return { level: 'unassessed', label: 'Unassessed', rank: 0, count, loaded };
-    const level = count >= REVIEW_PRIORITY_THRESHOLDS.high ? 'high' : count >= REVIEW_PRIORITY_THRESHOLDS.medium ? 'medium' : 'low';
-    return { level, label: level[0].toUpperCase() + level.slice(1), rank: {high:3, medium:2, low:1}[level], count, loaded };
+    const pattern = context.patterns.get(reviewPatternKey(log)) || [], count = pattern.length;
+    const reviewed = isReviewed(log), position = context.positions.get(exactReviewKey(log));
+    let level = 'unassessed', reason;
+    if (!isAttack(log)) reason = 'Not applicable: this record is not attack-labelled.';
+    else if (!loaded) reason = 'Unassessed: this saved copy is outside the loaded window or differs from its currently loaded ID. Its full traffic pattern cannot be assessed here.';
+    else if (!sourceKey(log) || !log.destination_ip || !log.protocol || !Number.isFinite(savedTime(log))) reason = 'Unassessed: source, destination, protocol or recorded time is missing. There is insufficient saved context to order this record reliably.';
+    else if (reviewed) { level = 'low'; reason = 'Already marked as reviewed in this browser. It remains attack-labelled and available for follow-up; reviewed does not mean resolved.'; }
+    else if (count >= REVIEW_PRIORITY_THRESHOLDS.high && position === 0) { level = 'high'; reason = `Newest unreviewed example of a repeated traffic pattern (${count.toLocaleString()} matching records). Review this representative first.`; }
+    else if (count >= REVIEW_PRIORITY_THRESHOLDS.medium && position < REVIEW_PRIORITY_THRESHOLDS.recentExamples) { level = 'medium'; reason = position === 0 ? `Newest unreviewed example of ${count.toLocaleString()} matching records; fewer than ${REVIEW_PRIORITY_THRESHOLDS.high} repeats in this window.` : `Recent follow-up example ${position + 1} of the same pattern (${count.toLocaleString()} matching records). A newer unreviewed representative is available.`; }
+    else { level = 'low'; reason = count < REVIEW_PRIORITY_THRESHOLDS.medium ? `Only ${count.toLocaleString()} matching ${count === 1 ? 'record' : 'records'} in this window. Review after more repeated patterns; this is not a safety judgement.` : `Additional older example of the same pattern (${count.toLocaleString()} matching records). Newer unreviewed examples are suggested first; this remains attack-labelled.`; }
+    return {level,label:level[0].toUpperCase()+level.slice(1),rank:{high:3,medium:2,low:1,unassessed:0}[level],count,loaded,reviewed,position,reason};
   }
   function priorityDescription(log, priority) {
-    if (!priority.loaded) return 'Unassessed: this saved detection is outside the loaded window. Open related records to review available source activity.';
-    if (!sourceKey(log)) return 'Unassessed: no source IP was saved for this detection.';
-    return `${priority.count.toLocaleString()} attack-labelled ${priority.count === 1 ? 'record' : 'records'} from this source in ${state.logs.length.toLocaleString()} loaded records.`;
+    if (!isAttack(log)) return priority.reason;
+    return `${priority.reason} Based on ${state.logs.length.toLocaleString()} loaded records. A matching pattern has the same source, threat type, destination, protocol and destination port. This is suggested review order, not validated severity; Low does not mean safe.`;
+  }
+  function priorityRuleText() {
+    return `${PRIORITY_HELP} High: newest unreviewed example of a pattern with ${REVIEW_PRIORITY_THRESHOLDS.high}+ matching records. Medium: up to the ${REVIEW_PRIORITY_THRESHOLDS.recentExamples} newest unreviewed examples of a pattern with ${REVIEW_PRIORITY_THRESHOLDS.medium}+ matches, unless already High. Low: older repeats, patterns with 1–${REVIEW_PRIORITY_THRESHOLDS.medium - 1} matches, or records already reviewed locally. Missing context: Unassessed. Benign: Not applicable. Matching means the same source, threat type and target service (destination, protocol and port). These are configurable frontend workflow rules, not validated security thresholds; model confidence is not used.`;
   }
   function savedTime(log) { const n = Date.parse(String(log.timestamp || '').replace(' ', 'T')); return Number.isFinite(n) ? n : -Infinity; }
   function newerSavedRecord(a, b) { return (savedTime(b) - savedTime(a) || (num(b.id) || 0) - (num(a.id) || 0)); }
   function reviewCandidates() {
-    const counts = flaggedSourceCounts(), groups = new Map();
-    for (const log of state.logs) {
-      if (!isAttack(log)) continue;
-      const key = JSON.stringify([sourceKey(log), classify(log.attack_type).key]);
-      const group = groups.get(key);
-      if (group) { group.matches++; if (newerSavedRecord(log, group.log) < 0) group.log = log; }
-      else groups.set(key, { log, matches: 1 });
-    }
-    return [...groups.values()].map(group => ({...group, priority:reviewPriority(group.log, counts)}))
-      .sort((a,b) => b.priority.rank - a.priority.rank || b.priority.count - a.priority.count || newerSavedRecord(a.log,b.log)).slice(0,3);
+    const context = flaggedSourceCounts();
+    const candidates = [...context.patterns.values()].map(pattern => {
+      const log = pattern.find(row => !isReviewed(row)) || pattern[0];
+      return {log,matches:pattern.length,priority:reviewPriority(log,context)};
+    }).sort((a,b) => b.priority.rank-a.priority.rank || b.priority.count-a.priority.count || newerSavedRecord(a.log,b.log));
+    // Prefer distinct source/threat combinations, then fill remaining places with real target-service variants.
+    const chosen = [], seen = new Set();
+    for (const item of candidates) { const key=JSON.stringify([sourceKey(item.log),classify(item.log.attack_type).key]); if(!seen.has(key)){chosen.push(item);seen.add(key);} if(chosen.length===3)break; }
+    for (const item of candidates) { if(chosen.length===3)break; if(!chosen.includes(item))chosen.push(item); }
+    return chosen.sort((a,b) => b.priority.rank-a.priority.rank || b.priority.count-a.priority.count || newerSavedRecord(a.log,b.log));
   }
 
   /* Local presentation workflow only. No backend writes, incident resolution, or authentication claims.
@@ -2405,7 +2434,7 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
     }
     state.selected = { id: String(log.id), fingerprint: fingerprint(log), snapshot: { ...log } };
     state.notice = ''; state.selDetailsOpen = true; // Show detection evidence for every newly selected flow; explicit collapse survives refresh.
-    $('threatExplanation').open = false; setText($('reviewConfirmation'), '');
+    $('threatExplanation').open = false; $('selectedPriorityWhy').open = false; setText($('reviewConfirmation'), '');
     render();
     showView('investigate', { reveal: true });
     playScene($('selScene'), 'select');
@@ -2458,7 +2487,8 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
     ['heroReview','heroNextStep'].forEach(id => $(id).hidden = false);
     $('heroPriority').dataset.level = priority.level;
     setText($('heroPriority'), `Priority: ${priority.label}`);
-    $('heroPriority').title = `${PRIORITY_HELP} ${priorityDescription(a, priority)}`;
+    $('heroPriority').title = priorityDescription(a, priority);
+    setText($('priorityHelp'), `${priorityDescription(a,priority)} ${priorityRuleText()}`);
     $('heroReviewed').hidden = !isReviewed(a);
     setText($('heroNextStep'), 'Next step: Investigate this flow.');
     $('alertActions').hidden = false;
@@ -2598,8 +2628,8 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
       if (isReviewed(log)) source.append(el('span', 'review-label', 'Reviewed locally'));
       const suggested = el('div', 'queue-priority'), badge = el('span', 'priority-badge', `Suggested: ${priority.label}`); badge.dataset.level = priority.level;
       badge.title = `${PRIORITY_HELP} ${priorityDescription(log, priority)}`;
-      suggested.append(badge, el('small', null, priority.level === 'unassessed' ? 'Insufficient source data' : `${priority.count.toLocaleString()} flagged from source`));
-      const count = el('div', 'queue-matches', `${matches.toLocaleString()} matching`); count.append(el('small', null, 'same source + threat'));
+      suggested.append(badge, el('small', null, priority.level === 'unassessed' ? 'Insufficient source data' : `${priority.count.toLocaleString()} in same pattern`));
+      const count = el('div', 'queue-matches', `${matches.toLocaleString()} matching`); count.append(el('small', null, 'same traffic pattern'));
       const btn = el('button', 'link-btn queue-investigate', 'Investigate →'); btn.type = 'button'; btn.dataset.focusKey = `grp-${log.id}`;
       btn.setAttribute('aria-label', `Investigate ${classify(log.attack_type).label}, Flow #${log.id}, from ${text(log.source_ip)}. Suggested review priority ${priority.label}.`);
       btn.addEventListener('click', () => selectFlow(log));
@@ -2624,6 +2654,7 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
     const priority = reviewPriority(l);
     setText($('selectedPriority'), isAttack(l) ? `Priority: ${priority.label}` : 'Priority: Not applicable');
     $('selectedPriority').dataset.level = priority.level;
+    setText($('selectedPriorityReason'), priorityDescription(l,priority));
     $('selectedPriority').title = isAttack(l) ? `${PRIORITY_HELP} ${priorityDescription(l, priority)}` : 'Suggested review priority applies only to attack-labelled records.';
     setText($('selectedVerdict'), ci.attack ? 'Attack-labelled' : 'Not an attack');
     const badge = $('selectedBadge'); badge.hidden = info.live;
@@ -2858,7 +2889,7 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
     const dcell = el('td'); dcell.colSpan = cells.length;
     const panel = el('section', 'quick-panel'); panel.setAttribute('aria-label', `Saved evidence for flow ${id}`);
     const dhead = el('div', 'detail-head'); dhead.append(el('span', 'detail-title', `Saved evidence · Flow #${id}${currentRecord && sameSavedRecord(currentRecord,log) ? '' : ' · retained snapshot'}`));
-    dhead.append(investigate); panel.append(dhead, evidence(log)); dcell.append(panel); detail.append(dcell);
+    dhead.append(investigate); panel.append(dhead, el('p','record-priority-reason', priorityDescription(log,priority)), evidence(log)); dcell.append(panel); detail.append(dcell);
     function setOpen(open) {
       detail.hidden = !open; tr.classList.toggle('is-expanded', open); quick.setAttribute('aria-expanded', String(open));
       quick.querySelector('.btn-t').textContent = open ? 'Hide details' : 'Details';
@@ -3092,7 +3123,8 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
   $('classLegend').addEventListener('focusout',e=>{if(!$('classLegend').contains(e.relatedTarget))resetDonutPreview();});
   $('classLegend').addEventListener('pointerover',e=>{const b=e.target.closest('.legend-item');if(b)showClassificationReadout([...$('classLegend').children].indexOf(b));});
   $('classLegend').addEventListener('focusin',e=>{const b=e.target.closest('.legend-item');if(b)showClassificationReadout([...$('classLegend').children].indexOf(b));});
-  setText($('priorityHelp'), `${PRIORITY_HELP} High: ${REVIEW_PRIORITY_THRESHOLDS.high}+ flagged records from the source; Medium: ${REVIEW_PRIORITY_THRESHOLDS.medium}–${REVIEW_PRIORITY_THRESHOLDS.high - 1}; Low: 1–${REVIEW_PRIORITY_THRESHOLDS.medium - 1}. Counts use the selected loaded window. These presentation thresholds are not validated security severity thresholds; model confidence is not used.`);
+  setText($('priorityHelp'), priorityRuleText());
+  setText($('priorityGuideText'), priorityRuleText());
   document.querySelectorAll('.metric-info').forEach(b=>{
     const box=$(b.getAttribute('aria-controls'));document.body.append(box);
     box.setAttribute('role','tooltip');b.setAttribute('aria-describedby',box.id);
