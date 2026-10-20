@@ -1293,6 +1293,50 @@ body { --sidebar-width: 18rem; }
 @container workspace (max-width: 26rem) {
   #selectedContext .sel-facts, #selectedContext .sel-facts:not(:has(#selectedStageField:not([hidden]))) { grid-template-columns: minmax(0,1fr); }
 }
+
+/* Presentation UX: a quick in-table look, a focused investigation, and a clear return path. */
+#recordsSection>.block-head { display: flex; margin-bottom: .8rem; justify-content: flex-end; }
+:root[data-layout="pages"] #recordsSection>.block-head h2 { display: none; }
+.records-help { margin: 0 0 .9rem; color: var(--ink-3); font-size: .85rem; line-height: 1.6; }
+.record-context { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: .5rem 1rem; padding: .7rem .9rem; margin-bottom: .9rem; border-radius: 10px; border: 1px solid var(--cyan-line); background: var(--cyan-soft); font-size: .83rem; }
+.record-context .link-btn { font-size: .83rem; }
+.row-actions { display: flex; flex-wrap: wrap; gap: .4rem; align-items: center; }
+#recordsSection .row-actions .row-btn { font-size: .85rem; min-height: 2.35rem; padding: .3rem .7rem; }
+#recordsSection .quick-toggle { color: var(--ink-2); }
+#recordsSection .quick-toggle[aria-expanded="true"] { color: var(--cyan); border-color: var(--cyan-line); background: var(--cyan-soft); }
+#recordsSection .investigate-btn { color: var(--cyan); border-color: var(--cyan-line); }
+#recordsSection .detail-row>td { padding: .8rem; background: var(--surface-soft); border-left: 3px solid var(--cyan-line); }
+.quick-panel { min-width: 0; padding: .8rem; border-radius: 10px; background: var(--surface); }
+.quick-panel .detail-head { display: flex; align-items: center; flex-wrap: wrap; justify-content: space-between; gap: .7rem; padding-bottom: .8rem; }
+.quick-panel .detail-title { color: var(--ink); font-size: .9rem; }
+.quick-panel .evidence { grid-template-columns: repeat(3,minmax(0,1fr)); gap: .8rem 1.4rem; }
+.quick-panel .evidence dt { font-size: .8rem; }
+.quick-panel .evidence dd { font-size: .9rem; font-weight: 500; margin-top: .2rem; }
+#recordsSection .log-row.is-expanded>td { background: var(--cyan-soft); }
+#selectedContext .sel-meaning { display: block; max-width: 50rem; font-size: 1rem; line-height: 1.7; }
+#selectedContext .sel-facts, #selectedContext .sel-facts:not(:has(#selectedStageField:not([hidden]))) { grid-template-columns: repeat(3,minmax(0,1fr)); max-width: none; }
+#selectedContext .sel-facts>.fact { display: block; border-top: 1px solid var(--line-2); }
+#selectedContext .sel-facts>.confidence-fact { border-top: 2px solid var(--accent-line); }
+#selectedContext .sel-facts>.fact:nth-child(4) { grid-column: auto; }
+#selectedContext .sel-facts>.fact dd { color: var(--ink); font-size: 1.05rem; overflow-wrap: anywhere; }
+#selectedContext .sel-facts>.confidence-fact dd { color: var(--accent-ink); }
+.confidence-note { color: var(--ink-3); font-size: .78rem; line-height: 1.7; max-width: 62rem; }
+#selectedContext .investigation-guide { padding: 1.2rem 0 .4rem; border: 0; border-top: 1px solid var(--line-soft); border-radius: 0; background: none; }
+#selectedContext .investigation-guide h2 { font-size: 1.1rem; }
+#selectedContext .investigation-guide #relatedRecords { font-size: .95rem; padding: .6rem 1rem; min-height: 2.8rem; }
+#selectedContext .advanced-stage { color: var(--ink-3); font-size: .8rem; margin: .7rem 0 1rem; }
+.empty-actions { display: flex; flex-wrap: wrap; gap: .6rem; }
+#selectionEmpty p { max-width: 42rem; line-height: 1.7; font-size: .95rem; }
+:root[data-layout="single"] body[data-requested-page="detail"] #selectionEmpty { display: flex; }
+@container workspace (max-width: 75rem) { #recordsSection .row-actions { flex-direction: column; align-items: stretch; } }
+@container workspace (max-width: 48rem) {
+  #selectedContext .sel-facts, #selectedContext .sel-facts:not(:has(#selectedStageField:not([hidden]))) { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .quick-panel .evidence { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@container workspace (max-width: 28rem) {
+  #selectedContext .sel-facts, #selectedContext .sel-facts:not(:has(#selectedStageField:not([hidden]))) { grid-template-columns: minmax(0,1fr); }
+  .record-context { align-items: flex-start; flex-direction: column; }
+}
 </style>
 </head>
 <body>
@@ -1307,12 +1351,13 @@ body { --sidebar-width: 18rem; }
       <p class="sidebar-tagline sidebar-label">HYBRID INTRUSION DETECTION</p>
     </div>
     <nav id="sidebarViews" class="sidebar-navigation" aria-label="Workspace navigation">
-      <p class="nav-caption sidebar-label">OPERATIONS</p>
-<button id="tabOverview" class="nav-item" type="button" data-nav="overview" aria-current="page" title="Overview" aria-controls="overviewView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span class="sidebar-label">Overview</span></button><button id="tabInvestigate" class="nav-item" type="button" data-nav="records"  title="Detection records" aria-controls="recordsView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span class="sidebar-label">Detection records</span></button>
+      <p class="nav-caption sidebar-label">MONITOR</p>
+<button id="tabOverview" class="nav-item" type="button" data-nav="overview" aria-current="page" title="Overview" aria-controls="overviewView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span class="sidebar-label">Overview</span></button><p class="nav-caption sidebar-label">INVESTIGATE</p>
+<button id="tabInvestigate" class="nav-item" type="button" data-nav="records"  title="Detection records" aria-controls="recordsView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span class="sidebar-label">Detection records</span></button>
 <button class="nav-item" type="button" data-nav="detail" aria-controls="detailView" title="Flow investigation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5m-14-10h7"/></svg><span class="sidebar-label">Flow investigation</span></button>
-      <p class="nav-caption sidebar-label">ANALYSIS</p>
-<button  class="nav-item" type="button" data-nav="classes"  title="Threat classification" aria-controls="classesView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v9h9A9 9 0 1 1 12 3Z"/><path d="M16 3.9A9 9 0 0 1 20.1 8H16Z"/></svg><span class="sidebar-label">Threat classification</span></button><button  class="nav-item" type="button" data-nav="latency"  title="Processing latency" aria-controls="latencyView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg><span class="sidebar-label">Processing latency</span></button><button  class="nav-item" type="button" data-nav="sources"  title="Attacking sources" aria-controls="sourcesView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v5M5 17v-5h14v5"/></svg><span class="sidebar-label">Attacking sources</span></button>
-      <p class="nav-caption sidebar-label">WORKSPACE</p>
+      <p class="nav-caption sidebar-label">ANALYSE</p>
+<button  class="nav-item" type="button" data-nav="classes"  title="Threat classification" aria-controls="classesView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v9h9A9 9 0 1 1 12 3Z"/><path d="M16 3.9A9 9 0 0 1 20.1 8H16Z"/></svg><span class="sidebar-label">Threat classification</span></button><button  class="nav-item" type="button" data-nav="latency"  title="Processing latency" aria-controls="latencyView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg><span class="sidebar-label">Processing latency</span></button><button  class="nav-item" type="button" data-nav="sources"  title="Sources of suspicious traffic" aria-controls="sourcesView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v5M5 17v-5h14v5"/></svg><span class="sidebar-label">Sources of suspicious traffic</span></button>
+      <p class="nav-caption sidebar-label">SYSTEM</p>
 <button  class="nav-item" type="button" data-nav="pipeline"  title="Detection pipeline" aria-controls="pipelineView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="8" width="5" height="8" rx="1"/><rect x="17" y="8" width="5" height="8" rx="1"/><path d="M7 12h10m-5-3 3 3-3 3"/></svg><span class="sidebar-label">Detection pipeline</span></button>
     </nav>
     <div class="sidebar-bottom"><button id="accountNav" class="account-nav nav-item" type="button" data-nav="account" data-page="account" aria-controls="accountView" title="Account & workspace"><span class="avatar" data-avatar>SA</span><span class="sidebar-label account-identity"><strong data-operator-name>Security Analyst</strong><small>Local workspace</small></span><span class="sidebar-label account-arrow" aria-hidden="true">↗</span></button><div class="sidebar-environment"><span class="environment-dot" aria-hidden="true"></span><span class="sidebar-label">MDS02 · Research testbed</span></div></div>
@@ -1452,6 +1497,8 @@ body { --sidebar-width: 18rem; }
 
 <section id="recordsView" class="view stack workspace-page" aria-label="Records" hidden><section id="recordsSection" class="panel records" aria-labelledby="recordsHeading" tabindex="-1">
           <div class="block-head"><h2 id="recordsHeading">Detection records</h2><div class="record-actions"><button id="collapseDetails" hidden class="btn btn-sm btn-quiet" type="button">Close expanded rows</button><button id="toggleRecords" hidden class="btn btn-sm" type="button" aria-expanded="true" aria-controls="recordsBody">Hide records ↑</button></div></div><div id="recordsBody">
+          <p class="records-help">Quick details opens below the row. Investigate opens the complete saved flow.</p>
+          <div id="recordInvestigationContext" class="record-context" hidden><span id="recordInvestigationLabel"></span><button id="returnToInvestigation" type="button" class="link-btn">Back to investigation →</button></div>
           <div class="toolbar">
             <div class="segmented" role="group" aria-label="Which records to show">
               <button type="button" class="seg" data-scope="all" aria-pressed="true">All records</button>
@@ -1471,7 +1518,7 @@ body { --sidebar-width: 18rem; }
               <thead><tr>
                 <th scope="col">Recorded</th><th scope="col">Source → Target</th><th scope="col">Detected</th>
                 <th scope="col" class="num">Confidence</th><th scope="col" class="num">Processing</th>
-                <th id="thStage" scope="col">Stage</th><th scope="col"><span class="sr-only">Details</span></th>
+                <th id="thStage" scope="col">Stage</th><th scope="col">Explore</th>
               </tr></thead>
               <tbody id="logBody"></tbody>
             </table>
@@ -1489,35 +1536,39 @@ body { --sidebar-width: 18rem; }
               <div class="sel-tags"><span id="selectedFlowId" class="pill mono">--</span><span id="selectedVerdict" class="pill verdict">--</span><span id="selectedBadge" class="pill warn" hidden></span></div>
             </div>
             <h2 id="selectedTitle" class="sel-name">--</h2>
-            <p id="selectedHeadline" class="hero-headline"></p>
             <p id="selectedMeaning" class="sel-meaning"></p>
-            <dl class="sel-facts">
-              <div class="fact"><dt>Confidence</dt><dd class="fact-conf"><svg class="conf-ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="ring-track" cx="18" cy="18" r="15"/><circle id="selConfRing" class="ring-value" cx="18" cy="18" r="15" pathLength="100"/></svg><span id="selectedConfidence">--</span></dd></div>
+            <p id="selectedHeadline" class="hero-headline"></p>
+            <dl class="sel-facts" aria-label="Key facts for this saved flow">
+              <div class="fact"><dt>Source IP</dt><dd id="selectedSource">--</dd></div>
+              <div class="fact"><dt>Destination IP</dt><dd id="selectedDestination">--</dd></div>
+              <div class="fact confidence-fact"><dt>Model confidence</dt><dd class="fact-conf"><svg class="conf-ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="ring-track" cx="18" cy="18" r="15"/><circle id="selConfRing" class="ring-value" cx="18" cy="18" r="15" pathLength="100"/></svg><span id="selectedConfidence">--</span></dd></div>
+              <div class="fact"><dt>Time recorded</dt><dd id="selectedTimestamp">--</dd></div>
+              <div class="fact"><dt>Protocol & target port</dt><dd id="selectedProto">--</dd></div>
               <div class="fact"><dt>Processing time</dt><dd><span id="selectedLatency">--</span><span id="selectedLatencyCmp" class="fact-sub"></span></dd></div>
-              <div class="fact"><dt>Protocol</dt><dd id="selectedProto">--</dd></div>
-              <div class="fact"><dt>Recorded</dt><dd id="selectedTimestamp">--</dd></div>
-              <div id="selectedStageField" class="fact" hidden><dt>Pipeline stage</dt><dd id="selectedStage">--</dd></div>
             </dl>
+            <p class="confidence-note">Model confidence describes the model’s score for its classification, not the probability that an attack is definitively real. Processing time is classification time, not the full attack-to-alert delay.</p>
             <div class="sel-actions">
               <button id="toggleSelDetails" class="btn" type="button" aria-expanded="false" aria-controls="selDetails"><span id="toggleSelDetailsLabel">Model evidence</span> <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 5 5 5-5"/></svg></button>
-              <button id="jumpToFlow" class="btn btn-quiet" type="button">Back to records →</button>
+              <button id="jumpToFlow" class="btn btn-quiet" type="button">Back to Detection Records →</button>
             </div>
           </div>
           <button id="closeSelected" class="btn btn-sm btn-quiet sel-close" type="button" aria-label="Clear selection">Clear selection</button>
           <div class="sel-scene"><div id="selScene"></div></div>
+          <section id="investigationGuide" class="panel investigation-guide" hidden><div><p class="eyebrow">WHAT TO CHECK NEXT</p><h2 id="nextCheckTitle">Follow the saved evidence</h2><p id="nextCheckCopy"></p></div><div class="guide-actions"><button type="button" class="btn" id="relatedRecords">Records from this source →</button><button type="button" class="btn btn-quiet" data-go="pipeline">Understand the model pipeline</button></div></section>
           <div id="selDetails" class="sel-details" role="region" aria-labelledby="selDetailsTitle" hidden>
             <div class="sel-details-head">
               <div><h3 id="selDetailsTitle">Model evidence</h3><p class="sub">Connection, model scores and metadata · open only when needed</p></div>
               <button id="copyRecord" class="btn btn-sm btn-quiet" type="button"><span id="copyRecordLabel">Copy record (JSON)</span></button>
             </div>
+            <p id="selectedStageField" class="advanced-stage" hidden>Pipeline stage: <span id="selectedStage">--</span></p>
             <div id="selDetailsBody"></div>
             <h4 class="sel-details-sub">Related activity in the loaded records</h4>
             <dl id="selRelated" class="evidence"></dl>
           </div>
         </section><section id="selectionEmpty" class="panel pick">
-          <div><h2>Pick a detection to follow</h2><p>Its path from source to target appears here, with the evidence behind it.</p></div>
-          <button id="inspectLatest" class="btn" type="button">Inspect the latest attack</button>
-        </section><div id="selectionNotice" class="notice" role="status" hidden><span id="selectionNoticeText"></span><button id="dismissNotice" class="btn btn-sm" type="button">Dismiss</button></div><section id="investigationGuide" class="panel investigation-guide" hidden><div><p class="eyebrow">WHAT TO CHECK NEXT</p><h2 id="nextCheckTitle">Follow the saved evidence</h2><p id="nextCheckCopy"></p></div><div class="guide-actions"><button type="button" class="btn" id="relatedRecords">Records from this source →</button><button type="button" class="btn btn-quiet" data-go="pipeline">Understand the model pipeline</button></div></section></section><section id="classesView" class="view stack workspace-page" aria-label="Classes" hidden><section id="classificationPanel" class="panel chart-card" aria-labelledby="classHeading" tabindex="-1">
+          <div><h2>Choose a detection to investigate</h2><p>Browse saved records, open Quick details, or choose Investigate to follow one flow.</p></div>
+          <div class="empty-actions"><button class="btn" type="button" data-go="records">Browse Detection Records →</button><button id="inspectLatest" class="btn btn-quiet" type="button">Investigate latest available attack →</button></div>
+        </section><div id="selectionNotice" class="notice" role="status" hidden><span id="selectionNoticeText"></span><button id="dismissNotice" class="btn btn-sm" type="button">Dismiss</button></div></section><section id="classesView" class="view stack workspace-page" aria-label="Classes" hidden><section id="classificationPanel" class="panel chart-card" aria-labelledby="classHeading" tabindex="-1">
             <h2 id="classHeading">What the model classified</h2>
             <p id="threatTotal" class="sub">Share of the selected flows</p>
             <div class="donut-box">
@@ -1551,9 +1602,9 @@ body { --sidebar-width: 18rem; }
             </div>
             <p id="chartReadout" class="readout" aria-live="polite">Select a bar to inspect flows in that time range.</p>
             <p class="processing-caveat">Saved classification time · not the full delay from attack to alert.</p>
-          </section><p class="page-footnote">Use Distribution to spot common processing times, or Individual flows to inspect unusually slow records. Selecting a time range opens matching logs.</p></section><section id="sourcesView" class="view stack workspace-page" aria-label="Sources" hidden><div class="page-intro"><p class="eyebrow">SOURCE ANALYSIS</p><h2>Where attack-labelled flows came from</h2><p>Ranked by saved detections in the loaded records. Select a source to inspect its latest attack-labelled flow.</p></div><section id="sourcesPanel" class="panel block" aria-labelledby="topHeading" tabindex="-1">
+          </section><p class="page-footnote">Use Distribution to spot common processing times, or Individual flows to inspect unusually slow records. Selecting a time range opens matching logs.</p></section><section id="sourcesView" class="view stack workspace-page" aria-label="Sources" hidden><section id="sourcesPanel" class="panel block" aria-labelledby="topHeading" tabindex="-1">
             <div class="block-head">
-              <div><h2 id="topHeading">Top attacking sources</h2><p class="sub">Attack-labelled flows per source in the selection</p></div>
+              <div><h2 id="topHeading">Sources of suspicious traffic</h2><p class="sub">Flagged flows per source in the loaded records</p></div>
             </div>
             <ol id="topSources" class="top-list"></ol>
           </section></section><section id="pipelineView" class="view stack workspace-page" aria-label="Pipeline" hidden><div class="page-intro"><p class="eyebrow">THE HYBRID APPROACH</p><h2>From network traffic to evidence</h2><p>Follow the five stages to see how machine learning triage and deep learning classification turn a flow into a saved result.</p></div><section id="pipelinePanel" class="panel block pipeline-main" aria-labelledby="pipelineHeading" tabindex="-1">
@@ -2012,7 +2063,7 @@ body { --sidebar-width: 18rem; }
     const current = state.logs.find((l) => String(l.id) === s.id);
     if (current && fingerprint(current) !== s.fingerprint) {
       state.notice = `Flow #${s.id} no longer matches the record you selected (the database may have been reset), so it was deselected.`;
-      state.expanded.delete(s.id); state.selected = null;
+      state.expanded.delete(s.id); state.openSnapshots.delete(s.id); state.selected = null;
     }
   }
   function selectedInfo() {
@@ -2027,12 +2078,12 @@ body { --sidebar-width: 18rem; }
       render();showView('investigate',{reveal:true});return;
     }
     state.selected = { id: String(log.id), fingerprint: fingerprint(log), snapshot: { ...log } };
-    state.notice = ''; state.selDetailsOpen = false;   // v5: the card has its own technical details now, so the table row is no longer auto-opened
+    state.notice = ''; state.selDetailsOpen = false; // Quick details and investigation are independent.
     render();
     showView('investigate', { reveal: true });
     playScene($('selScene'), 'select');
   }
-  function clearSelection() { if (state.selected) state.expanded.delete(state.selected.id); state.selected = null; state.notice = ''; render(); }
+  function clearSelection() { state.selected = null; state.notice = ''; render(); }
   $('inspectAlert').addEventListener('click', () => {
     const btn = $('inspectAlert'), id = btn.dataset.flowId, fp = btn.dataset.fp;
     const current = id ? state.logs.find((l) => String(l.id) === id) : null;
@@ -2228,7 +2279,7 @@ body { --sidebar-width: 18rem; }
 
   function renderSelected() {
     const info = selectedInfo();
-    $('selectedContext').hidden = !info; $('selectionEmpty').hidden = !!info || !!state.notice;
+    $('selectedContext').hidden = !info; $('selectionEmpty').hidden = !!info;
     $('inspectLatest').hidden = !state.alertLog;
     $('selectionNotice').hidden = !state.notice; setText($('selectionNoticeText'), state.notice);
     if (!info) { $('investigationGuide').hidden = true; return; }
@@ -2245,6 +2296,9 @@ body { --sidebar-width: 18rem; }
     const verb = ci.attack ? (HEADLINE_VERB[ci.key] || 'sent attack-labelled traffic to') : 'sent normal traffic to';
     $('selectedHeadline').replaceChildren(el('span', 'ip', text(l.source_ip)), document.createTextNode(` ${verb} `), el('span', 'ip', text(l.destination_ip)));
     setText($('selectedMeaning'), ci.meaning);
+    setText($('selectedSource'), text(l.source_ip)); setText($('selectedDestination'), text(l.destination_ip));
+    $('relatedRecords').disabled = !l.source_ip;
+    $('relatedRecords').title = l.source_ip ? `Find saved records from ${l.source_ip}` : 'No source IP was saved for this flow';
     setText($('selectedConfidence'), fmtPct(l.confidence)); setText($('selectedLatency'), fmtMs(l.latency_ms)); setText($('selectedTimestamp'), text(l.timestamp));
     const conf = num(l.confidence);
     $('selConfRing').style.strokeDashoffset = String(conf === null ? 100 : 100 - Math.max(0, Math.min(1, conf)) * 100);
@@ -2415,15 +2469,14 @@ body { --sidebar-width: 18rem; }
   function evidence(log) {
     const dl = el('dl', 'evidence');
     const add = (k, v) => { const d = el('div'); d.append(el('dt', null, k), el('dd', null, v)); dl.append(d); };
-    add('Flow ID', `#${text(log.id)}`);
     add('Source port', num(log.source_port) !== null ? String(num(log.source_port)) : DASH);
     add('Destination port', num(log.destination_port) !== null ? String(num(log.destination_port)) : DASH);
     add('Protocol', text(log.protocol));
     if (log.attack_type && String(log.attack_type) !== classify(log.attack_type).label) add('Label as saved', String(log.attack_type));
     if (log.stage_reached) add('Pipeline stage', String(log.stage_reached));
-    if (log.model_attack_type) add('Model result', String(log.model_attack_type));
+    if (log.model_attack_type && String(log.model_attack_type) !== String(log.attack_type)) add('Model result', String(log.model_attack_type));
     if (log.model_verdict) add('Model verdict', String(log.model_verdict));
-    if (num(log.model_confidence) !== null) add('Model confidence', fmtPct(log.model_confidence));
+    if (num(log.model_confidence) !== null && num(log.model_confidence) !== num(log.confidence)) add('Model confidence', fmtPct(log.model_confidence));
     if (num(log.stage1_attack_probability) !== null) add('Stage 1 attack score', fmtPct(log.stage1_attack_probability));
     return dl;
   }
@@ -2442,12 +2495,35 @@ body { --sidebar-width: 18rem; }
     const classCell = el('td', 'c-class'); classCell.append(chip(log));
     const cells = [timeCell, routeCell, classCell, el('td', 'num c-conf', fmtPct(log.confidence)), el('td', 'num c-lat', fmtMs(log.latency_ms))];
     if (anyStage) { const sc = el('td', 'c-stage'); sc.append(el('span', 'chip chip-stage', log.stage_reached ? String(log.stage_reached) : 'Not recorded')); cells.push(sc); }
-    const actionCell = el('td', 'c-act');
-    const btn = el('button', 'row-btn'); btn.type = 'button'; btn.dataset.focusKey = `inspect-${id}`;
-    btn.setAttribute('aria-label', `Investigate flow ${id}`);
-    btn.append(el('span', 'btn-t', 'Inspect →')); actionCell.append(btn); cells.push(actionCell); tr.append(...cells);
-    tr.addEventListener('click', () => selectFlow(log));
-    return [tr];
+    const actionCell = el('td', 'c-act'), actions = el('div', 'row-actions');
+    const quick = el('button', 'row-btn quick-toggle'); quick.type = 'button'; quick.dataset.focusKey = `toggle-${id}`;
+    quick.setAttribute('aria-controls', `details-${id}`); quick.setAttribute('aria-label', `Quick details for flow ${id}`);
+    quick.append(el('span', 'btn-t', 'Quick details')); quick.insertAdjacentHTML('beforeend', CHEVRON);
+    const investigate = el('button', 'row-btn investigate-btn', 'Investigate →'); investigate.type = 'button'; investigate.dataset.focusKey = `inspect-${id}`;
+    investigate.setAttribute('aria-label', `Investigate flow ${id}`);
+    investigate.addEventListener('click', e => { e.stopPropagation(); selectFlow(log); });
+    actions.append(quick, investigate); actionCell.append(actions); cells.push(actionCell); tr.append(...cells);
+    const detail = el('tr', 'detail-row'); detail.id = `details-${id}`;
+    const dcell = el('td'); dcell.colSpan = cells.length;
+    const panel = el('section', 'quick-panel'); panel.setAttribute('aria-label', `Saved evidence for flow ${id}`);
+    const dhead = el('div', 'detail-head'); dhead.append(el('span', 'detail-title', `Saved evidence · Flow #${id}`));
+    const hide = el('button', 'btn btn-sm btn-quiet', 'Close quick details'); hide.type = 'button'; hide.dataset.focusKey = `hide-${id}`;
+    dhead.append(hide); panel.append(dhead, evidence(log)); dcell.append(panel); detail.append(dcell);
+    function setOpen(open) {
+      detail.hidden = !open; tr.classList.toggle('is-expanded', open); quick.setAttribute('aria-expanded', String(open));
+    }
+    function changeOpen(open) {
+      const current = state.logs.find(l => String(l.id) === id);
+      if (open && current && fingerprint(current) !== fingerprint(log)) { renderTable(); return; }
+      if (open) { state.expanded.add(id); state.openSnapshots.set(id, {...log}); }
+      else { state.expanded.delete(id); state.openSnapshots.delete(id); }
+      setOpen(open); syncExpansionControls();
+    }
+    setOpen(state.expanded.has(id));
+    quick.addEventListener('click', e => { e.stopPropagation(); changeOpen(detail.hidden); });
+    tr.addEventListener('click', e => { if (!e.target.closest('button, a, input, select, textarea')) changeOpen(detail.hidden); });
+    hide.addEventListener('click', () => { changeOpen(false); quick.focus({preventScroll:true}); });
+    return [tr, detail];
   }
 
   /* v4: if a selected or opened row is on screen, remember where it is, so we can keep it in the same
@@ -2459,12 +2535,23 @@ body { --sidebar-width: 18rem; }
     const pick = rows.find((r) => r.classList.contains('is-selected') && onScreen(r)) || rows.find((r) => state.expanded.has(r.dataset.id) && onScreen(r));
     return pick ? { id: pick.dataset.id, top: pick.getBoundingClientRect().top } : null;
   }
+  function syncExpansionControls() {
+    const count = state.expanded.size;
+    $('collapseDetails').hidden = count === 0;
+    setText($('collapseDetails'), `Close expanded rows${count ? ` (${count})` : ''}`);
+    $('collapseDetails').setAttribute('aria-controls', 'logBody');
+    $('recordsSection').querySelector('.block-head').hidden = presentation !== 'single' && count === 0;
+  }
   function renderTable() {
     const focusKey = document.activeElement?.dataset?.focusKey;
     const anchor = tableAnchor();   // v4
     const body = $('logBody'); body.replaceChildren();
     const rows = state.logs.filter(matchesFilters), shown = rows.slice(0, state.tableLimit), sel = selectedInfo();
-    for(const id of state.expanded){const saved=state.openSnapshots.get(id),current=state.logs.find(l=>String(l.id)===id);if(saved&&current&&fingerprint(saved)!==fingerprint(current)){state.expanded.delete(id);state.openSnapshots.delete(id);continue;}if(!shown.some(l=>String(l.id)===id)&&(current||saved))shown.unshift(current||saved);}
+    const currentById = new Map(state.logs.map(log => [String(log.id), log]));
+    for (const id of state.expanded) {
+      const saved = state.openSnapshots.get(id), current = currentById.get(id);
+      if (saved && current && fingerprint(saved) !== fingerprint(current)) { state.expanded.delete(id); state.openSnapshots.delete(id); }
+    }
     const anyStage = state.logs.some((l) => l.stage_reached);
     $('thStage').hidden = !anyStage; $('stageNote').hidden = anyStage || !state.logs.length;
     const pinned = sel && matchesFilters(sel.log) && !shown.some((l) => String(l.id) === state.selected.id) ? sel.log : null;
@@ -2475,6 +2562,9 @@ body { --sidebar-width: 18rem; }
     if (!all.length) setText(empty, !state.data ? 'Waiting for the first update…' : !state.logs.length ? 'No saved flows yet. Records appear once the monitor writes detections to the database.' : 'No records match these filters.');
     setText($('tableCount'), !state.data ? DASH : filtered ? `${rows.length.toLocaleString()} of ${state.logs.length.toLocaleString()} loaded records match · showing the newest ${shown.length.toLocaleString()}` : `Showing the newest ${shown.length.toLocaleString()} of ${state.logs.length.toLocaleString()} loaded records`);
     $('showMore').hidden = rows.length <= state.tableLimit;
+    syncExpansionControls();
+    $('recordInvestigationContext').hidden = !sel;
+    if (sel) setText($('recordInvestigationLabel'), `Selected detection: Flow #${sel.log.id} · ${classify(sel.log.attack_type).label}`);
     const af = $('activeFilters'); af.replaceChildren();
     const addChip = (label, onClear) => { const b = el('button', 'filter-chip'); b.type = 'button'; b.append(document.createTextNode(label), el('b', null, '✕')); b.setAttribute('aria-label', `Remove filter: ${label}`); b.addEventListener('click', onClear); af.append(b); };
     if (state.sourceIp) addChip(`Source: ${state.sourceIp}`, () => { state.sourceIp = null; state.tableLimit = 50; renderTable(); });
@@ -2505,13 +2595,13 @@ body { --sidebar-width: 18rem; }
   /* ---------------------------------------------------------------- views, filters, controls */
   function positionTabs() {} // Navigation uses a vertical active state.
   const NAV_ITEMS = {
-    overview: ['Overview', 'Saved detections at a glance'],
-    records: ['Detection records', 'Search saved flows and open one to investigate'],
-    detail: ['Flow investigation', 'One detection. Its evidence. Your next step.'],
-    classes: ['Threat classification', 'Understand the mix of the loaded records'],
-    latency: ['Processing latency', 'Find variation in saved classification times'],
-    sources: ['Attacking sources', 'Trace attack-labelled flows to their source'],
-    pipeline: ['Detection pipeline', 'How a flow becomes an alert'],
+    overview: ['Overview', 'See recent detections and what needs attention.'],
+    records: ['Detection records', 'Find a network event and explore its details.'],
+    detail: ['Flow investigation', 'Understand one detection and decide what to check next.'],
+    classes: ['Threat classification', 'See what types of traffic the model has identified.'],
+    latency: ['Processing latency', 'See how long the model takes to classify saved flows.'],
+    sources: ['Sources of suspicious traffic', 'Find sources linked to multiple flagged records.'],
+    pipeline: ['Detection pipeline', 'See how network traffic becomes a detection result.'],
     account: ['Account & workspace', 'Your identity and browser preferences'],
   };
   const singlePlacements = [
@@ -2535,6 +2625,7 @@ body { --sidebar-width: 18rem; }
     $('layoutToggle').setAttribute('aria-label', single ? 'Switch to sidebar pages' : 'Switch to classic single-page view');
     $('layoutToggle').title = single ? 'Switch to sidebar pages' : 'Switch to classic single-page view';
     $('layoutLabel').textContent = single ? 'Sidebar pages' : 'Single page';
+    syncExpansionControls();
     try { localStorage.setItem('sentinelflow-layout', presentation); } catch (_) {}
   }
   $('layoutToggle').addEventListener('click', () => {
@@ -2561,11 +2652,12 @@ body { --sidebar-width: 18rem; }
     if (single && visiblePage === 'overview') { $('detailView').hidden = false; $('pipelineView').hidden = false; }
     setText($('scopeHeading'), single && view !== 'account' ? 'Detection overview' : NAV_ITEMS[view][0]);
     setText($('pageTitle'), NAV_ITEMS[view][0]);
-    setText($('pageDescription'), single ? 'Network traffic · Model verdicts' : NAV_ITEMS[view][1]);
+    setText($('pageDescription'), single && view !== 'account' ? NAV_ITEMS.overview[1] : NAV_ITEMS[view][1]);
     document.querySelector('.scopebar').hidden = view === 'account';
     document.querySelector('.scope-choice').hidden = view === 'account' || (!single && ['pipeline','detail'].includes(view));
     $('backToCharts').hidden = true;
     document.body.dataset.page = visiblePage;
+    document.body.dataset.requestedPage = view;
     activateNavigation(view);
     document.querySelectorAll('#singleNavigation [data-go]').forEach(b => { if(b.dataset.go === view) b.setAttribute('aria-current','location'); else b.removeAttribute('aria-current'); });
     if (view === 'records' || single) revealRecords();
@@ -2573,7 +2665,7 @@ body { --sidebar-width: 18rem; }
     requestAnimationFrame(() => {
       if (view === 'latency' || (single && visiblePage === 'overview')) { renderLatency(true); latencyChart?.resize(); }
       if (view === 'classes' || (single && visiblePage === 'overview')) donut?.resize();
-      const target = single && view !== 'account' ? $(SINGLE_TARGETS[view]) : null;
+      const target = single && view !== 'account' ? (view === 'detail' && $('selectedContext').hidden ? $('selectionEmpty') : $(SINGLE_TARGETS[view])) : null;
       if (opts.scroll !== false && target && view !== 'overview' && !target.hidden) target.scrollIntoView({behavior: reduceMotion ? 'auto' : 'smooth',block:'start'});
       if (opts.focus || opts.reveal) { const heading = target && !target.hidden && view !== 'overview' ? target : view === 'account' ? $('accountHeading') : $('scopeHeading'); heading.tabIndex = -1; heading.focus({preventScroll:true}); }
     });
@@ -2634,6 +2726,7 @@ body { --sidebar-width: 18rem; }
     document.addEventListener('keydown',e=>{if(e.key==='Escape'){dismissed=true;sync()}});
     window.addEventListener('scroll',position,{passive:true,capture:true});window.addEventListener('resize',position);
   });
+  $('returnToInvestigation').addEventListener('click', () => { if (selectedInfo()) showView('detail', {reveal:true}); });
   $('relatedRecords').addEventListener('click', () => {
     const info = selectedInfo(); if (!info) return;
     state.sourceIp = String(info.log.source_ip || ''); state.search = ''; state.activeClass = null; state.attacksOnly = false; state.latencyRange = null; state.tableLimit = 50;
@@ -2667,12 +2760,12 @@ body { --sidebar-width: 18rem; }
     $('recordsBody').hidden=!open;$('recordsHiddenNote').hidden=open;
     $('toggleRecords').setAttribute('aria-expanded',String(open));
     setText($('toggleRecords'),open?'Hide records ↑':'Show records ↓');
-    $('collapseDetails').hidden=true;
+    syncExpansionControls();
   }
   function revealRecords(){setRecordsOpen(true);}
   $('toggleRecords').addEventListener('click',()=>setRecordsOpen($('recordsBody').hidden));
   $('hideRecordsBottom').addEventListener('click',()=>{setRecordsOpen(false);$('recordsSection').scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'start'});$('toggleRecords').focus({preventScroll:true});});
-  $('collapseDetails').addEventListener('click',()=>{state.expanded.clear();state.openSnapshots.clear();renderTable();});
+  $('collapseDetails').addEventListener('click',()=>{state.expanded.clear();state.openSnapshots.clear();renderTable();$('logBody').querySelector('.quick-toggle')?.focus({preventScroll:true});});
   $('showMore').addEventListener('click', () => { state.tableLimit += 50; renderTable(); });
   $('logSearch').addEventListener('input', (e) => { state.search = e.target.value.trim().toLowerCase(); state.tableLimit = 50; renderTable(); });
   $('clearFilter').addEventListener('click', () => { state.sourceIp=null; state.latencyRange=null;state.activeClass = null; state.attacksOnly = false; state.search = ''; $('logSearch').value = ''; state.tableLimit = 50; render(); $('logSearch').focus(); });
