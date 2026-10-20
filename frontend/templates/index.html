@@ -1532,7 +1532,7 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
 #recordsSection .bookmark-toggle { justify-content: center; padding: .3rem; min-width: 2.35rem; }
 #recordsSection .bookmark-toggle svg { width: 1rem; height: 1rem; }
 #recordsSection .bookmark-toggle[aria-pressed="true"] { color: var(--cyan); border-color: var(--cyan-line); background: var(--cyan-soft); }
-#recordsSection .bookmark-toggle[aria-pressed="true"] svg { fill: var(--cyan-soft); }
+#recordsSection .bookmark-toggle[aria-pressed="true"] svg { fill: currentColor; }
 #recordsSection .row-bookmarked { display: block; margin-top: .3rem; color: var(--cyan); }
 
 /* Explain review order without implying severity or changing the saved model outputs. */
@@ -1541,6 +1541,15 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
 .priority-guide p { max-width: 64rem; font-size: .8rem; line-height: 1.7; margin-top: .55rem; }
 #selectedPriorityWhy { margin: .2rem 0; }
 #recordsSection .record-priority-reason { font-size: .8rem; color: var(--ink-2); line-height: 1.65; padding: .65rem 0 .85rem; border-top: 1px solid var(--line-soft); }
+
+/* Analyst investigation worklist: browser-local status, no new backend features. */
+.investigation-worklist { background: var(--panel); }
+.worklist-metrics { display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;margin:18px 0 22px; }
+.worklist-metrics>div { background:var(--surface,rgba(127,146,190,.065));border:1px solid var(--line,rgba(145,163,212,.18));border-radius:13px;padding:15px 17px;display:flex;flex-direction:column;gap:7px; }
+.worklist-metrics span{font-size:.78rem;color:var(--muted);}.worklist-metrics strong{font-size:1.8rem;color:var(--text);font-variant-numeric:tabular-nums;}
+.worklist-toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:15px;}.worklist-tabs{display:flex;gap:7px;flex-wrap:wrap}.worklist-tab[aria-pressed="true"]{background:var(--cyan-soft,rgba(55,203,232,.12));color:var(--cyan);border-color:var(--cyan-line,rgba(55,203,232,.45))}.worklist-note,.worklist-footer p{font-size:.75rem;color:var(--muted)}
+.worklist-items{display:grid;gap:12px}.worklist-item{border:1px solid var(--line,rgba(160,170,200,.18));border-radius:14px;padding:17px;background:rgba(110,136,183,.045);display:grid;gap:12px}.worklist-item.is-done{opacity:.8}.worklist-item-head{display:flex;align-items:center;gap:10px;justify-content:space-between;flex-wrap:wrap}.worklist-item-title{font-size:1rem;font-weight:750}.worklist-item-id{font-size:.78rem;color:var(--muted)}.worklist-item-desc{color:var(--muted);font-size:.83rem}.worklist-item-actions{display:flex;flex-wrap:wrap;gap:9px;align-items:center}.worklist-item-actions .btn{white-space:nowrap}.worklist-status{border-radius:99px;border:1px solid var(--cyan-line,rgba(60,195,235,.34));padding:.25rem .5rem;font-size:.71rem;color:var(--cyan);}.worklist-status.is-pending{color:var(--orange,#ffad70);border-color:rgba(255,149,79,.34)}.worklist-empty{padding:36px 18px;text-align:center;color:var(--muted);border:1px dashed var(--line,rgba(160,170,200,.24));border-radius:14px}.worklist-footer{display:flex;flex-wrap:wrap;justify-content:space-between;align-items:center;gap:10px;margin-top:20px}.worklist-source-details{padding:18px 24px}.worklist-source-details summary{cursor:pointer;font-weight:650}.worklist-source-details summary span{float:right;color:var(--muted);font-size:.78rem;font-weight:400}.worklist-source-details[open] .block-head{margin-top:22px}
+@media(max-width:760px){.worklist-metrics{grid-template-columns:1fr 1fr 1fr;gap:6px}.worklist-metrics>div{padding:9px}.worklist-metrics strong{font-size:1.35rem}.worklist-note{width:100%}}
 </style>
 </head>
 <body class="sidebar-collapsed">
@@ -1560,7 +1569,7 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
 <button class="nav-item" type="button" data-nav="detail" aria-controls="detailView" title="Flow investigation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5m-14-10h7"/></svg><span class="sidebar-label">Flow investigation</span></button>
 <button id="tabInvestigate" class="nav-item" type="button" data-nav="records"  title="Detection records" aria-controls="recordsView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span class="sidebar-label">Detection records</span></button>
       <p class="nav-caption sidebar-label">ANALYSE</p>
-<button  class="nav-item" type="button" data-nav="classes"  title="Threat classification" aria-controls="classesView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v9h9A9 9 0 1 1 12 3Z"/><path d="M16 3.9A9 9 0 0 1 20.1 8H16Z"/></svg><span class="sidebar-label">Threat classification</span></button><button  class="nav-item" type="button" data-nav="latency"  title="Processing latency" aria-controls="latencyView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg><span class="sidebar-label">Processing latency</span></button><button  class="nav-item" type="button" data-nav="sources"  title="Sources of suspicious traffic" aria-controls="sourcesView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v5M5 17v-5h14v5"/></svg><span class="sidebar-label">Sources of suspicious traffic</span></button>
+<button  class="nav-item" type="button" data-nav="classes"  title="Threat classification" aria-controls="classesView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v9h9A9 9 0 1 1 12 3Z"/><path d="M16 3.9A9 9 0 0 1 20.1 8H16Z"/></svg><span class="sidebar-label">Threat classification</span></button><button  class="nav-item" type="button" data-nav="latency"  title="Processing latency" aria-controls="latencyView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg><span class="sidebar-label">Processing latency</span></button><button  class="nav-item" type="button" data-nav="sources"  title="My Investigation List" aria-controls="sourcesView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v5M5 17v-5h14v5"/></svg><span class="sidebar-label">My Investigation List</span></button>
       <p class="nav-caption sidebar-label">SYSTEM</p>
 <button  class="nav-item" type="button" data-nav="pipeline"  title="Detection pipeline" aria-controls="pipelineView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="8" width="5" height="8" rx="1"/><rect x="17" y="8" width="5" height="8" rx="1"/><path d="M7 12h10m-5-3 3 3-3 3"/></svg><span class="sidebar-label">Detection pipeline</span></button>
     </nav>
@@ -1822,12 +1831,16 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
             </div>
             <p id="chartReadout" class="readout" aria-live="polite">Select a bar to inspect flows in that time range.</p>
             <p class="processing-caveat">Saved classification time · not the full delay from attack to alert.</p>
-          </section><p class="page-footnote">Use Distribution to spot common processing times, or Individual flows to inspect unusually slow records. Selecting a time range opens matching logs.</p></section><section id="sourcesView" class="view stack workspace-page" aria-label="Sources" hidden><section id="sourcesPanel" class="panel block" aria-labelledby="topHeading" tabindex="-1">
-            <div class="block-head">
-              <div><h2 id="topHeading">Sources of suspicious traffic</h2><p class="sub">Flagged flows per source in the loaded records</p></div>
-            </div>
-            <ol id="topSources" class="top-list"></ol>
-          </section></section><section id="pipelineView" class="view stack workspace-page" aria-label="Pipeline" hidden><div class="page-intro"><p class="eyebrow">THE HYBRID APPROACH</p><h2>From network traffic to evidence</h2><p>Follow the five stages to see how machine learning triage and deep learning classification turn a flow into a saved result.</p></div><section id="pipelinePanel" class="panel block pipeline-main" aria-labelledby="pipelineHeading" tabindex="-1">
+          </section><p class="page-footnote">Use Distribution to spot common processing times, or Individual flows to inspect unusually slow records. Selecting a time range opens matching logs.</p></section><section id="sourcesView" class="view stack workspace-page" aria-label="My investigation list" hidden>
+          <section id="sourcesPanel" class="panel block investigation-worklist" aria-labelledby="worklistHeading" tabindex="-1">
+            <div class="block-head"><div><p class="eyebrow">YOUR NEXT ACTIONS</p><h2 id="worklistHeading">My Investigation List</h2><p class="sub">Save interesting detections, return to their evidence, and keep track of what you have reviewed.</p></div></div>
+            <div class="worklist-metrics" aria-live="polite"><div><span>Saved for review</span><strong id="worklistSavedCount">0</strong></div><div><span>Needs review</span><strong id="worklistPendingCount">0</strong></div><div><span>Reviewed</span><strong id="worklistReviewedCount">0</strong></div></div>
+            <div class="worklist-toolbar"><div class="worklist-tabs" role="group" aria-label="Review list filters"><button class="btn btn-sm worklist-tab" data-worklist-filter="all" aria-pressed="true">All saved</button><button class="btn btn-sm worklist-tab" data-worklist-filter="pending" aria-pressed="false">To review</button><button class="btn btn-sm worklist-tab" data-worklist-filter="done" aria-pressed="false">Reviewed</button></div><span class="worklist-note">Local browser only · No attacks are blocked or deleted</span></div>
+            <div id="worklistItems" class="worklist-items" aria-live="polite"></div>
+            <div class="worklist-footer"><button id="worklistBrowse" type="button" class="btn btn-quiet">Browse Detection Records →</button><p>Reviewing an alert does not mean the threat has been resolved.</p></div>
+          </section>
+          <details class="panel block worklist-source-details"><summary>Optional: Sources of suspicious traffic <span>View source statistics</span></summary><div class="block-head"><div><h2 id="topHeading">Sources of suspicious traffic</h2><p class="sub">Flagged flows per source in the loaded records</p></div></div><ol id="topSources" class="top-list"></ol></details>
+          </section><section id="pipelineView" class="view stack workspace-page" aria-label="Pipeline" hidden><div class="page-intro"><p class="eyebrow">THE HYBRID APPROACH</p><h2>From network traffic to evidence</h2><p>Follow the five stages to see how machine learning triage and deep learning classification turn a flow into a saved result.</p></div><section id="pipelinePanel" class="panel block pipeline-main" aria-labelledby="pipelineHeading" tabindex="-1">
             <h2 id="pipelineHeading" style="font-size:1.1875rem">How a flow becomes an alert</h2>
             <div class="steps" role="group" aria-label="Detection pipeline steps">
               <button type="button" class="step" data-step="0" aria-pressed="false"><span class="step-num">1</span>Live traffic</button><span class="step-link" aria-hidden="true"></span>
@@ -2089,7 +2102,7 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
     if (saved) savedForReview.set(String(log.id), {...log}); else savedForReview.delete(String(log.id));
     try { localStorage.setItem(SAVED_REVIEW_STORAGE_KEY, JSON.stringify([...savedForReview.values()])); savedReviewStorageAvailable = true; }
     catch (_) { savedReviewStorageAvailable = false; }
-    state.tableOrderVersion++; renderTable();
+    state.tableOrderVersion++; renderTable(); renderInvestigationList();
     setText($('recordsActionStatus'), saved ? 'Saved for review' : 'Removed from saved for review');
   }
   const RECORD_SORT_LABELS = { newest: 'Newest first', oldest: 'Oldest first', priority: 'Priority: highest first', unreviewed: 'Unreviewed first (this browser)' };
@@ -3000,10 +3013,53 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
     setText($('viewSummary'), state.data ? `Latest ${fmtInt(state.logs.length)} saved flows` : `Loading the latest ${fmtInt(state.limit)} saved flows`);
     setText($('lastRefreshed'), state.fetchedAt ? ` · updated ${state.fetchedAt.toLocaleTimeString()}${state.newCount ? ` · ${state.newCount} new record${state.newCount === 1 ? '' : 's'}` : ''}` : '');
   }
+
+  // Saved alerts worklist; uses the existing same-record identity and existing local reviewed state.
+  let worklistFilter = 'all';
+  function renderInvestigationList() {
+    const holder = $('worklistItems'); if (!holder) return;
+    const saved = savedReviewRecords().filter(log => !!exactReviewKey(log));
+    const reviewed = saved.filter(isReviewed), pending = saved.filter(log => !isReviewed(log));
+    setText($('worklistSavedCount'), fmtInt(saved.length));
+    setText($('worklistPendingCount'), fmtInt(pending.length));
+    setText($('worklistReviewedCount'), fmtInt(reviewed.length));
+    document.querySelectorAll('[data-worklist-filter]').forEach(btn => btn.setAttribute('aria-pressed', String(btn.dataset.worklistFilter===worklistFilter)));
+    const display = worklistFilter==='pending' ? pending : worklistFilter==='done' ? reviewed : saved;
+    holder.replaceChildren();
+    if (!display.length) {
+      const empty=el('div','worklist-empty');
+      empty.append(el('strong','',saved.length ? 'No records in this view' : 'Your investigation list is empty'));
+      empty.append(el('p','',saved.length ? 'Choose another filter to see your saved alerts.' : 'In Detection Records, select Save for review on a detection to add it here.'));
+      holder.append(empty);return;
+    }
+    for (const log of display) {
+      const done=isReviewed(log), card=el('article','worklist-item'+(done?' is-done':''));
+      const title=el('div','worklist-item-head'); const head=el('div');
+      head.append(el('span','worklist-item-title',String(log.attack_type||log.label||log.prediction||'Saved detection')));
+      head.append(el('span','worklist-item-id','  · Flow #'+String(log.id)));
+      const status=el('span','worklist-status'+(done?'':' is-pending'),done?'Reviewed':'To review');
+      title.append(head,status);card.append(title);
+      card.append(el('p','worklist-item-desc',String(log.source_ip||'Unknown source')+' → '+String(log.destination_ip||'Unknown target')+' · '+String(log.timestamp||log.recorded_at||'Saved evidence')));
+      const actions=el('div','worklist-item-actions');
+      const investigate=el('button','btn btn-sm btn-primary','Investigate →');investigate.type='button'; investigate.addEventListener('click',()=>selectFlow(log));actions.append(investigate);
+      const review=el('button','btn btn-sm btn-quiet',done?'Mark as unreviewed':'Mark as reviewed');review.type='button';review.setAttribute('aria-pressed',String(done));
+      review.addEventListener('click',()=>{
+        const key=exactReviewKey(log);if(!key)return;
+        if(localReviews.has(key))localReviews.delete(key);else localReviews.add(key);
+        try {localStorage.setItem(LOCAL_REVIEW_STORAGE_KEY,JSON.stringify([...localReviews]));reviewStorageAvailable=true;}catch(_){reviewStorageAvailable=false;}
+        state.tableOrderVersion++;render();
+      });actions.append(review);
+      const remove=el('button','btn btn-sm btn-quiet','Remove from list');remove.type='button';remove.addEventListener('click',()=>{toggleSavedForReview(log);renderInvestigationList();});actions.append(remove);
+      card.append(actions);holder.append(card);
+    }
+  }
+  document.querySelectorAll('[data-worklist-filter]').forEach(btn=>btn.addEventListener('click',()=>{worklistFilter=btn.dataset.worklistFilter;renderInvestigationList();}));
+  $('worklistBrowse').addEventListener('click',()=>{state.savedOnly=false;state.sourceIp=null;state.search='';$('logSearch').value='';renderTable();showView('records');});
+
   function render() {
     for (const [id, at] of state.fresh) if (Date.now() - at >= FRESH_MS) state.fresh.delete(id);
     renderStatus(); renderBanner(); renderHero(); renderMetrics(); renderGroups(); renderClasses(); renderLatency(); renderTable(); renderSelected(); renderFooter();
-    renderThreatChip(); renderTopSources();   // v3
+    renderThreatChip(); renderTopSources(); renderInvestigationList();   // v3
   }
 
   /* ---------------------------------------------------------------- views, filters, controls */
@@ -3014,7 +3070,7 @@ body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: 
     detail: ['Flow investigation', 'Understand one detection and decide what to check next.'],
     classes: ['Threat classification', 'See what types of traffic the model has identified.'],
     latency: ['Processing latency', 'See how long the model takes to classify saved flows.'],
-    sources: ['Sources of suspicious traffic', 'Find sources linked to multiple flagged records.'],
+    sources: ['My Investigation List', 'Save alerts and track what still needs review.'],
     pipeline: ['Detection pipeline', 'See how network traffic becomes a detection result.'],
     account: ['Account & workspace', 'Your identity and browser preferences'],
   };
