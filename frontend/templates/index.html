@@ -1515,7 +1515,7 @@ body { --sidebar-width: 18rem; }
 <section id="recordsView" class="view stack workspace-page" aria-label="Records" hidden><section id="recordsSection" class="panel records" aria-labelledby="recordsHeading" tabindex="-1">
           <div class="block-head"><h2 id="recordsHeading">Detection records</h2><div class="record-actions"><button id="collapseDetails" hidden class="btn btn-sm btn-quiet" type="button">Close expanded rows</button><button id="toggleRecords" hidden class="btn btn-sm" type="button" aria-expanded="true" aria-controls="recordsBody">Hide records ↑</button></div></div><div id="recordsBody">
           <p class="records-help">Open a row to view its details, then choose Investigate for the complete saved flow.</p>
-          <div id="recordInvestigationContext" class="record-context" hidden><span id="recordInvestigationLabel"></span><button id="returnToInvestigation" type="button" class="link-btn">Back to investigation →</button></div>
+          <div id="recordInvestigationContext" class="record-context" hidden><span id="recordInvestigationLabel"></span><button id="findSelectedRecord" type="button" class="link-btn">Find selected row ↓</button><button id="returnToInvestigation" type="button" class="link-btn">Back to investigation →</button></div>
           <div class="toolbar">
             <div class="segmented" role="group" aria-label="Which records to show">
               <button type="button" class="seg" data-scope="all" aria-pressed="true">All records</button>
@@ -2618,10 +2618,10 @@ body { --sidebar-width: 18rem; }
       if (held.has(id) && !shown.some(log => String(log.id) === id)) shown.push(held.get(id));
     }
     body.replaceChildren();
-    const anyStage = [...shown, ...state.logs].some((l) => l.stage_reached);
+    const anyStage = [...shown, ...state.logs, ...(sel ? [sel.log] : [])].some((l) => l.stage_reached);
     $('thStage').hidden = !anyStage; $('stageNote').hidden = anyStage || !state.logs.length;
-    const pinned = sel && matchesFilters(sel.log) && !shown.some((l) => String(l.id) === state.selected.id) ? sel.log : null;
-    const now = Date.now(), all = pinned ? [pinned, ...shown] : shown;
+    // Keep the exact selected detection first, even outside filters or the latest loaded window.
+    const now = Date.now(), all = sel ? [sel.log, ...shown.filter(log => String(log.id) !== state.selected.id)] : shown;
     all.forEach((log) => body.append(...buildRow(log, !!sel && String(log.id) === state.selected.id && fingerprint(log) === state.selected.fingerprint, now, anyStage)));
     const filtered = !!(state.activeClass || state.search || state.sourceIp || state.attacksOnly || state.latencyRange);
     const empty = $('empty'); empty.hidden = all.length > 0;
@@ -2631,7 +2631,11 @@ body { --sidebar-width: 18rem; }
     $('showMore').hidden = rows.length <= state.tableLimit;
     syncExpansionControls();
     $('recordInvestigationContext').hidden = !sel;
-    if (sel) setText($('recordInvestigationLabel'), `Selected detection: Flow #${sel.log.id} · ${classify(sel.log.attack_type).label}`);
+    if (sel) {
+      const context = [!matchesFilters(sel.log) ? 'outside current filters' : '', !sel.live ? 'retained snapshot' : ''].filter(Boolean);
+      setText($('recordInvestigationLabel'), `Selected detection: Flow #${sel.log.id} · ${classify(sel.log.attack_type).label} · pinned first${context.length ? ` · ${context.join(' · ')}` : ''}`);
+      setText($('tableCount'), `${all.length.toLocaleString()} displayed · ${rows.length.toLocaleString()} matching loaded records · selected detection pinned first${state.expanded.size ? ' · order held while details are open' : ''}`);
+    }
     const af = $('activeFilters'); af.replaceChildren();
     const addChip = (label, onClear) => { const b = el('button', 'filter-chip'); b.type = 'button'; b.append(document.createTextNode(label), el('b', null, '✕')); b.setAttribute('aria-label', `Remove filter: ${label}`); b.addEventListener('click', onClear); af.append(b); };
     if (state.sourceIp) addChip(`Source: ${state.sourceIp}`, () => { state.sourceIp = null; state.tableLimit = 50; renderTable(); });
@@ -2803,11 +2807,13 @@ body { --sidebar-width: 18rem; }
   $('openInvestigate').addEventListener('click', () => showView('investigate'));
   $('closeSelected').addEventListener('click', () => { clearSelection(); showView('records'); });
   $('dismissNotice').addEventListener('click', () => { state.notice = ''; render(); });
-  $('jumpToFlow').addEventListener('click', () => {
+  function findSelectedRecord() {
     showView('records'); revealRecords();
     const row = document.querySelector('.log-row.is-selected');
     if (row) { row.scrollIntoView({ behavior: reduceMotion ? 'auto' : 'smooth', block: 'center' }); row.querySelector('button')?.focus({ preventScroll: true }); }
-  });
+  }
+  $('jumpToFlow').addEventListener('click', findSelectedRecord);
+  $('findSelectedRecord').addEventListener('click', findSelectedRecord);
   // v4: open/close the technical details panel inside the card (stays open across refreshes)
   $('toggleSelDetails').addEventListener('click', () => {
     state.selDetailsOpen = !state.selDetailsOpen; $('selDetailsBody').dataset.key = '';
