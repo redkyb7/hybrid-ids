@@ -1294,6 +1294,23 @@ body { --sidebar-width: 18rem; }
   #selectedContext .sel-facts, #selectedContext .sel-facts:not(:has(#selectedStageField:not([hidden]))) { grid-template-columns: minmax(0,1fr); }
 }
 
+/* Small, optional category guidance within the existing investigation. */
+.threat-explanation { max-width: 48rem; color: var(--ink-2); font-size: .85rem; line-height: 1.65; }
+.threat-explanation summary { width: fit-content; cursor: pointer; color: var(--cyan); list-style: none; }
+.threat-explanation summary::-webkit-details-marker { display: none; }
+.threat-explanation summary:hover { text-decoration: underline; text-underline-offset: .2em; }
+.threat-explanation summary:focus-visible { outline: 2px solid var(--cyan); outline-offset: 4px; border-radius: 3px; }
+.threat-explanation p { margin: .55rem 0 0; }
+.threat-explanation .explanation-note, .related-records-note { color: var(--ink-3); font-size: .8rem; line-height: 1.65; }
+.related-records-note { margin: .65rem 0 0; }
+
+/* Keep row selection and disclosure controls contained at every table width. */
+#recordsSection .c-time .tag { display: flex; width: fit-content; margin: .35rem 0 0; white-space: nowrap; font-size: .75rem; line-height: 1.4; }
+#recordsSection .row-actions { flex-direction: row; }
+#recordsSection .quick-toggle { min-width: 7.5rem; justify-content: space-between; white-space: nowrap; }
+#recordsSection .quick-panel .investigate-btn { font-size: .85rem; min-height: 2.35rem; padding: .3rem .7rem; }
+#recordsSection .quick-panel .detail-title { font-size: .85rem; }
+
 /* Presentation UX: a quick in-table look, a focused investigation, and a clear return path. */
 #recordsSection>.block-head { display: flex; margin-bottom: .8rem; justify-content: flex-end; }
 :root[data-layout="pages"] #recordsSection>.block-head h2 { display: none; }
@@ -1339,7 +1356,7 @@ body { --sidebar-width: 18rem; }
 }
 </style>
 </head>
-<body>
+<body class="sidebar-collapsed">
   <a class="skip-link" href="#main">Skip to main content</a>
   <div class="bg-fx" aria-hidden="true"></div>
 
@@ -1347,14 +1364,14 @@ body { --sidebar-width: 18rem; }
   <aside id="sidebar" class="sidebar" aria-label="SentinelFlow workspace">
     <div class="sidebar-header">
       <a class="sidebar-brand" href="#overview" aria-label="SentinelFlow overview"><span class="platform-mark">S<span>F</span></span><span class="sidebar-label"><strong>SentinelFlow</strong></span></a>
-      <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-expanded="true" aria-controls="sidebarViews" aria-label="Collapse sidebar" title="Collapse sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16m7-12-4 4 4 4"/></svg></button>
+      <button id="sidebarToggle" class="sidebar-toggle" type="button" aria-expanded="false" aria-controls="sidebarViews" aria-label="Expand sidebar" title="Expand sidebar"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" aria-hidden="true"><rect x="3" y="4" width="18" height="16" rx="3"/><path d="M9 4v16m7-12-4 4 4 4"/></svg></button>
       <p class="sidebar-tagline sidebar-label">HYBRID INTRUSION DETECTION</p>
     </div>
     <nav id="sidebarViews" class="sidebar-navigation" aria-label="Workspace navigation">
       <p class="nav-caption sidebar-label">MONITOR</p>
 <button id="tabOverview" class="nav-item" type="button" data-nav="overview" aria-current="page" title="Overview" aria-controls="overviewView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="3" width="7" height="7" rx="2"/><rect x="14" y="3" width="7" height="7" rx="2"/><rect x="3" y="14" width="7" height="7" rx="2"/><rect x="14" y="14" width="7" height="7" rx="2"/></svg><span class="sidebar-label">Overview</span></button><p class="nav-caption sidebar-label">INVESTIGATE</p>
-<button id="tabInvestigate" class="nav-item" type="button" data-nav="records"  title="Detection records" aria-controls="recordsView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span class="sidebar-label">Detection records</span></button>
 <button class="nav-item" type="button" data-nav="detail" aria-controls="detailView" title="Flow investigation"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6.5"/><path d="m16 16 5 5m-14-10h7"/></svg><span class="sidebar-label">Flow investigation</span></button>
+<button id="tabInvestigate" class="nav-item" type="button" data-nav="records"  title="Detection records" aria-controls="recordsView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="3" width="16" height="18" rx="2"/><path d="M8 8h8M8 12h8M8 16h5"/></svg><span class="sidebar-label">Detection records</span></button>
       <p class="nav-caption sidebar-label">ANALYSE</p>
 <button  class="nav-item" type="button" data-nav="classes"  title="Threat classification" aria-controls="classesView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 3v9h9A9 9 0 1 1 12 3Z"/><path d="M16 3.9A9 9 0 0 1 20.1 8H16Z"/></svg><span class="sidebar-label">Threat classification</span></button><button  class="nav-item" type="button" data-nav="latency"  title="Processing latency" aria-controls="latencyView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="13" r="8"/><path d="M12 9v4l3 2M9 2h6"/></svg><span class="sidebar-label">Processing latency</span></button><button  class="nav-item" type="button" data-nav="sources"  title="Sources of suspicious traffic" aria-controls="sourcesView"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="5" r="2"/><circle cx="5" cy="19" r="2"/><circle cx="19" cy="19" r="2"/><path d="M12 7v5M5 17v-5h14v5"/></svg><span class="sidebar-label">Sources of suspicious traffic</span></button>
       <p class="nav-caption sidebar-label">SYSTEM</p>
@@ -1497,7 +1514,7 @@ body { --sidebar-width: 18rem; }
 
 <section id="recordsView" class="view stack workspace-page" aria-label="Records" hidden><section id="recordsSection" class="panel records" aria-labelledby="recordsHeading" tabindex="-1">
           <div class="block-head"><h2 id="recordsHeading">Detection records</h2><div class="record-actions"><button id="collapseDetails" hidden class="btn btn-sm btn-quiet" type="button">Close expanded rows</button><button id="toggleRecords" hidden class="btn btn-sm" type="button" aria-expanded="true" aria-controls="recordsBody">Hide records ↑</button></div></div><div id="recordsBody">
-          <p class="records-help">Quick details opens below the row. Investigate opens the complete saved flow.</p>
+          <p class="records-help">Open a row to view its details, then choose Investigate for the complete saved flow.</p>
           <div id="recordInvestigationContext" class="record-context" hidden><span id="recordInvestigationLabel"></span><button id="returnToInvestigation" type="button" class="link-btn">Back to investigation →</button></div>
           <div class="toolbar">
             <div class="segmented" role="group" aria-label="Which records to show">
@@ -1514,7 +1531,7 @@ body { --sidebar-width: 18rem; }
           <p id="stageNote" class="stage-note" hidden>Pipeline stage isn’t saved in these records.</p>
           <div class="table-scroll" tabindex="0" role="region" aria-label="Detection records table">
             <table>
-              <caption class="sr-only">Saved detections, newest first</caption>
+              <caption class="sr-only">Saved detections. Display order is held while details are open.</caption>
               <thead><tr>
                 <th scope="col">Recorded</th><th scope="col">Source → Target</th><th scope="col">Detected</th>
                 <th scope="col" class="num">Confidence</th><th scope="col" class="num">Processing</th>
@@ -1537,6 +1554,11 @@ body { --sidebar-width: 18rem; }
             </div>
             <h2 id="selectedTitle" class="sel-name">--</h2>
             <p id="selectedMeaning" class="sel-meaning"></p>
+            <details id="threatExplanation" class="threat-explanation">
+              <summary>What does this mean? <span aria-hidden="true">ⓘ</span></summary>
+              <p id="threatExplanationText"></p>
+              <p class="explanation-note">This describes the traffic category, not the model’s specific reasoning. A classification alone does not confirm an attack.</p>
+            </details>
             <p id="selectedHeadline" class="hero-headline"></p>
             <dl class="sel-facts" aria-label="Key facts for this saved flow">
               <div class="fact"><dt>Source IP</dt><dd id="selectedSource">--</dd></div>
@@ -1554,7 +1576,6 @@ body { --sidebar-width: 18rem; }
           </div>
           <button id="closeSelected" class="btn btn-sm btn-quiet sel-close" type="button" aria-label="Clear selection">Clear selection</button>
           <div class="sel-scene"><div id="selScene"></div></div>
-          <section id="investigationGuide" class="panel investigation-guide" hidden><div><p class="eyebrow">WHAT TO CHECK NEXT</p><h2 id="nextCheckTitle">Follow the saved evidence</h2><p id="nextCheckCopy"></p></div><div class="guide-actions"><button type="button" class="btn" id="relatedRecords">Records from this source →</button><button type="button" class="btn btn-quiet" data-go="pipeline">Understand the model pipeline</button></div></section>
           <div id="selDetails" class="sel-details" role="region" aria-labelledby="selDetailsTitle" hidden>
             <div class="sel-details-head">
               <div><h3 id="selDetailsTitle">Model evidence</h3><p class="sub">Connection, model scores and metadata · open only when needed</p></div>
@@ -1564,9 +1585,11 @@ body { --sidebar-width: 18rem; }
             <div id="selDetailsBody"></div>
             <h4 class="sel-details-sub">Related activity in the loaded records</h4>
             <dl id="selRelated" class="evidence"></dl>
+            <p id="relatedRecordsEmpty" class="related-records-note" hidden></p>
           </div>
+          <section id="investigationGuide" class="panel investigation-guide" hidden><div><p class="eyebrow">WHAT TO CHECK NEXT</p><h2 id="nextCheckTitle">Follow the saved evidence</h2><p id="nextCheckCopy"></p></div><div class="guide-actions"><button type="button" class="btn" id="relatedRecords">Records from this source →</button><button type="button" class="btn btn-quiet" data-go="pipeline">Understand the model pipeline</button></div></section>
         </section><section id="selectionEmpty" class="panel pick">
-          <div><h2>Choose a detection to investigate</h2><p>Browse saved records, open Quick details, or choose Investigate to follow one flow.</p></div>
+          <div><h2>Choose a detection to investigate</h2><p>Browse saved records and expand a row, then choose Investigate to follow that flow.</p></div>
           <div class="empty-actions"><button class="btn" type="button" data-go="records">Browse Detection Records →</button><button id="inspectLatest" class="btn btn-quiet" type="button">Investigate latest available attack →</button></div>
         </section><div id="selectionNotice" class="notice" role="status" hidden><span id="selectionNoticeText"></span><button id="dismissNotice" class="btn btn-sm" type="button">Dismiss</button></div></section><section id="classesView" class="view stack workspace-page" aria-label="Classes" hidden><section id="classificationPanel" class="panel chart-card" aria-labelledby="classHeading" tabindex="-1">
             <h2 id="classHeading">What the model classified</h2>
@@ -1654,8 +1677,7 @@ body { --sidebar-width: 18rem; }
     sidebarToggle.title = label;
     window.dispatchEvent(new Event('resize'));
   }
-  let sidebarCollapsed = window.matchMedia('(max-width: 700px)').matches;
-  try { const saved = localStorage.getItem('sentinelflow-sidebar-collapsed'); if (saved !== null) sidebarCollapsed = saved === 'true'; } catch (_) {}
+  let sidebarCollapsed = true; // Start compact for demos; an explicit workspace preference can override this.
   try { const compact = localStorage.getItem('sentinelflow-compact-default'); if (compact !== null) sidebarCollapsed = compact === 'true'; } catch (_) {}
   setSidebarCollapsed(sidebarCollapsed);
   sidebarToggle.addEventListener('click', () => {
@@ -1713,6 +1735,19 @@ body { --sidebar-width: 18rem; }
     otherattack:   { label: 'Other attack',   color: '#7fb2ff', ink: '#a3c6ff', attack: true,  meaning: 'An attack outside the five named classes (for example infiltration or web attacks).' },
     unknownattack: { label: 'Unknown attack', color: '#e6e9f2', ink: '#e6e9f2', attack: true,  meaning: 'Flagged as malicious, but the DL model could not name the attack type.' },
     benign:        { label: 'Benign',         color: '#5f7391', ink: '#b6c3da', attack: false, meaning: 'Classified as normal traffic.' },
+  };
+  // General category definitions only; no feature-level model reasoning is inferred.
+  const THREAT_EXPLANATIONS = {
+    ddos: 'Think of many people crowding a doorway at once, making it hard for others to get through. DDoS traffic can overwhelm an online service from many sources, making it slow or unavailable.',
+    dos: 'Think of one person blocking a doorway so others cannot get through. DoS traffic can overwhelm an online service from one source, making it slow or unavailable.',
+    portscan: 'Think of someone checking different doors to see which ones are open. A port scan does something similar on a computer. It can be legitimate, but it may also indicate someone looking for possible entry points.',
+    bruteforce: 'Think of someone trying many keys in a lock. Brute force activity involves repeated guesses at passwords or other access details. Review the service’s login records to see whether access was attempted or gained.',
+    botnet: 'This traffic resembles activity from a device controlled remotely. Such devices can be used to carry out malicious actions. The label alone does not establish that this device is compromised.',
+    webattack: 'This category covers requests that may try to misuse a website or online application, such as sending unexpected input to gain access. The saved label does not show whether an attempt succeeded.',
+    otherattack: 'The model grouped this traffic into a broad category outside its five named threat types. It can include attempts to gain unauthorised access or misuse a website. This label does not identify a specific method.',
+    unknownattack: 'The system flagged this traffic as potentially harmful but could not confidently name a threat type. Review the saved connection and other activity before drawing a conclusion.',
+    benign: 'The model classified this connection as normal traffic. This is a model assessment, not a guarantee that the activity is safe. You can still review the connection if it looks unexpected.',
+    unclassified: 'No traffic category was saved for this connection, so the dashboard cannot explain a threat type. The saved connection details are still available to review.',
   };
   const ALIASES = { normal: 'benign', normaltraffic: 'benign', benigntraffic: 'benign' };
   function classify(raw) {
@@ -2078,7 +2113,8 @@ body { --sidebar-width: 18rem; }
       render();showView('investigate',{reveal:true});return;
     }
     state.selected = { id: String(log.id), fingerprint: fingerprint(log), snapshot: { ...log } };
-    state.notice = ''; state.selDetailsOpen = false; // Quick details and investigation are independent.
+    state.notice = ''; state.selDetailsOpen = true; // Show evidence immediately for demos; the user can collapse it.
+    $('threatExplanation').open = false;
     render();
     showView('investigate', { reveal: true });
     playScene($('selScene'), 'select');
@@ -2296,6 +2332,7 @@ body { --sidebar-width: 18rem; }
     const verb = ci.attack ? (HEADLINE_VERB[ci.key] || 'sent attack-labelled traffic to') : 'sent normal traffic to';
     $('selectedHeadline').replaceChildren(el('span', 'ip', text(l.source_ip)), document.createTextNode(` ${verb} `), el('span', 'ip', text(l.destination_ip)));
     setText($('selectedMeaning'), ci.meaning);
+    setText($('threatExplanationText'), THREAT_EXPLANATIONS[ci.key] || 'This saved label has no category explanation in the dashboard. Review the saved connection details and related activity; the label alone does not establish what happened.');
     setText($('selectedSource'), text(l.source_ip)); setText($('selectedDestination'), text(l.destination_ip));
     $('relatedRecords').disabled = !l.source_ip;
     $('relatedRecords').title = l.source_ip ? `Find saved records from ${l.source_ip}` : 'No source IP was saved for this flow';
@@ -2336,7 +2373,15 @@ body { --sidebar-width: 18rem; }
     // Related activity: counts from the records currently loaded on the page (these change as new flows arrive).
     const ci = classify(l.attack_type), rel = $('selRelated'); rel.replaceChildren();
     const fromSrc = state.logs.filter((x) => x.source_ip === l.source_ip);
-    add(rel, 'Same attack from this source', `${fromSrc.filter((x) => classify(x.attack_type).key === ci.key).length.toLocaleString()} flows`);
+    const matching = fromSrc.filter(x => classify(x.attack_type).key === ci.key);
+    add(rel, ci.attack ? 'Same threat category from this source' : 'Same classification from this source', `${matching.length.toLocaleString()} flows`);
+    // Absence from the loaded window alone does not prove a record is older.
+    const selected = selectedInfo(), selectedId = num(l.id);
+    const loadedIds = state.logs.map(x => num(x.id));
+    const older = selected && !selected.live && selectedId !== null && loadedIds.length > 0 && loadedIds.every(id => id !== null && id > selectedId);
+    const note = $('relatedRecordsEmpty');
+    note.hidden = !(older && l.source_ip && matching.length === 0);
+    if (!note.hidden) setText(note, `No matching records for this classification from this source were found in the latest ${fmtInt(state.logs.length)} loaded flows. This selected detection is an older saved record; these counts cover only the loaded flows.`);
     add(rel, 'All flows from this source', `${fromSrc.length.toLocaleString()} · ${fromSrc.filter(isAttack).length.toLocaleString()} attack-labelled`);
     add(rel, 'Flows to this target', `${state.logs.filter((x) => x.destination_ip === l.destination_ip).length.toLocaleString()}`);
     add(rel, 'Loaded records', `latest ${fmtInt(state.logs.length)} saved flows`);
@@ -2498,19 +2543,19 @@ body { --sidebar-width: 18rem; }
     const actionCell = el('td', 'c-act'), actions = el('div', 'row-actions');
     const quick = el('button', 'row-btn quick-toggle'); quick.type = 'button'; quick.dataset.focusKey = `toggle-${id}`;
     quick.setAttribute('aria-controls', `details-${id}`); quick.setAttribute('aria-label', `Quick details for flow ${id}`);
-    quick.append(el('span', 'btn-t', 'Quick details')); quick.insertAdjacentHTML('beforeend', CHEVRON);
+    quick.append(el('span', 'btn-t', 'Details')); quick.insertAdjacentHTML('beforeend', CHEVRON);
     const investigate = el('button', 'row-btn investigate-btn', 'Investigate →'); investigate.type = 'button'; investigate.dataset.focusKey = `inspect-${id}`;
     investigate.setAttribute('aria-label', `Investigate flow ${id}`);
     investigate.addEventListener('click', e => { e.stopPropagation(); selectFlow(log); });
-    actions.append(quick, investigate); actionCell.append(actions); cells.push(actionCell); tr.append(...cells);
+    actions.append(quick); actionCell.append(actions); cells.push(actionCell); tr.append(...cells);
     const detail = el('tr', 'detail-row'); detail.id = `details-${id}`;
     const dcell = el('td'); dcell.colSpan = cells.length;
     const panel = el('section', 'quick-panel'); panel.setAttribute('aria-label', `Saved evidence for flow ${id}`);
-    const dhead = el('div', 'detail-head'); dhead.append(el('span', 'detail-title', `Saved evidence · Flow #${id}`));
-    const hide = el('button', 'btn btn-sm btn-quiet', 'Close quick details'); hide.type = 'button'; hide.dataset.focusKey = `hide-${id}`;
-    dhead.append(hide); panel.append(dhead, evidence(log)); dcell.append(panel); detail.append(dcell);
+    const dhead = el('div', 'detail-head'); dhead.append(el('span', 'detail-title', `Saved evidence · Flow #${id}${state.logs.some(l => String(l.id) === id) ? '' : ' · retained snapshot'}`));
+    dhead.append(investigate); panel.append(dhead, evidence(log)); dcell.append(panel); detail.append(dcell);
     function setOpen(open) {
       detail.hidden = !open; tr.classList.toggle('is-expanded', open); quick.setAttribute('aria-expanded', String(open));
+      quick.querySelector('.btn-t').textContent = open ? 'Hide details' : 'Details';
     }
     function changeOpen(open) {
       const current = state.logs.find(l => String(l.id) === id);
@@ -2522,7 +2567,6 @@ body { --sidebar-width: 18rem; }
     setOpen(state.expanded.has(id));
     quick.addEventListener('click', e => { e.stopPropagation(); changeOpen(detail.hidden); });
     tr.addEventListener('click', e => { if (!e.target.closest('button, a, input, select, textarea')) changeOpen(detail.hidden); });
-    hide.addEventListener('click', () => { changeOpen(false); quick.focus({preventScroll:true}); });
     return [tr, detail];
   }
 
@@ -2532,8 +2576,9 @@ body { --sidebar-width: 18rem; }
     if (!$('recordsSection').getClientRects().length) return null;
     const onScreen = (r) => { const b = r.getBoundingClientRect(); return b.bottom > 0 && b.top < window.innerHeight; };
     const rows = [...document.querySelectorAll('#logBody > tr.log-row')];
-    const pick = rows.find((r) => r.classList.contains('is-selected') && onScreen(r)) || rows.find((r) => state.expanded.has(r.dataset.id) && onScreen(r));
-    return pick ? { id: pick.dataset.id, top: pick.getBoundingClientRect().top } : null;
+    const pick = rows.find(r => state.expanded.has(r.dataset.id) && (onScreen(r) || onScreen(r.nextElementSibling))) || rows.find(r => r.classList.contains('is-selected') && onScreen(r));
+    const target = pick && (onScreen(pick) ? pick : pick.nextElementSibling);
+    return target ? { id: target.id || pick.dataset.id, detail: target !== pick, top: target.getBoundingClientRect().top } : null;
   }
   function syncExpansionControls() {
     const count = state.expanded.size;
@@ -2545,14 +2590,35 @@ body { --sidebar-width: 18rem; }
   function renderTable() {
     const focusKey = document.activeElement?.dataset?.focusKey;
     const anchor = tableAnchor();   // v4
-    const body = $('logBody'); body.replaceChildren();
-    const rows = state.logs.filter(matchesFilters), shown = rows.slice(0, state.tableLimit), sel = selectedInfo();
+    const body = $('logBody');
+    const previousOrder = [...body.querySelectorAll('tr.log-row')].map(row => row.dataset.id);
+    const rows = state.logs.filter(matchesFilters), sel = selectedInfo();
+    const filterKey = JSON.stringify([state.activeClass, state.search, state.sourceIp, state.attacksOnly, state.latencyRange]);
+    const holdOrder = state.expanded.size && previousOrder.length && state.tableFilterKey === filterKey;
+    state.tableFilterKey = filterKey;
     const currentById = new Map(state.logs.map(log => [String(log.id), log]));
     for (const id of state.expanded) {
       const saved = state.openSnapshots.get(id), current = currentById.get(id);
       if (saved && current && fingerprint(saved) !== fingerprint(current)) { state.expanded.delete(id); state.openSnapshots.delete(id); }
     }
-    const anyStage = state.logs.some((l) => l.stage_reached);
+    // Hold the visible reading order during refresh, including records that leave the loaded window.
+    const held = new Map(rows.map(log => [String(log.id), log]));
+    for (const id of state.expanded) {
+      const saved = state.openSnapshots.get(id);
+      if (saved && !currentById.has(id) && matchesFilters(saved)) held.set(id, saved);
+    }
+    let ordered = rows;
+    if (holdOrder) {
+      ordered = previousOrder.filter(id => held.has(id)).map(id => held.get(id));
+      const seen = new Set(ordered.map(log => String(log.id)));
+      ordered.push(...[...held.values()].filter(log => !seen.has(String(log.id))));
+    }
+    const shown = ordered.slice(0, state.tableLimit);
+    for (const id of state.expanded) {
+      if (held.has(id) && !shown.some(log => String(log.id) === id)) shown.push(held.get(id));
+    }
+    body.replaceChildren();
+    const anyStage = [...shown, ...state.logs].some((l) => l.stage_reached);
     $('thStage').hidden = !anyStage; $('stageNote').hidden = anyStage || !state.logs.length;
     const pinned = sel && matchesFilters(sel.log) && !shown.some((l) => String(l.id) === state.selected.id) ? sel.log : null;
     const now = Date.now(), all = pinned ? [pinned, ...shown] : shown;
@@ -2561,6 +2627,7 @@ body { --sidebar-width: 18rem; }
     const empty = $('empty'); empty.hidden = all.length > 0;
     if (!all.length) setText(empty, !state.data ? 'Waiting for the first update…' : !state.logs.length ? 'No saved flows yet. Records appear once the monitor writes detections to the database.' : 'No records match these filters.');
     setText($('tableCount'), !state.data ? DASH : filtered ? `${rows.length.toLocaleString()} of ${state.logs.length.toLocaleString()} loaded records match · showing the newest ${shown.length.toLocaleString()}` : `Showing the newest ${shown.length.toLocaleString()} of ${state.logs.length.toLocaleString()} loaded records`);
+    if (state.expanded.size) $('tableCount').textContent = `${shown.length} displayed · ${rows.length} matching loaded records · order held while details are open`;
     $('showMore').hidden = rows.length <= state.tableLimit;
     syncExpansionControls();
     $('recordInvestigationContext').hidden = !sel;
@@ -2577,7 +2644,7 @@ body { --sidebar-width: 18rem; }
     restoreFocus(focusKey);
     // v4: put the remembered row back where it was on screen
     if (anchor) {
-      const again = body.querySelector(`tr.log-row[data-id="${CSS.escape(anchor.id)}"]`);
+      const again = anchor.detail ? document.getElementById(anchor.id) : body.querySelector(`tr.log-row[data-id="${CSS.escape(anchor.id)}"]`);
       if (again) { const shift = again.getBoundingClientRect().top - anchor.top; if (Math.abs(shift) > 1) window.scrollBy(0, shift); }
     }
   }
