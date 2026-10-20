@@ -1193,8 +1193,6 @@ body { --sidebar-width: 18rem; }
 :root[data-layout="single"] #singleSupport { gap: 1.2rem; }
 :root[data-layout="single"] #overviewView .sel .sel-details { scroll-margin-top: 1rem; }
 :root[data-layout="single"] #overviewView #distributionInsight:not([hidden]) { display: flex!important; }
-:root[data-layout="single"] .validation-panel .cell { display: none; }
-:root[data-layout="single"] .validation-panel { grid-template-columns: minmax(0,1fr); }
 #singleRecords, #singleInvestigation, #singleSupport, #singleAnalysis { min-width: 0; scroll-margin-top: 1rem; }
 /* Keep the reference scale; stack the hero only when its actual content area is narrow. */
 .shell { container-name: workspace; container-type: inline-size; }
@@ -1204,9 +1202,6 @@ body { --sidebar-width: 18rem; }
 @media(prefers-reduced-motion:reduce) { :root:not([data-theme="light"]) #overviewView #alert[data-state="threat"], :root:not([data-theme="light"]) #overviewView #alert[data-state="threat"].alert-arrival { animation: none; } }
 
 :root[data-layout="single"] #shareMetricCell { display: none; }
-:root[data-layout="single"] #overviewMetrics #offlineMetricCell { display: block; --metric-accent: #c4a9ff; }
-:root[data-layout="single"] #overviewMetrics #offlineMetricCell #f1 { color: var(--metric-accent); }
-:root[data-layout="single"][data-theme="light"] #overviewMetrics #offlineMetricCell #f1 { color: #7257a7; }
 
 :root[data-layout="pages"] #overviewView #alert { gap: 1.6rem; padding: 2rem; }
 :root[data-layout="pages"] #overviewView #alert .node { padding: .75rem; }
@@ -1354,6 +1349,191 @@ body { --sidebar-width: 18rem; }
   #selectedContext .sel-facts, #selectedContext .sel-facts:not(:has(#selectedStageField:not([hidden]))) { grid-template-columns: minmax(0,1fr); }
   .record-context { align-items: flex-start; flex-direction: column; }
 }
+
+/* Presentation focus: one alert, three metrics, then actual saved detections. */
+body[data-page="overview"] #threatChip, body[data-page="detail"] #threatChip,
+body[data-page="overview"] #scopeScanner, body[data-page="detail"] #scopeScanner { display: none; }
+#overviewView #alert { min-height: 0; }
+#overviewView #alert .hero-name { font-size: clamp(2.4rem,5vw,4.5rem); }
+#overviewView #alert .hero-meaning { max-width: 36rem; font-size: 1.05rem; line-height: 1.65; }
+#overviewMetrics.strip { grid-template-columns: repeat(3,minmax(0,1fr)); }
+#overviewMetrics .cell { padding: 1.15rem 1.4rem; }
+#overviewMetrics .cell-value { font-size: 2rem; }
+#overviewMetrics .cell-label { font-size: .85rem; }
+#overviewMetrics .cell-note { font-size: .8rem; }
+#overviewMetrics .spark { display: none; }
+#recentAlertsPanel { padding: 1.2rem 1.4rem; }
+#recentAlertsPanel h2 { font-size: 1rem; }
+#recentAlertsPanel .sub { font-size: .8rem; margin-top: .3rem; }
+#overviewEvidence { list-style: none; padding: 0; margin: 0; }
+.recent-alert + .recent-alert { border-top: 1px solid var(--line-soft); }
+.recent-alert-link { display: grid; grid-template-columns: 8rem minmax(0,1fr) auto auto; gap: .65rem 1rem; align-items: center; width: 100%; padding: .8rem 0; border: 0; background: none; color: var(--ink); text-align: left; cursor: pointer; font: inherit; }
+.recent-alert-link:hover .recent-alert-action { text-decoration: underline; }
+.recent-alert-link .chip { justify-self: start; font-size: .8rem; }
+.recent-alert-route { font: .85rem var(--font-mono); overflow-wrap: anywhere; }
+.recent-alert-time { color: var(--ink-3); font-size: .78rem; }
+.recent-alert-action { color: var(--cyan); font-size: .85rem; }
+.class-share-note { display: flex; flex-wrap: wrap; align-items: baseline; gap: .4rem .65rem; color: var(--ink-2); margin-top: .75rem; }
+.class-share-note .cell-label, .class-share-note .cell-value, .class-share-note .cell-note { font: inherit; margin: 0; }
+.class-share-note .metric-link { display: none; }
+:root[data-layout] #shareMetricCell { display: flex; }
+#selectedContext.sel { display: flex; flex-direction: column; gap: 1.3rem; }
+#selectedContext .sel-copy { width: 100%; gap: .6rem; }
+#selectedContext .sel-name { font-size: clamp(2rem,4vw,3rem); }
+#selectedContext #selectedHeadline { display: none; }
+#selectedContext .investigation-recorded { color: var(--ink-3); font-size: .85rem; margin-top: .4rem; }
+#selectedContext .sel-scene { display: block; width: 100%; padding: 1.1rem 0; border-block: 1px solid var(--line-soft); }
+.connection-heading { font-size: .85rem; font-weight: 500; color: var(--ink-2); margin-bottom: .85rem; }
+#selectedContext #selScene { max-width: 58rem; margin: auto; }
+#selectedContext .investigation-guide { padding: 0; border: 0; }
+#selectedContext .investigation-guide .eyebrow { display: none; }
+#selectedContext .investigation-guide #nextCheckCopy { font-size: .9rem; max-width: 50rem; line-height: 1.6; }
+#selectedContext .sel-actions { margin: 0; padding-top: .9rem; border-top: 1px solid var(--line-soft); }
+#selectedContext .sel-actions .btn { font-size: .85rem; }
+#selectedContext .sel-details { width: 100%; }
+#selectedContext .sel-details .sel-facts { grid-template-columns: repeat(2,minmax(0,1fr)); margin: 1rem 0 .7rem; }
+#selectedContext .sel-details .confidence-note { margin-bottom: 1.2rem; }
+@container workspace (max-width: 60rem) {
+  .recent-alert-link { grid-template-columns: 8rem minmax(0,1fr) auto; }
+  .recent-alert-time { grid-column: 2; grid-row: 2; }
+  .recent-alert-action { grid-column: 3; grid-row: 1 / 3; }
+}
+@media(max-width:600px) {
+  #overviewMetrics.strip { grid-template-columns: minmax(0,1fr); }
+  #overviewMetrics .cell { padding: .85rem 1rem; }
+  .recent-alert-link { grid-template-columns: minmax(0,1fr) auto; }
+  .recent-alert-route { grid-row: 2; grid-column: 1 / -1; }
+  .recent-alert-time { grid-column: 1; grid-row: 3; }
+  .recent-alert-action { grid-column: 2; grid-row: 1; }
+  #selectedContext .sel-details .sel-facts { grid-template-columns: minmax(0,1fr); }
+}
+
+/* Keep only functional emphasis on the two presentation pages. */
+#overviewView #alert[data-state="threat"] .alarm-beacon { display: none; }
+body:is([data-page="overview"],[data-page="detail"]) .refresh-runner { display: none; }
+#overviewMetrics .cell:nth-child(1) .cell-value { color: var(--ink); }
+#overviewMetrics .cell:nth-child(2) .cell-value { color: var(--orange); }
+#overviewMetrics .cell:nth-child(3) .cell-value { color: var(--cyan); }
+#selectedContext .sel-details .sel-facts:not(:has(#selectedStageField:not([hidden]))) { grid-template-columns: repeat(2,minmax(0,1fr)); }
+#selectedContext .scene-hint { font-size: .8rem; margin-top: .6rem; }
+#selectedContext .guide-actions button[data-go="pipeline"] { padding: 0; border: 0; background: none; box-shadow: none; color: var(--ink-2); font-size: .85rem; }
+#selectedContext .sel-actions { width: 100%; }
+@media(max-width:600px) {
+  #selectedContext .sel-details .sel-facts:not(:has(#selectedStageField:not([hidden]))) { grid-template-columns: minmax(0,1fr); }
+}
+
+:root[data-theme="light"] #selectedContext .node { color: var(--ink); background: var(--surface); border-color: var(--line-2); box-shadow: none; }
+:root[data-theme="light"] #selectedContext .node-dst { border-color: var(--accent-line); background: var(--surface-soft); }
+:root[data-theme="light"] #selectedContext .node-ico svg { stroke: currentColor; }
+:root[data-theme="light"] #selectedContext .node-port { color: var(--ink-2); }
+:root[data-theme="light"] #selectedContext .scene-drawer { background: var(--surface-soft); border-color: var(--line-2); }
+:root[data-theme="light"] #selectedContext .drawer-grid dt { color: var(--ink-2); }
+:root[data-theme="light"] #selectedContext .link-chip { color: var(--ink); background: var(--surface); border-color: var(--accent-line); }
+
+/* Final presentation refinement: preserve the product identity and existing page controls. */
+#historyPanel.system-summary { display: flex; gap: 1rem 2rem; align-items: center; padding: .8rem 1.2rem; border-radius: 14px; }
+#historyPanel.system-summary>div { display: flex; gap: .6rem; align-items: baseline; flex-wrap: wrap; }
+#historyPanel.system-summary>div:last-child { margin-left: auto; }
+#historyPanel.system-summary span, #historyPanel.system-summary small { color: var(--ink-3); font-size: .78rem; }
+#historyPanel.system-summary strong { color: var(--ink); font-size: .95rem; font-weight: 650; }
+#overviewView #alert[data-state="threat"] .alarm-beacon { display: grid; width: 3.25rem; height: 3.25rem; flex: none; box-shadow: none; }
+#overviewView #alert[data-state="threat"] .alarm-beacon svg { animation: reviewWarning 4s ease-in-out infinite; }
+@keyframes reviewWarning { 0%,100% { opacity:.7; transform:scale(.96); } 50% { opacity:1; transform:scale(1.02); } }
+.hero-review { display: flex; flex-wrap: wrap; align-items: center; gap: .5rem; }
+.priority-badge { display: inline-flex; align-items: center; gap: .35rem; width: fit-content; padding: .35rem .65rem; border: 1px solid var(--line-2); border-radius: 99px; color: var(--ink-2); background: var(--surface-soft); font-size: .78rem; font-weight: 650; line-height: 1.3; white-space: nowrap; }
+.priority-badge[data-level="high"] { color: #ffc29b; border-color: #ff9e665c; background: #e4763320; }
+.priority-badge[data-level="medium"] { color: #efcf80; border-color: #dbb65350; background: #cb9e3015; }
+:root[data-theme="light"] .priority-badge[data-level="high"] { color: #95451c; border-color: #cc8b614d; background: #fff0e4; }
+:root[data-theme="light"] .priority-badge[data-level="medium"] { color: #785717; border-color: #b58a3b4d; background: #fff6df; }
+.priority-basis { color: var(--ink-2); font-size: .78rem; line-height: 1.5; max-width: 36rem; }
+.hero-next-step { color: var(--ink-2); font-size: .85rem; line-height: 1.6; max-width: 36rem; }
+#overviewView #alert .hero-copy { gap: .65rem; }
+#overviewView #alert .hero-name { font-size: clamp(2.3rem,4.2vw,4rem); overflow-wrap: anywhere; }
+#overviewView #alert .hero-meaning { font-size: 1rem; }
+#overviewMetrics .cell { position: relative; overflow: hidden; transition: background .2s,box-shadow .2s; }
+#overviewMetrics .cell:hover { background: var(--cyan-soft); box-shadow: inset 0 2px 0 var(--cyan-line); }
+#overviewMetrics .spark { display: block; width: 100%; height: 1.65rem; margin-top: .75rem; opacity: .8; }
+#recentAlertsPanel { background: linear-gradient(130deg,#6961a509,transparent 65%),var(--surface); }
+#overviewEvidence .review-candidate { display: grid; grid-template-columns: minmax(6rem,.8fr) minmax(12rem,1.65fr) minmax(9rem,1.1fr) minmax(7rem,.8fr) auto; gap: .75rem 1rem; align-items: center; padding: 1rem 0; }
+.review-candidate + .review-candidate { border-top: 1px solid var(--line-soft); }
+.review-candidate .chip { font-size: .8rem; }
+.queue-source, .queue-priority { display: grid; gap: .35rem; min-width: 0; }
+.queue-ip { font: .85rem var(--font-mono); overflow-wrap: anywhere; }
+.review-candidate small { display: block; font-size: .72rem; color: var(--ink-3); line-height: 1.5; }
+.queue-matches { color: var(--ink-2); font-size: .8rem; }
+.queue-investigate { font-size: .85rem; white-space: nowrap; }
+.queue-note { color: var(--ink-3); font-size: .73rem; line-height: 1.5; border-top: 1px solid var(--line-soft); padding-top: .7rem; }
+.review-label { color: var(--ink-3); font-size: .75rem; }
+.review-label[data-reviewed="true"], .row-reviewed, #heroReviewed, .queue-source .review-label { color: var(--cyan); }
+.row-reviewed { display: block; margin-top: .3rem; }
+.local-review { width: 100%; padding-top: .9rem; border-top: 1px solid var(--line-soft); }
+.local-review-main { display: flex; flex-wrap: wrap; gap: .7rem; align-items: center; }
+.local-review p { color: var(--ink-3); font-size: .75rem; line-height: 1.5; margin-top: .4rem; }
+.local-review #reviewConfirmation { color: var(--cyan); }
+@container workspace (max-width: 65rem) {
+  #historyPanel.system-summary { gap: .6rem 1.2rem; flex-wrap: wrap; }
+  #historyPanel.system-summary>div:last-child { margin-left: 0; }
+  #overviewEvidence .review-candidate { grid-template-columns: minmax(5rem,.7fr) minmax(10rem,1.5fr) minmax(8rem,1fr) auto; gap: .65rem; }
+  .queue-matches { grid-column: 2; grid-row: auto; }
+  .queue-investigate { grid-column: 4; grid-row: 1 / 3; }
+  .queue-priority { grid-column: 3; grid-row: 1 / 3; }
+}
+@container workspace (max-width: 42rem) {
+  #overviewEvidence .review-candidate { grid-template-columns: minmax(0,1fr) auto; }
+  .queue-threat { grid-column: 1; }
+  .queue-source { grid-column: 1 / -1; grid-row: 2; }
+  .queue-priority { grid-column: 1; grid-row: 3; }
+  .queue-matches { grid-column: 2; grid-row: 3; }
+  .queue-investigate { grid-column: 2; grid-row: 1; }
+}
+@media(max-width:600px) {
+  #historyPanel.system-summary { display: grid; gap: .6rem; }
+  #overviewView #alert[data-state="threat"] .alarm-beacon { width: 2rem; height: 2rem; }
+  .priority-badge { font-size: .73rem; }
+}
+@media(prefers-reduced-motion:reduce) { #overviewView #alert[data-state="threat"] .alarm-beacon svg { animation: none; } }
+
+@media(min-width:1000px) and (max-width:1400px) {
+  body[data-page="overview"] #main>.scopebar { margin-block: .8rem 1rem; }
+  :root[data-layout="pages"] #overviewView #alert { padding: 1.4rem 1.7rem; gap: 1.25rem; }
+  #overviewView #alert .hero-copy { gap: .45rem; }
+  #overviewView #alert .hero-name { font-size: 3.15rem; }
+  #overviewView #alert .hero-meaning { font-size: .95rem; line-height: 1.5; }
+  #overviewView #alert .hero-next-step { font-size: .8rem; line-height: 1.5; }
+  #overviewView #alert .hero-cta { margin-top: .3rem; }
+}
+
+#overviewMetrics .kpi-order-note { grid-column: 1 / -1; color: var(--ink-3); font-size: .7rem; line-height: 1.4; padding: 0 1.4rem .7rem; margin: 0; }
+
+/* Presentation clarity: fewer words in the hero; evidence visible in each investigation. */
+#overviewView #alert .hero-next-step { font-size: .85rem; color: var(--ink-2); }
+#selectedContext #selDetails { border-radius: 12px; background: var(--surface-soft); }
+#selectedContext #selDetails .sel-details-head { margin-bottom: .85rem; }
+#selectedContext #selDetails .sub { font-size: .8rem; }
+#selectedContext #selDetails .evidence-group h4 { font-size: .95rem; }
+#selectedContext #selDetails .confidence-note { margin: .8rem 0; }
+#selectedContext .sel-tags { align-items: center; }
+#recordsSection .c-priority .priority-badge { font-size: .75rem; padding: .3rem .55rem; }
+#recordsSection .quick-panel .evidence { grid-template-columns: repeat(4,minmax(0,1fr)); gap: .8rem 1rem; }
+#recordsSection .quick-panel .evidence dt { font-size: .75rem; }
+#recordsSection .quick-panel .evidence dd { font-size: .85rem; }
+@container workspace (max-width:48rem) { #recordsSection .quick-panel .evidence { grid-template-columns: repeat(2,minmax(0,1fr)); } }
+
+/* Minimal local workflow controls; preserve the existing table and theme. */
+#recordsSection .record-sort-label { min-width: 12rem; }
+#recordsSection #recordSort { font-size: .85rem; min-height: 2.35rem; }
+#recordsSection .saved-review-filter { align-self: end; min-height: 2.35rem; font-size: .8rem; }
+#recordsSection .saved-review-filter[aria-pressed="true"] { color: var(--cyan); border-color: var(--cyan-line); background: var(--cyan-soft); }
+#recordsSection .saved-review-note { color: var(--ink-3); font-size: .75rem; line-height: 1.5; margin-bottom: .45rem; }
+#recordsSection .records-action-status { color: var(--cyan); font-size: .8rem; line-height: 1.5; }
+#recordsSection .records-action-status:empty { display: none; }
+#recordsSection .row-actions { display: grid; grid-template-columns: max-content 2.35rem; gap: .4rem; align-items: center; width: max-content; }
+#recordsSection .row-actions .quick-toggle { min-width: 7rem; }
+#recordsSection .bookmark-toggle { justify-content: center; padding: .3rem; min-width: 2.35rem; }
+#recordsSection .bookmark-toggle svg { width: 1rem; height: 1rem; }
+#recordsSection .bookmark-toggle[aria-pressed="true"] { color: var(--cyan); border-color: var(--cyan-line); background: var(--cyan-soft); }
+#recordsSection .bookmark-toggle[aria-pressed="true"] svg { fill: var(--cyan-soft); }
+#recordsSection .row-bookmarked { display: block; margin-top: .3rem; color: var(--cyan); }
 </style>
 </head>
 <body class="sidebar-collapsed">
@@ -1449,6 +1629,12 @@ body { --sidebar-width: 18rem; }
 
 
 
+        <section id="historyPanel" class="panel system-summary" aria-label="Saved detection data">
+          <div><span>All-time saved records</span><strong id="totalFlows">--</strong></div>
+          <div><span>All-time attack-labelled flows</span><strong id="totalAttacks">--</strong></div>
+          <div><span>Selected window</span><strong id="summaryWindow">Latest 500</strong><small id="summaryLoaded">Waiting for saved records</small></div>
+        </section>
+
         <!-- latest_alert → hero. data-state: loading | threat | clear | error -->
         <article id="alert" tabindex="-1" class="hero enter-seq" data-state="loading" aria-live="polite">
           <div class="hero-copy">
@@ -1460,7 +1646,14 @@ body { --sidebar-width: 18rem; }
             </p>
             <div class="alert-heading"><div class="alarm-beacon" aria-hidden="true"><svg viewBox="0 0 64 64" fill="none"><path d="M32 8 5 55h54L32 8Z" fill="rgba(255,105,58,.12)" stroke="currentColor" stroke-width="3" stroke-linejoin="round"/><path d="M32 25v14" stroke="currentColor" stroke-width="4" stroke-linecap="round"/><circle cx="32" cy="46" r="2.5" fill="currentColor"/></svg></div><h2 id="alertLabel" class="hero-name">Loading…</h2></div>
 
+            <div id="heroReview" class="hero-review" hidden>
+              <span id="heroPriority" class="priority-badge" data-level="unassessed">Priority: Unassessed</span>
+              <button class="metric-info" type="button" aria-label="How suggested review priority is calculated" aria-expanded="false" aria-controls="priorityHelp">i</button>
+              <span id="heroReviewed" class="review-label" hidden>Reviewed locally</span>
+            </div>
+            <p id="priorityHelp" class="metric-explanation" hidden>Suggested from repeated attack-labelled activity in the selected records. Not a confirmed incident severity.</p>
             <p id="alertCopy" class="hero-meaning">Reading saved detections from the dashboard API.</p>
+            <p id="heroNextStep" class="hero-next-step" hidden></p>
             <div id="alertActions" class="hero-cta" hidden>
               <button id="inspectAlert" class="btn btn-hero" type="button">Investigate flow <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 10h11M11 5.5 15.5 10 11 14.5"/></svg></button>
               <span id="alertFlowId" class="flow-id"></span>
@@ -1471,42 +1664,30 @@ body { --sidebar-width: 18rem; }
         </article>
 
         <section id="overviewMetrics" class="strip panel" aria-label="Key metrics">
+          <div class="cell"><h3 class="cell-label">Records in selected window</h3><p id="windowRecords" class="cell-value">--</p><p class="cell-note">saved flows, not unique incidents</p><svg id="sparkRecords" class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" role="img" aria-label="Record count by flow-order group"></svg></div>
           <div class="cell">
-            <h3 class="cell-label">Threats detected</h3>
+            <h3 class="cell-label">Attack-labelled records</h3>
             <p id="windowAttacks" class="cell-value">--</p>
             <p id="windowAttacksNote" class="cell-note">in the selected records</p>
             <svg id="sparkThreats" class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" role="img" aria-label="Attack flows across the selection"></svg>
           </div>
 
           <div class="cell">
-            <h3 class="cell-label">Processing time <button class="metric-info" type="button" aria-label="About Processing time" aria-expanded="false" aria-controls="latencyHelp">i</button></h3>
+            <h3 class="cell-label">Typical model processing time <button class="metric-info" type="button" aria-label="About typical model processing time" aria-expanded="false" aria-controls="latencyHelp">i</button></h3>
             <p id="latency" class="cell-value">--</p>
             <p id="latencyNote" class="cell-note">median per flow</p>
-            <p id="latencyHelp" class="metric-explanation" hidden>Saved classification time per flow, not the full delay from attack to alert. Line: median across the selection, oldest → newest.</p><svg id="sparkLatency" class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" role="img" aria-label="Processing time across the selection"></svg>
+            <p id="latencyHelp" class="metric-explanation" hidden>Saved classification time per flow, not the full delay from attack to alert. Line: median by flow-order group, oldest → newest; not a clock-time trend.</p><svg id="sparkLatency" class="spark" viewBox="0 0 100 28" preserveAspectRatio="none" role="img" aria-label="Processing time across the selection"></svg>
           </div>
-<div id="shareMetricCell" class="cell"><h3 class="cell-label">Attack-labelled share</h3><p id="overviewShare" class="cell-value">--</p><p class="cell-note">of the loaded records</p><button class="link-btn metric-link" type="button" data-go="classes">Explore threat classes →</button></div>
-
+          <p class="kpi-order-note">Microcharts: consecutive flow-order groups, oldest → newest; not clock time.</p>
         </section>
 
-
-
-
-
-<section id="historyPanel" class="panel block history-summary" aria-labelledby="historyHeading">
-            <h2 id="historyHeading" style="font-size:1.1875rem">All-time saved records</h2>
-            <div class="totals">
-              <div><strong id="totalFlows">--</strong><span>Saved flows</span></div>
-              <div><strong id="totalAttacks">--</strong><span>Attack-labelled flows</span></div>
-            </div>
-            <p class="totals-note">Counts every row in the database, not just the selected records.</p>
-          </section>
         <div id="singleAnalysis" class="single-analysis" hidden></div>
-<div class="overview-directions"><button type="button" data-go="records"><span class="direction-number">01</span><span><strong>Find a detection</strong><small>Search logs by IP, class or protocol</small></span><b aria-hidden="true">↗</b></button><button type="button" data-go="classes"><span class="direction-number">02</span><span><strong>Understand the mix</strong><small>Compare threat classes and their share</small></span><b aria-hidden="true">↗</b></button><button type="button" data-go="latency"><span class="direction-number">03</span><span><strong>Explore processing time</strong><small>See variation and inspect slow flows</small></span><b aria-hidden="true">↗</b></button></div>        <section class="panel block" aria-labelledby="recentHeading">
+        <section id="recentAlertsPanel" class="panel block" aria-labelledby="recentHeading">
             <div class="block-head">
-              <div><h2 id="recentHeading">Recent detections</h2><p class="sub">Grouped by attack, source and target</p></div>
-              <button id="openInvestigate" class="link-btn" type="button">Open all records →</button>
+              <div><h2 id="recentHeading">Suggested review queue</h2><p class="sub">Review suggestions by source activity · one saved detection per source and threat type</p></div>
+              <button id="openInvestigate" class="link-btn" type="button">View all records →</button>
             </div>
-            <ol id="overviewEvidence"></ol>
+            <ol id="overviewEvidence" aria-label="Suggested review candidates"></ol><p class="queue-note">Priority uses only the selected loaded records. Frontend review guidance, not validated incident severity.</p>
           </section>
 
       <div id="singleInvestigation" class="stack" hidden></div><div id="singleRecords" class="stack" hidden></div><div id="singleSupport" class="stack" hidden></div>
@@ -1514,7 +1695,7 @@ body { --sidebar-width: 18rem; }
 
 <section id="recordsView" class="view stack workspace-page" aria-label="Records" hidden><section id="recordsSection" class="panel records" aria-labelledby="recordsHeading" tabindex="-1">
           <div class="block-head"><h2 id="recordsHeading">Detection records</h2><div class="record-actions"><button id="collapseDetails" hidden class="btn btn-sm btn-quiet" type="button">Close expanded rows</button><button id="toggleRecords" hidden class="btn btn-sm" type="button" aria-expanded="true" aria-controls="recordsBody">Hide records ↑</button></div></div><div id="recordsBody">
-          <p class="records-help">Open a row to view its details, then choose Investigate for the complete saved flow.</p>
+          <p class="records-help">Review detections, expand Details, then Investigate a flow.</p>
           <div id="recordInvestigationContext" class="record-context" hidden><span id="recordInvestigationLabel"></span><button id="findSelectedRecord" type="button" class="link-btn">Find selected row ↓</button><button id="returnToInvestigation" type="button" class="link-btn">Back to investigation →</button></div>
           <div class="toolbar">
             <div class="segmented" role="group" aria-label="Which records to show">
@@ -1524,16 +1705,22 @@ body { --sidebar-width: 18rem; }
             <label for="logSearch">Search records
               <input id="logSearch" class="input" type="search" placeholder="IP address, attack type or protocol" autocomplete="off" />
             </label>
+            <label for="recordSort" class="record-sort-label">Sort by
+              <select id="recordSort" class="input"><option value="priority">Priority: highest first</option><option value="newest" selected>Newest first</option><option value="oldest">Oldest first</option><option value="unreviewed">Unreviewed first (this browser)</option></select>
+            </label>
+            <button id="savedReviewFilter" class="btn btn-sm btn-quiet saved-review-filter" type="button" aria-pressed="false">Saved for review (0)</button>
             <div id="activeFilters" class="active-filters" aria-live="polite"></div>
             <button id="clearFilter" class="btn btn-sm" type="button" hidden>Clear all filters</button>
           </div>
+          <p id="savedReviewNote" class="saved-review-note">Saved copies and review status stay in this browser only.</p>
+          <p id="recordsActionStatus" class="records-action-status" role="status" aria-live="polite"></p>
           <p id="tableCount" class="count" aria-live="polite">--</p>
           <p id="stageNote" class="stage-note" hidden>Pipeline stage isn’t saved in these records.</p>
           <div class="table-scroll" tabindex="0" role="region" aria-label="Detection records table">
             <table>
               <caption class="sr-only">Saved detections. Display order is held while details are open.</caption>
               <thead><tr>
-                <th scope="col">Recorded</th><th scope="col">Source → Target</th><th scope="col">Detected</th>
+                <th scope="col">Recorded</th><th scope="col">Source → Target</th><th scope="col">Detected</th><th scope="col">Priority</th>
                 <th scope="col" class="num">Confidence</th><th scope="col" class="num">Processing</th>
                 <th id="thStage" scope="col">Stage</th><th scope="col">Explore</th>
               </tr></thead>
@@ -1550,7 +1737,7 @@ body { --sidebar-width: 18rem; }
                 <svg class="k-calm" viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 2.5 4 6v6c0 5 3.4 8.2 8 9.5 4.6-1.3 8-4.5 8-9.5V6l-8-3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="m8.5 12 2.5 2.5 4.5-5" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>
                 Selected detection
               </p>
-              <div class="sel-tags"><span id="selectedFlowId" class="pill mono">--</span><span id="selectedVerdict" class="pill verdict">--</span><span id="selectedBadge" class="pill warn" hidden></span></div>
+              <div class="sel-tags"><span id="selectedFlowId" class="pill mono">--</span><span id="selectedVerdict" class="pill verdict">--</span><span id="selectedPriority" class="priority-badge" data-level="unassessed">Priority: Unassessed</span><span id="selectedBadge" class="pill warn" hidden></span></div>
             </div>
             <h2 id="selectedTitle" class="sel-name">--</h2>
             <p id="selectedMeaning" class="sel-meaning"></p>
@@ -1560,41 +1747,42 @@ body { --sidebar-width: 18rem; }
               <p class="explanation-note">This describes the traffic category, not the model’s specific reasoning. A classification alone does not confirm an attack.</p>
             </details>
             <p id="selectedHeadline" class="hero-headline"></p>
-            <dl class="sel-facts" aria-label="Key facts for this saved flow">
-              <div class="fact"><dt>Source IP</dt><dd id="selectedSource">--</dd></div>
-              <div class="fact"><dt>Destination IP</dt><dd id="selectedDestination">--</dd></div>
-              <div class="fact confidence-fact"><dt>Model confidence</dt><dd class="fact-conf"><svg class="conf-ring" viewBox="0 0 36 36" aria-hidden="true"><circle class="ring-track" cx="18" cy="18" r="15"/><circle id="selConfRing" class="ring-value" cx="18" cy="18" r="15" pathLength="100"/></svg><span id="selectedConfidence">--</span></dd></div>
-              <div class="fact"><dt>Time recorded</dt><dd id="selectedTimestamp">--</dd></div>
-              <div class="fact"><dt>Protocol & target port</dt><dd id="selectedProto">--</dd></div>
-              <div class="fact"><dt>Processing time</dt><dd><span id="selectedLatency">--</span><span id="selectedLatencyCmp" class="fact-sub"></span></dd></div>
-            </dl>
-            <p class="confidence-note">Model confidence describes the model’s score for its classification, not the probability that an attack is definitively real. Processing time is classification time, not the full attack-to-alert delay.</p>
-            <div class="sel-actions">
-              <button id="toggleSelDetails" class="btn" type="button" aria-expanded="false" aria-controls="selDetails"><span id="toggleSelDetailsLabel">Model evidence</span> <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 5 5 5-5"/></svg></button>
-              <button id="jumpToFlow" class="btn btn-quiet" type="button">Back to Detection Records →</button>
-            </div>
+            <p class="investigation-recorded">Recorded <span id="selectedTimestamp">--</span></p>
+
           </div>
           <button id="closeSelected" class="btn btn-sm btn-quiet sel-close" type="button" aria-label="Clear selection">Clear selection</button>
-          <div class="sel-scene"><div id="selScene"></div></div>
+          <div class="sel-scene"><h3 class="connection-heading">Source → Destination</h3><div id="selScene"></div></div>
+            <div class="sel-actions">
+              <button id="toggleSelDetails" class="btn" type="button" aria-expanded="false" aria-controls="selDetails"><span id="toggleSelDetailsLabel">Detection evidence</span> <svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 5 5 5-5"/></svg></button>
+              <button id="jumpToFlow" class="btn btn-quiet" type="button">Back to Detection Records →</button>
+            </div>
           <div id="selDetails" class="sel-details" role="region" aria-labelledby="selDetailsTitle" hidden>
             <div class="sel-details-head">
-              <div><h3 id="selDetailsTitle">Model evidence</h3><p class="sub">Connection, model scores and metadata · open only when needed</p></div>
+              <div><h3 id="selDetailsTitle">Detection evidence</h3><p class="sub">Saved labels and model scores; feature-level reasons are not recorded.</p></div>
               <button id="copyRecord" class="btn btn-sm btn-quiet" type="button"><span id="copyRecordLabel">Copy record (JSON)</span></button>
             </div>
-            <p id="selectedStageField" class="advanced-stage" hidden>Pipeline stage: <span id="selectedStage">--</span></p>
-            <div id="selDetailsBody"></div>
+            <div id="selDetailsBody"></div><p class="confidence-note">Model confidence is a classification score, not confirmation of an attack. Processing time covers classification only.</p>
             <h4 class="sel-details-sub">Related activity in the loaded records</h4>
             <dl id="selRelated" class="evidence"></dl>
             <p id="relatedRecordsEmpty" class="related-records-note" hidden></p>
           </div>
           <section id="investigationGuide" class="panel investigation-guide" hidden><div><p class="eyebrow">WHAT TO CHECK NEXT</p><h2 id="nextCheckTitle">Follow the saved evidence</h2><p id="nextCheckCopy"></p></div><div class="guide-actions"><button type="button" class="btn" id="relatedRecords">Records from this source →</button><button type="button" class="btn btn-quiet" data-go="pipeline">Understand the model pipeline</button></div></section>
+
+          <section class="local-review" aria-label="Local record review">
+            <div class="local-review-main"><span id="selectedReviewStatus" class="review-label">Not reviewed in this browser</span><button id="toggleReviewed" class="btn btn-sm btn-quiet" type="button" aria-pressed="false">Mark as reviewed</button></div>
+            <p id="reviewStorageNote">Review status is saved in this browser only.</p>
+            <p id="reviewConfirmation" role="status" aria-live="polite"></p>
+          </section>
+
+
+
         </section><section id="selectionEmpty" class="panel pick">
           <div><h2>Choose a detection to investigate</h2><p>Browse saved records and expand a row, then choose Investigate to follow that flow.</p></div>
           <div class="empty-actions"><button class="btn" type="button" data-go="records">Browse Detection Records →</button><button id="inspectLatest" class="btn btn-quiet" type="button">Investigate latest available attack →</button></div>
         </section><div id="selectionNotice" class="notice" role="status" hidden><span id="selectionNoticeText"></span><button id="dismissNotice" class="btn btn-sm" type="button">Dismiss</button></div></section><section id="classesView" class="view stack workspace-page" aria-label="Classes" hidden><section id="classificationPanel" class="panel chart-card" aria-labelledby="classHeading" tabindex="-1">
             <h2 id="classHeading">What the model classified</h2>
             <p id="threatTotal" class="sub">Share of the selected flows</p>
-            <div class="donut-box">
+            <div id="shareMetricCell" class="class-share-note"><h3 class="cell-label">Attack-labelled share</h3><p id="overviewShare" class="cell-value">--</p><p class="cell-note">of the loaded records</p><button class="link-btn metric-link" type="button" data-go="classes">Explore threat classes →</button></div><div class="donut-box">
               <canvas id="threatChart" role="img" aria-label="Doughnut chart of classes in the selected flows; the legend below lists the same numbers"></canvas>
               <div class="donut-center"><strong id="threatPercentValue">--</strong><span id="threatPercentLabel">attack-labelled</span></div>
               <div id="donutEmpty" class="chart-empty" hidden>No flows to chart yet</div>
@@ -1778,12 +1966,115 @@ body { --sidebar-width: 18rem; }
   const state = {
     limit: 500, refreshSeconds: 5, live: true, view: 'overview',
     status: 'connecting', errorTitle: '', errorText: '',
-    data: null, logs: [], kpis: {}, alertLog: null, fetchedAt: null, newCount: 0,
-    activeClass: null, attacksOnly: false, search: '', tableLimit: 50,
+    data: null, logs: [], loadedById: new Map(), kpis: {}, alertLog: null, fetchedAt: null, newCount: 0,
+    activeClass: null, attacksOnly: false, search: '', tableLimit: 50, recordSort: 'newest', savedOnly: false, tableOrderVersion: 0,
     selected: null, notice: '', expanded: new Set(), openSnapshots: new Map(), chartMode: 'distribution', latencyRange: null,
     maxSeenId: null, fresh: new Map(), step: null,
   };
   let timer = null, controller = null, serial = 0, inFlight = false, heroLastId = null, newTagTimer = null;
+
+  /* Frontend-only review guidance. Presentation thresholds, NOT validated severity thresholds.
+     Counts are attack-labelled records per source in the current loaded window. Model confidence is unused.
+     Conservatively leave a retained/out-of-window record Unassessed, even if its source appears elsewhere. */
+  const REVIEW_PRIORITY_THRESHOLDS = Object.freeze({ high: 10, medium: 3 });
+  const PRIORITY_HELP = 'Suggested from repeated attack-labelled activity in the selected records. Not a confirmed incident severity.';
+  function sourceKey(log) { return typeof log.source_ip === 'string' ? log.source_ip.trim() : ''; }
+  function flaggedSourceCounts() {
+    const counts = new Map();
+    for (const log of state.logs) if (isAttack(log) && sourceKey(log)) counts.set(sourceKey(log), (counts.get(sourceKey(log)) || 0) + 1);
+    return counts;
+  }
+  function reviewPriority(log, counts = flaggedSourceCounts()) {
+    const count = counts.get(sourceKey(log)) || 0;
+    const current = state.loadedById.get(String(log.id));
+    const loaded = !!current && fingerprint(current) === fingerprint(log) && exactReviewKey(current) === exactReviewKey(log);
+    if (!isAttack(log) || !sourceKey(log) || !loaded || !count) return { level: 'unassessed', label: 'Unassessed', rank: 0, count, loaded };
+    const level = count >= REVIEW_PRIORITY_THRESHOLDS.high ? 'high' : count >= REVIEW_PRIORITY_THRESHOLDS.medium ? 'medium' : 'low';
+    return { level, label: level[0].toUpperCase() + level.slice(1), rank: {high:3, medium:2, low:1}[level], count, loaded };
+  }
+  function priorityDescription(log, priority) {
+    if (!priority.loaded) return 'Unassessed: this saved detection is outside the loaded window. Open related records to review available source activity.';
+    if (!sourceKey(log)) return 'Unassessed: no source IP was saved for this detection.';
+    return `${priority.count.toLocaleString()} attack-labelled ${priority.count === 1 ? 'record' : 'records'} from this source in ${state.logs.length.toLocaleString()} loaded records.`;
+  }
+  function savedTime(log) { const n = Date.parse(String(log.timestamp || '').replace(' ', 'T')); return Number.isFinite(n) ? n : -Infinity; }
+  function newerSavedRecord(a, b) { return (savedTime(b) - savedTime(a) || (num(b.id) || 0) - (num(a.id) || 0)); }
+  function reviewCandidates() {
+    const counts = flaggedSourceCounts(), groups = new Map();
+    for (const log of state.logs) {
+      if (!isAttack(log)) continue;
+      const key = JSON.stringify([sourceKey(log), classify(log.attack_type).key]);
+      const group = groups.get(key);
+      if (group) { group.matches++; if (newerSavedRecord(log, group.log) < 0) group.log = log; }
+      else groups.set(key, { log, matches: 1 });
+    }
+    return [...groups.values()].map(group => ({...group, priority:reviewPriority(group.log, counts)}))
+      .sort((a,b) => b.priority.rank - a.priority.rank || b.priority.count - a.priority.count || newerSavedRecord(a.log,b.log)).slice(0,3);
+  }
+
+  /* Local presentation workflow only. No backend writes, incident resolution, or authentication claims.
+     ID + timestamp/connection fingerprint + saved model outputs prevents a reused ID inheriting a review. */
+  const LOCAL_REVIEW_STORAGE_KEY = 'sentinelflow-local-reviewed-v1';
+  function exactReviewKey(log) {
+    if (log.id === null || log.id === undefined || !log.timestamp) return null;
+    return JSON.stringify([String(log.id), fingerprint(log), ...['attack_type','confidence','latency_ms','stage_reached','model_attack_type','model_verdict','model_confidence','stage1_attack_probability'].map(key => log[key] ?? null)]);
+  }
+  let localReviews = new Set(), reviewStorageAvailable = true;
+  try {
+    const saved = JSON.parse(localStorage.getItem(LOCAL_REVIEW_STORAGE_KEY) || '[]');
+    if (Array.isArray(saved)) localReviews = new Set(saved.filter(key => typeof key === 'string'));
+  } catch (_) { reviewStorageAvailable = false; }
+  function isReviewed(log) { const key = exactReviewKey(log); return !!key && localReviews.has(key); }
+  function renderLocalReview(log) {
+    const reviewed = isReviewed(log), available = !!exactReviewKey(log);
+    setText($('selectedReviewStatus'), reviewed ? 'Reviewed locally' : 'Not reviewed in this browser');
+    $('selectedReviewStatus').dataset.reviewed = String(reviewed);
+    $('toggleReviewed').disabled = !available;
+    $('toggleReviewed').setAttribute('aria-pressed', String(reviewed));
+    setText($('toggleReviewed'), reviewed ? 'Mark as unreviewed' : 'Mark as reviewed');
+    setText($('reviewStorageNote'), !available ? 'Review unavailable: this detection has no stable saved ID and timestamp.' : reviewStorageAvailable ? 'Review status is saved in this browser only.' : 'Browser storage is unavailable. Review status is kept for this page session only.');
+  }
+
+  const SAVED_REVIEW_STORAGE_KEY = 'sentinelflow-saved-review-v1';
+  let savedForReview = new Map(), savedReviewStorageAvailable = true;
+  function readSavedReview(value) {
+    const records = JSON.parse(value || '[]'), saved = new Map();
+    if (!Array.isArray(records)) return saved;
+    for (const record of records) {
+      if (record && typeof record === 'object' && !Array.isArray(record) && exactReviewKey(record)) saved.set(String(record.id), {...record});
+    }
+    return saved;
+  }
+  try { savedForReview = readSavedReview(localStorage.getItem(SAVED_REVIEW_STORAGE_KEY)); }
+  catch (_) { savedReviewStorageAvailable = false; }
+  function sameSavedRecord(a,b) { return String(a.id) === String(b.id) && fingerprint(a) === fingerprint(b) && exactReviewKey(a) === exactReviewKey(b); }
+  function isSavedForReview(log) { const saved = savedForReview.get(String(log.id)); return !!saved && sameSavedRecord(saved,log); }
+  function savedReviewRecords() {
+    const loaded = new Map(state.logs.map(log => [String(log.id), log]));
+    return [...savedForReview.values()].map(saved => { const current = loaded.get(String(saved.id)); return current && sameSavedRecord(saved,current) ? current : saved; });
+  }
+  function toggleSavedForReview(log) {
+    if (!exactReviewKey(log)) return;
+    const saved = !isSavedForReview(log);
+    // A reused ID never inherits the previous record's bookmark. Saving its new record explicitly replaces the old copy.
+    if (saved) savedForReview.set(String(log.id), {...log}); else savedForReview.delete(String(log.id));
+    try { localStorage.setItem(SAVED_REVIEW_STORAGE_KEY, JSON.stringify([...savedForReview.values()])); savedReviewStorageAvailable = true; }
+    catch (_) { savedReviewStorageAvailable = false; }
+    state.tableOrderVersion++; renderTable();
+    setText($('recordsActionStatus'), saved ? 'Saved for review' : 'Removed from saved for review');
+  }
+  const RECORD_SORT_LABELS = { newest: 'Newest first', oldest: 'Oldest first', priority: 'Priority: highest first', unreviewed: 'Unreviewed first (this browser)' };
+  function recordComparator(counts) {
+    return (a,b) => {
+      if (state.recordSort === 'priority') {
+        const first = reviewPriority(a,counts), second = reviewPriority(b,counts);
+        return second.rank - first.rank || Number(isAttack(b)) - Number(isAttack(a)) || (second.rank ? second.count - first.count : 0) || newerSavedRecord(a,b);
+      }
+      if (state.recordSort === 'oldest') return newerSavedRecord(b,a);
+      if (state.recordSort === 'unreviewed') return Number(isReviewed(a)) - Number(isReviewed(b)) || newerSavedRecord(a,b);
+      return newerSavedRecord(a,b);
+    };
+  }
 
   /* ---------------------------------------------------------------- source → target scene
      Built once per container, updated in place. It depicts a SAVED record. Animation only ever plays when
@@ -1994,7 +2285,7 @@ body { --sidebar-width: 18rem; }
         else showPoint(hit.index);
       },
       onClick:(_e,els)=>{const hit=els.find(x=>x.datasetIndex===0);if(!hit)return;
-        if(distribution){const bin=timeBins[hit.index];if(!bin?.n)return;state.latencyRange={lo:bin.lo,hi:bin.hi};state.sourceIp=null;state.activeClass=null;state.attacksOnly=false;state.search='';$('logSearch').value='';state.tableLimit=50;clearSelection();showView('investigate',{scroll:false});revealRecords();$('recordsSection').scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'start'});}
+        if(distribution){const bin=timeBins[hit.index];if(!bin?.n)return;state.savedOnly=false;state.latencyRange={lo:bin.lo,hi:bin.hi};state.sourceIp=null;state.activeClass=null;state.attacksOnly=false;state.search='';$('logSearch').value='';state.tableLimit=50;clearSelection();showView('investigate',{scroll:false});revealRecords();$('recordsSection').scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'start'});}
         else if(plotRecords[hit.index]) {showPoint(hit.index);selectFlow({...plotRecords[hit.index]});}
       }
     }});
@@ -2084,7 +2375,7 @@ body { --sidebar-width: 18rem; }
         state.maxSeenId = maxId;
       }
     }
-    state.data = body; state.logs = logs; state.kpis = body.kpis; state.fetchedAt = new Date();
+    state.loadedLimit = state.limit; state.data = body; state.logs = logs; state.loadedById = new Map(logs.map(log => [String(log.id),log])); state.kpis = body.kpis; state.fetchedAt = new Date();
     // latest_alert is the API's newest attack-labelled row. If it is not attack-labelled on the client (e.g. a
     // "Benign" row, which the backend's NORMAL_LABELS does not list) fall back to the newest attack in logs.
     const la = body.latest_alert;
@@ -2096,7 +2387,7 @@ body { --sidebar-width: 18rem; }
   function reconcileSelection() {
     const s = state.selected; if (!s) return;
     const current = state.logs.find((l) => String(l.id) === s.id);
-    if (current && fingerprint(current) !== s.fingerprint) {
+    if (current && (fingerprint(current) !== s.fingerprint || exactReviewKey(current) !== exactReviewKey(s.snapshot))) {
       state.notice = `Flow #${s.id} no longer matches the record you selected (the database may have been reset), so it was deselected.`;
       state.expanded.delete(s.id); state.openSnapshots.delete(s.id); state.selected = null;
     }
@@ -2104,17 +2395,17 @@ body { --sidebar-width: 18rem; }
   function selectedInfo() {
     const s = state.selected; if (!s) return null;
     const current = state.logs.find((l) => String(l.id) === s.id);
-    return current && fingerprint(current)===s.fingerprint ? { log: current, live: true } : { log: s.snapshot, live: false };
+    return current && fingerprint(current)===s.fingerprint && exactReviewKey(current)===exactReviewKey(s.snapshot) ? { log: current, live: true } : { log: s.snapshot, live: false };
   }
   function selectFlow(log) {
     const current=state.logs.find(l=>String(l.id)===String(log.id));
-    if(current&&fingerprint(current)!==fingerprint(log)) {
+    if(current&&!sameSavedRecord(current,log)) {
       state.selected=null;state.notice=`Flow #${log.id} now refers to a different saved record. Refresh the selection; no replacement record was opened.`;
       render();showView('investigate',{reveal:true});return;
     }
     state.selected = { id: String(log.id), fingerprint: fingerprint(log), snapshot: { ...log } };
-    state.notice = ''; state.selDetailsOpen = true; // Show evidence immediately for demos; the user can collapse it.
-    $('threatExplanation').open = false;
+    state.notice = ''; state.selDetailsOpen = true; // Show detection evidence for every newly selected flow; explicit collapse survives refresh.
+    $('threatExplanation').open = false; setText($('reviewConfirmation'), '');
     render();
     showView('investigate', { reveal: true });
     playScene($('selScene'), 'select');
@@ -2146,6 +2437,7 @@ body { --sidebar-width: 18rem; }
     const card = $('alert');
     const show = (s) => { if (card.dataset.state !== s) card.dataset.state = s; };
     $('alertRetryWrap').hidden = true; $('alertActions').hidden = true;
+    ['heroReview','heroNextStep'].forEach(id => $(id).hidden = true);
     if (!state.data) {
       if (state.status === 'error') { show('error'); setText($('alertKicker'), 'Dashboard status'); setText($('alertLabel'), 'Can’t read detections'); setText($('alertCopy'), state.errorText); $('alertRetryWrap').hidden = false; }
       else { show('loading'); setText($('alertKicker'), 'Latest detected attack'); setText($('alertLabel'), 'Loading…'); setText($('alertCopy'), 'Reading saved detections from the dashboard API.'); }
@@ -2162,6 +2454,13 @@ body { --sidebar-width: 18rem; }
     show('threat'); setText($('alertKicker'), 'Latest detected attack');
     setText($('alertLabel'), info.label); $('alertLabel').style.setProperty('--name-size', `${nameSize(info.label)}rem`);
     setText($('alertCopy'), info.meaning);
+    const priority = reviewPriority(a);
+    ['heroReview','heroNextStep'].forEach(id => $(id).hidden = false);
+    $('heroPriority').dataset.level = priority.level;
+    setText($('heroPriority'), `Priority: ${priority.label}`);
+    $('heroPriority').title = `${PRIORITY_HELP} ${priorityDescription(a, priority)}`;
+    $('heroReviewed').hidden = !isReviewed(a);
+    setText($('heroNextStep'), 'Next step: Investigate this flow.');
     $('alertActions').hidden = false;
     setText($('alertFlowId'), a.id !== null && a.id !== undefined ? `Flow #${a.id}` : '');
     $('inspectAlert').dataset.flowId = a.id !== null && a.id !== undefined ? String(a.id) : '';
@@ -2180,20 +2479,22 @@ body { --sidebar-width: 18rem; }
   function renderMetrics() {
     const n = state.logs.length, k = state.kpis || {}, have = !!state.data;
     const threats = state.logs.filter(isAttack).length;
+    setText($('windowRecords'), have ? fmtInt(n) : DASH);
     setText($('overviewShare'), have && n ? `${(100 * threats / n).toFixed(1)}%` : DASH);
-    setText($('windowAttacks'), have && n ? fmtInt(threats) : DASH);
+    setText($('windowAttacks'), have ? fmtInt(threats) : DASH);
     setText($('windowAttacksNote'), have && n ? `of ${fmtInt(n)} selected flows` : 'in the selected records');
     // v2: attack share tile (same number as the donut centre)
-    // v2: processing tile shows the median (typical flow); the backend mean moves to the note
+    // Typical processing time is the median of saved classification times.
     const ms = state.logs.map((l) => num(l.latency_ms)).filter((v) => v !== null && v >= 0).sort((a, b) => a - b);
     const med = have && ms.length ? (ms.length % 2 ? ms[(ms.length - 1) / 2] : (ms[ms.length / 2 - 1] + ms[ms.length / 2]) / 2) : null;
-    const lat = have && n ? num(k.avg_latency) : null;
     $('latency').replaceChildren(document.createTextNode(med === null ? DASH : String(med < 10 ? med.toFixed(1) : Math.round(med))));
     if (med !== null) $('latency').append(el('span', 'cell-unit', 'ms'));
-    setText($('latencyNote'), med === null ? 'median per flow' : `median per flow${lat !== null ? ` · mean ${fmtMs(lat)}` : ''}`);
+    setText($('latencyNote'), 'median classification time per flow');
     setText($('f1'), fmtScore(k.dl_macro_f1));
     setText($('f1Note'),num(k.dl_macro_f1)!==null?'Selected model · offline validation':(have?'Offline DL report unavailable':'Offline test result'));
     setText($('totalFlows'), have ? fmtInt(k.total_flows) : DASH);
+    setText($('summaryWindow'), `Latest ${fmtInt(state.loadedLimit || state.limit)}`);
+    setText($('summaryLoaded'), have ? `${fmtInt(n)} records loaded` : 'Waiting for saved records');
     setText($('profileTotalFlows'), have ? fmtInt(k.total_flows) : DASH);
     setText($('profileLoaded'), have ? fmtInt(n) : DASH);
     setText($('profileUpdated'), state.fetchedAt ? state.fetchedAt.toLocaleTimeString() : 'Waiting for data');
@@ -2203,8 +2504,11 @@ body { --sidebar-width: 18rem; }
     const ordered = [...state.logs].reverse();
     const parts = have && ordered.length >= 2 ? chunk(ordered, Math.min(30, ordered.length)) : [];
     const attackCounts = parts.map((p) => p.filter(isAttack).length);
+    drawSpark($('sparkRecords'), parts.map(p => p.length), 'bars', getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim());
     drawSpark($('sparkThreats'), attackCounts, 'bars', getComputedStyle(document.documentElement).getPropertyValue('--orange').trim());
-    $('sparkThreats').setAttribute('aria-label', parts.length ? `Attack flows across the selection, oldest to newest; peak ${Math.max(...attackCounts)} in one chunk` : 'No trend yet');
+    $('sparkRecords').setAttribute('aria-label', parts.length ? `${ordered.length} loaded records split into ${parts.length} consecutive flow-order groups, oldest to newest; not clock time` : 'Not enough saved records for flow-order groups');
+    $('sparkThreats').setAttribute('aria-label', parts.length ? `Attack-labelled record counts in ${parts.length} flow-order groups, oldest to newest; not clock time` : 'Not enough saved records for flow-order groups');
+    $('sparkLatency').setAttribute('aria-label', parts.length ? `Median classification time in ${parts.length} flow-order groups, oldest to newest; not clock time` : 'Not enough saved processing times for flow-order groups');
     drawSpark($('sparkLatency'), parts.map((p) => median(p.map((l) => num(l.latency_ms)).filter((v) => v !== null && v >= 0))), 'line', getComputedStyle(document.documentElement).getPropertyValue('--cyan').trim());
 
     const f1 = num(k.dl_macro_f1);
@@ -2281,34 +2585,25 @@ body { --sidebar-width: 18rem; }
     restoreFocus(focusKey);
   }
 
-  /* Consecutive identical rows say nothing; grouping by attack + source + target says what is happening. */
-  function attackGroups(max) {
-    const map = new Map();
-    for (const l of state.logs) {                                   // newest first
-      const info = classify(l.attack_type); if (!info.attack) continue;
-      const key = `${info.key}|${l.source_ip}|${l.destination_ip}`;
-      const g = map.get(key) || { latest: l, info, count: 0 }; g.count++; map.set(key, g);
-    }
-    return [...map.values()].slice(0, max);
-  }
   function renderGroups() {
     const list = $('overviewEvidence'), focusKey = document.activeElement?.dataset?.focusKey;
     list.replaceChildren();
     if (!state.data) { list.append(el('li', 'empty-note', 'Waiting for the first update…')); return; }
-    const groups = attackGroups(5);   // v3: 5 rows, to line up with the 5 top sources beside it
-    if (!groups.length) { list.append(el('li', 'empty-note', state.logs.length ? 'No attacks among the selected records.' : 'No saved flows yet.')); return; }
-    const now = Date.now();
-    groups.forEach((g) => {
-      const li = el('li', 'grp'); li.dataset.id = String(g.latest.id);
-      const at = state.fresh.get(String(g.latest.id));
-      if (at && now - at < FRESH_MS) { li.classList.add('is-new'); li.style.setProperty('--fresh-delay', `-${now - at}ms`); }
-      const route = el('span', 'grp-route'); route.append(document.createTextNode(text(g.latest.source_ip)), el('i', null, '→'), document.createTextNode(text(g.latest.destination_ip)));
-      const count = el('span', 'grp-count', `${g.count.toLocaleString()} ${g.count === 1 ? 'flow' : 'flows'}`); count.append(el('small', null, text(g.latest.timestamp)));
-      const btn = el('button', 'btn btn-sm', 'Inspect latest'); btn.type = 'button'; btn.dataset.focusKey = `grp-${g.latest.id}`;
-      btn.setAttribute('aria-label', `Inspect the latest ${g.info.label} flow from ${text(g.latest.source_ip)}`);
-      btn.addEventListener('click', (e) => { e.stopPropagation(); selectFlow(g.latest); });
-      li.addEventListener('click', () => selectFlow(g.latest));
-      li.append(chip(g.latest), route, count, btn); list.append(li);
+    const candidates = reviewCandidates();
+    if (!candidates.length) { list.append(el('li', 'empty-note', state.logs.length ? 'No attack-labelled records in this window.' : 'No saved flows yet.')); return; }
+    candidates.forEach(({log, matches, priority}) => {
+      const li = el('li', 'review-candidate'); li.dataset.id = String(log.id); li.dataset.priority = priority.level;
+      const threat = el('div', 'queue-threat'); threat.append(chip(log));
+      const source = el('div', 'queue-source'); source.append(el('span', 'queue-ip', text(log.source_ip)), el('small', null, `Flow #${log.id} · ${text(log.timestamp)}`));
+      if (isReviewed(log)) source.append(el('span', 'review-label', 'Reviewed locally'));
+      const suggested = el('div', 'queue-priority'), badge = el('span', 'priority-badge', `Suggested: ${priority.label}`); badge.dataset.level = priority.level;
+      badge.title = `${PRIORITY_HELP} ${priorityDescription(log, priority)}`;
+      suggested.append(badge, el('small', null, priority.level === 'unassessed' ? 'Insufficient source data' : `${priority.count.toLocaleString()} flagged from source`));
+      const count = el('div', 'queue-matches', `${matches.toLocaleString()} matching`); count.append(el('small', null, 'same source + threat'));
+      const btn = el('button', 'link-btn queue-investigate', 'Investigate →'); btn.type = 'button'; btn.dataset.focusKey = `grp-${log.id}`;
+      btn.setAttribute('aria-label', `Investigate ${classify(log.attack_type).label}, Flow #${log.id}, from ${text(log.source_ip)}. Suggested review priority ${priority.label}.`);
+      btn.addEventListener('click', () => selectFlow(log));
+      li.append(threat, source, suggested, count, btn); list.append(li);
     });
     restoreFocus(focusKey);
   }
@@ -2320,11 +2615,16 @@ body { --sidebar-width: 18rem; }
     $('selectionNotice').hidden = !state.notice; setText($('selectionNoticeText'), state.notice);
     if (!info) { $('investigationGuide').hidden = true; return; }
     const l = info.log, ci = classify(l.attack_type);
+    renderLocalReview(l);
     // v4: orange styling for attacks, cyan for flows that are not an attack (e.g. a Benign dot picked in the chart)
     const card = $('selectedContext'), kind = ci.attack ? 'attack' : 'calm';
     if (card.dataset.kind !== kind) card.dataset.kind = kind;
     setText($('selectedTitle'), ci.label);
     setText($('selectedFlowId'), `Flow #${l.id}`);
+    const priority = reviewPriority(l);
+    setText($('selectedPriority'), isAttack(l) ? `Priority: ${priority.label}` : 'Priority: Not applicable');
+    $('selectedPriority').dataset.level = priority.level;
+    $('selectedPriority').title = isAttack(l) ? `${PRIORITY_HELP} ${priorityDescription(l, priority)}` : 'Suggested review priority applies only to attack-labelled records.';
     setText($('selectedVerdict'), ci.attack ? 'Attack-labelled' : 'Not an attack');
     const badge = $('selectedBadge'); badge.hidden = info.live;
     if (!info.live) setText(badge, `Saved copy · not in the latest ${fmtInt(state.limit)} flows`);
@@ -2333,17 +2633,9 @@ body { --sidebar-width: 18rem; }
     $('selectedHeadline').replaceChildren(el('span', 'ip', text(l.source_ip)), document.createTextNode(` ${verb} `), el('span', 'ip', text(l.destination_ip)));
     setText($('selectedMeaning'), ci.meaning);
     setText($('threatExplanationText'), THREAT_EXPLANATIONS[ci.key] || 'This saved label has no category explanation in the dashboard. Review the saved connection details and related activity; the label alone does not establish what happened.');
-    setText($('selectedSource'), text(l.source_ip)); setText($('selectedDestination'), text(l.destination_ip));
     $('relatedRecords').disabled = !l.source_ip;
     $('relatedRecords').title = l.source_ip ? `Find saved records from ${l.source_ip}` : 'No source IP was saved for this flow';
-    setText($('selectedConfidence'), fmtPct(l.confidence)); setText($('selectedLatency'), fmtMs(l.latency_ms)); setText($('selectedTimestamp'), text(l.timestamp));
-    const conf = num(l.confidence);
-    $('selConfRing').style.strokeDashoffset = String(conf === null ? 100 : 100 - Math.max(0, Math.min(1, conf)) * 100);
-    // v4: compare this flow's processing time with the typical (median) flow in the loaded records
-    const lt = num(l.latency_ms), typical = median(state.logs.map((x) => num(x.latency_ms)).filter((v) => v !== null && v >= 0));
-    setText($('selectedLatencyCmp'), lt === null || !typical ? '' : Math.abs(lt - typical) / typical < .1 ? `about typical (${fmtMs(typical)})` : `${lt < typical ? 'faster' : 'slower'} than typical (${fmtMs(typical)})`);
-    setText($('selectedProto'), `${text(l.protocol)}${num(l.destination_port) !== null ? ` · port ${num(l.destination_port)}` : ''}`);
-    $('selectedStageField').hidden = !l.stage_reached; setText($('selectedStage'), l.stage_reached ? String(l.stage_reached) : DASH);
+    setText($('selectedTimestamp'), text(l.timestamp));
     updateScene($('selScene'), l);
     renderSelDetails(l);
     $('jumpToFlow').hidden = false;
@@ -2357,17 +2649,16 @@ body { --sidebar-width: 18rem; }
       benign: 'This flow was classified as benign. Check the model evidence if the source, destination or timing still looks unusual.',
     }[ci.key] || 'Compare this source’s other saved flows, then review the model verdict and confidence. A model label is a starting point for investigation.';
     setText($('nextCheckTitle'), ci.attack ? 'Follow this source’s activity' : 'Review the connection in context');
-    setText($('nextCheckCopy'), next);
+    setText($('nextCheckCopy'), info.live ? next : `This saved detection is outside the latest ${fmtInt(state.logs.length)} loaded records. Related counts describe only that window; missing matches do not mean the source had no activity. ${next}`);
   }
 
   /* ---------------------------------------------------------------- v4: technical details inside the card
      Lives in the card at the top of the page, so new table rows arriving on refresh can never push it away.
      It is only rebuilt when the record itself changes, so text you are reading or selecting is not replaced. */
-  const KNOWN_FIELDS = new Set(['id', 'timestamp', 'source_ip', 'source_port', 'destination_ip', 'destination_port', 'protocol', 'attack_type', 'confidence', 'latency_ms', 'stage_reached', 'model_attack_type', 'model_verdict', 'model_confidence', 'stage1_attack_probability']);
   function renderSelDetails(l) {
     const open = !!state.selDetailsOpen, panel = $('selDetails'), btn = $('toggleSelDetails');
     panel.hidden = !open; btn.setAttribute('aria-expanded', String(open));
-    setText($('toggleSelDetailsLabel'), open ? 'Hide model evidence' : 'View model evidence');
+    setText($('toggleSelDetailsLabel'), open ? 'Hide detection evidence' : 'Show detection evidence');
     if (!open) return;
     const add = (target, k, v) => { const d = el('div'); d.append(el('dt', null, k), el('dd', null, v)); target.append(d); };
     // Related activity: counts from the records currently loaded on the page (these change as new flows arrive).
@@ -2380,37 +2671,33 @@ body { --sidebar-width: 18rem; }
     const loadedIds = state.logs.map(x => num(x.id));
     const older = selected && !selected.live && selectedId !== null && loadedIds.length > 0 && loadedIds.every(id => id !== null && id > selectedId);
     const note = $('relatedRecordsEmpty');
-    note.hidden = !(older && l.source_ip && matching.length === 0);
-    if (!note.hidden) setText(note, `No matching records for this classification from this source were found in the latest ${fmtInt(state.logs.length)} loaded flows. This selected detection is an older saved record; these counts cover only the loaded flows.`);
+    note.hidden = !(selected && !selected.live && l.source_ip && matching.length === 0);
+    if (!note.hidden) setText(note, `No matching records for this classification from this source were found in the latest ${fmtInt(state.logs.length)} loaded flows. This selected detection is ${older ? 'an older saved record' : 'outside the loaded window'}; these counts cover only the loaded flows.`);
     add(rel, 'All flows from this source', `${fromSrc.length.toLocaleString()} · ${fromSrc.filter(isAttack).length.toLocaleString()} attack-labelled`);
     add(rel, 'Flows to this target', `${state.logs.filter((x) => x.destination_ip === l.destination_ip).length.toLocaleString()}`);
     add(rel, 'Loaded records', `latest ${fmtInt(state.logs.length)} saved flows`);
     // The record itself: only rebuilt when a different record is shown.
-    const body = $('selDetailsBody'), key = `${l.id}|${fingerprint(l)}`;
+    const body = $('selDetailsBody'), key = JSON.stringify(l);
     if (body.dataset.key === key) return;
     body.dataset.key = key;
     const groups=el('div','evidence-groups');
     function group(title,number,color){const section=el('section','evidence-group');section.style.setProperty('--group-color',color);const heading=el('h4');heading.append(el('span','',number),document.createTextNode(title));const fields=el('dl','evidence');section.append(heading,fields);groups.append(section);return fields;}
-    const connection=group('Connection','01','#85dcef'), model=group('Model assessment','02','#ffc08b'), record=group('Record metadata','03','#c7b3f8');
-    const dl=record;
-    const savedValue = (v, fmt) => { const n = num(v); return n === null ? DASH : fmt(n); };
-    add(dl, 'Flow ID', `#${text(l.id)}`);
-    add(dl, 'Recorded (as saved)', text(l.timestamp));
+    const connection=group('Connection','01','#85dcef'), result=group('Detection result','02','#ffc08b'), record=group('Record info','03','#c7b3f8');
     add(connection, 'Source IP', text(l.source_ip));
-    add(connection, 'Source port', num(l.source_port) !== null ? String(num(l.source_port)) : DASH);
     add(connection, 'Destination IP', text(l.destination_ip));
+    add(connection, 'Source port', num(l.source_port) !== null ? String(num(l.source_port)) : DASH);
     add(connection, 'Destination port', num(l.destination_port) !== null ? String(num(l.destination_port)) : DASH);
     add(connection, 'Protocol', text(l.protocol));
-    add(model, 'Label as saved', text(l.attack_type));
-    add(model, 'Confidence', savedValue(l.confidence, fmtPct));
-    add(model, 'Processing time', savedValue(l.latency_ms, fmtMs));
-    if (l.stage_reached) add(model, 'Pipeline stage', String(l.stage_reached));
-    if (l.model_attack_type) add(model, 'Model result', String(l.model_attack_type));
-    if (l.model_verdict) add(model, 'Model verdict', String(l.model_verdict));
-    if (num(l.model_confidence) !== null) add(model, 'Model confidence', fmtPct(l.model_confidence));
-    if (num(l.stage1_attack_probability) !== null) add(model, 'Stage 1 attack score', fmtPct(l.stage1_attack_probability));
-    // Any extra field the backend adds later is still shown, as plain text.
-    for (const [k, v] of Object.entries(l)) if (!KNOWN_FIELDS.has(k) && v !== null && v !== undefined && v !== '') add(dl, k, typeof v === 'object' ? JSON.stringify(v) : String(v));
+    add(result, 'Label as saved', text(l.attack_type));
+    add(result, 'Model confidence', fmtPct(l.confidence)); result.lastChild.lastChild.id = 'selectedConfidence';
+    add(result, 'Model verdict', text(l.model_verdict));
+    add(result, 'Stage 1 attack score', fmtPct(l.stage1_attack_probability));
+    if (l.model_attack_type && String(l.model_attack_type) !== String(l.attack_type)) add(result, 'Model result', String(l.model_attack_type));
+    if (num(l.model_confidence) !== null && num(l.model_confidence) !== num(l.confidence)) add(result, 'Model score as saved', fmtPct(l.model_confidence));
+    add(record, 'Flow ID', `#${text(l.id)}`);
+    add(record, 'Recorded', text(l.timestamp));
+    add(record, 'Pipeline stage', text(l.stage_reached));
+    add(record, 'Processing time', fmtMs(l.latency_ms)); record.lastChild.lastChild.id = 'selectedLatency';
     body.replaceChildren(groups);
   }
 
@@ -2498,6 +2785,7 @@ body { --sidebar-width: 18rem; }
   }
 
   function matchesFilters(l) {
+    if (state.savedOnly && !isSavedForReview(l)) return false;
     if (state.sourceIp && String(l.source_ip) !== state.sourceIp) return false;
     if(state.latencyRange){const v=num(l.latency_ms);if(v===null||v<state.latencyRange.lo||v>=state.latencyRange.hi)return false;}
     const info = classify(l.attack_type);
@@ -2514,31 +2802,37 @@ body { --sidebar-width: 18rem; }
   function evidence(log) {
     const dl = el('dl', 'evidence');
     const add = (k, v) => { const d = el('div'); d.append(el('dt', null, k), el('dd', null, v)); dl.append(d); };
+    add('Flow ID', `#${text(log.id)}`);
     add('Source port', num(log.source_port) !== null ? String(num(log.source_port)) : DASH);
     add('Destination port', num(log.destination_port) !== null ? String(num(log.destination_port)) : DASH);
     add('Protocol', text(log.protocol));
-    if (log.attack_type && String(log.attack_type) !== classify(log.attack_type).label) add('Label as saved', String(log.attack_type));
-    if (log.stage_reached) add('Pipeline stage', String(log.stage_reached));
-    if (log.model_attack_type && String(log.model_attack_type) !== String(log.attack_type)) add('Model result', String(log.model_attack_type));
-    if (log.model_verdict) add('Model verdict', String(log.model_verdict));
-    if (num(log.model_confidence) !== null && num(log.model_confidence) !== num(log.confidence)) add('Model confidence', fmtPct(log.model_confidence));
-    if (num(log.stage1_attack_probability) !== null) add('Stage 1 attack score', fmtPct(log.stage1_attack_probability));
+    add('Label as saved', text(log.attack_type));
+    add('Pipeline stage', text(log.stage_reached));
+    add('Stage 1 attack score', fmtPct(log.stage1_attack_probability));
+    add('Model verdict', text(log.model_verdict));
     return dl;
   }
   const CHEVRON = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="m5 8 5 5 5-5"/></svg>';
 
-  function buildRow(log, isSelected, now, anyStage) {
+  function buildRow(log, isSelected, now, anyStage, priorityCounts) {
     const id = String(log.id), tr = el('tr', 'log-row'); tr.dataset.id = id;
     if (isSelected) tr.classList.add('is-selected');
     if (classify(log.attack_type).attack) tr.classList.add('is-attack');
     const at = state.fresh.get(id);
     if (at && now - at < FRESH_MS) { tr.classList.add('is-new'); tr.style.setProperty('--fresh-delay', `-${now - at}ms`); }
     const timeCell = el('td', 'c-time', text(log.timestamp)); if (isSelected) timeCell.append(el('span', 'tag', 'Selected'));
+    if (isSavedForReview(log)) timeCell.append(el('span', 'review-label row-bookmarked', 'Saved for review'));
+    if (isReviewed(log)) timeCell.append(el('span', 'review-label row-reviewed', 'Reviewed locally'));
     const routeCell = el('td', 'c-route'); const route = el('span', 'route-cell');
     route.append(el('span', 'route-source', text(log.source_ip)), el('i', null, '→'), el('span', 'route-target', text(log.destination_ip)));
     routeCell.append(route, el('span', 'route-sub', `${text(log.protocol)}${num(log.destination_port) !== null ? ' · port ' + num(log.destination_port) : ''}`));
     const classCell = el('td', 'c-class'); classCell.append(chip(log));
-    const cells = [timeCell, routeCell, classCell, el('td', 'num c-conf', fmtPct(log.confidence)), el('td', 'num c-lat', fmtMs(log.latency_ms))];
+    const priority = reviewPriority(log, priorityCounts), priorityCell = el('td', 'c-priority');
+    const priorityBadge = el('span', 'priority-badge', isAttack(log) ? priority.label : 'Not applicable');
+    priorityBadge.dataset.level = priority.level;
+    priorityBadge.title = isAttack(log) ? `${PRIORITY_HELP} ${priorityDescription(log, priority)}` : 'Suggested review priority applies only to attack-labelled records.';
+    priorityCell.append(priorityBadge);
+    const cells = [timeCell, routeCell, classCell, priorityCell, el('td', 'num c-conf', fmtPct(log.confidence)), el('td', 'num c-lat', fmtMs(log.latency_ms))];
     if (anyStage) { const sc = el('td', 'c-stage'); sc.append(el('span', 'chip chip-stage', log.stage_reached ? String(log.stage_reached) : 'Not recorded')); cells.push(sc); }
     const actionCell = el('td', 'c-act'), actions = el('div', 'row-actions');
     const quick = el('button', 'row-btn quick-toggle'); quick.type = 'button'; quick.dataset.focusKey = `toggle-${id}`;
@@ -2547,11 +2841,23 @@ body { --sidebar-width: 18rem; }
     const investigate = el('button', 'row-btn investigate-btn', 'Investigate →'); investigate.type = 'button'; investigate.dataset.focusKey = `inspect-${id}`;
     investigate.setAttribute('aria-label', `Investigate flow ${id}`);
     investigate.addEventListener('click', e => { e.stopPropagation(); selectFlow(log); });
-    actions.append(quick); actionCell.append(actions); cells.push(actionCell); tr.append(...cells);
+    const bookmark = el('button', 'row-btn bookmark-toggle'); bookmark.type = 'button'; bookmark.dataset.focusKey = `bookmark-${id}`;
+    const savedForLater = isSavedForReview(log);
+    bookmark.setAttribute('aria-pressed', String(savedForLater));
+    bookmark.setAttribute('aria-label', `${savedForLater ? 'Remove from' : 'Save for'} review: Flow #${id}`);
+    bookmark.title = savedForLater ? 'Remove from saved for review' : 'Save for review in this browser';
+    bookmark.disabled = !exactReviewKey(log);
+    bookmark.innerHTML = '<svg viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="1.6" aria-hidden="true"><path d="M5 3h10v14l-5-3-5 3V3Z" stroke-linejoin="round"/></svg>';
+    bookmark.addEventListener('click', e => { e.stopPropagation(); toggleSavedForReview(log); });
+    const currentRecord = state.logs.find(row => String(row.id) === id);
+    const conflictingCopy = !!currentRecord && !sameSavedRecord(currentRecord,log);
+    investigate.disabled = conflictingCopy;
+    if (conflictingCopy) { investigate.title = 'This saved copy differs from the currently loaded record with this ID. No replacement record will be opened.'; timeCell.append(el('span', 'review-label', 'Saved copy · ID now differs')); }
+    actions.append(quick, bookmark); actionCell.append(actions); cells.push(actionCell); tr.append(...cells);
     const detail = el('tr', 'detail-row'); detail.id = `details-${id}`;
     const dcell = el('td'); dcell.colSpan = cells.length;
     const panel = el('section', 'quick-panel'); panel.setAttribute('aria-label', `Saved evidence for flow ${id}`);
-    const dhead = el('div', 'detail-head'); dhead.append(el('span', 'detail-title', `Saved evidence · Flow #${id}${state.logs.some(l => String(l.id) === id) ? '' : ' · retained snapshot'}`));
+    const dhead = el('div', 'detail-head'); dhead.append(el('span', 'detail-title', `Saved evidence · Flow #${id}${currentRecord && sameSavedRecord(currentRecord,log) ? '' : ' · retained snapshot'}`));
     dhead.append(investigate); panel.append(dhead, evidence(log)); dcell.append(panel); detail.append(dcell);
     function setOpen(open) {
       detail.hidden = !open; tr.classList.toggle('is-expanded', open); quick.setAttribute('aria-expanded', String(open));
@@ -2559,7 +2865,7 @@ body { --sidebar-width: 18rem; }
     }
     function changeOpen(open) {
       const current = state.logs.find(l => String(l.id) === id);
-      if (open && current && fingerprint(current) !== fingerprint(log)) { renderTable(); return; }
+      if (open && current && !sameSavedRecord(current,log) && !isSavedForReview(log)) { renderTable(); return; }
       if (open) { state.expanded.add(id); state.openSnapshots.set(id, {...log}); }
       else { state.expanded.delete(id); state.openSnapshots.delete(id); }
       setOpen(open); syncExpansionControls();
@@ -2592,14 +2898,16 @@ body { --sidebar-width: 18rem; }
     const anchor = tableAnchor();   // v4
     const body = $('logBody');
     const previousOrder = [...body.querySelectorAll('tr.log-row')].map(row => row.dataset.id);
-    const rows = state.logs.filter(matchesFilters), sel = selectedInfo();
-    const filterKey = JSON.stringify([state.activeClass, state.search, state.sourceIp, state.attacksOnly, state.latencyRange]);
+    const priorityCounts = flaggedSourceCounts(), compare = recordComparator(priorityCounts);
+    const records = state.savedOnly ? savedReviewRecords() : state.logs;
+    const rows = records.filter(matchesFilters).sort(compare), sel = selectedInfo();
+    const filterKey = JSON.stringify([state.activeClass, state.search, state.sourceIp, state.attacksOnly, state.latencyRange, state.recordSort, state.savedOnly, state.tableOrderVersion]);
     const holdOrder = state.expanded.size && previousOrder.length && state.tableFilterKey === filterKey;
     state.tableFilterKey = filterKey;
     const currentById = new Map(state.logs.map(log => [String(log.id), log]));
     for (const id of state.expanded) {
       const saved = state.openSnapshots.get(id), current = currentById.get(id);
-      if (saved && current && fingerprint(saved) !== fingerprint(current)) { state.expanded.delete(id); state.openSnapshots.delete(id); }
+      if (saved && current && !sameSavedRecord(saved,current) && !(state.savedOnly && isSavedForReview(saved))) { state.expanded.delete(id); state.openSnapshots.delete(id); }
     }
     // Hold the visible reading order during refresh, including records that leave the loaded window.
     const held = new Map(rows.map(log => [String(log.id), log]));
@@ -2607,7 +2915,7 @@ body { --sidebar-width: 18rem; }
       const saved = state.openSnapshots.get(id);
       if (saved && !currentById.has(id) && matchesFilters(saved)) held.set(id, saved);
     }
-    let ordered = rows;
+    let ordered = [...held.values()].sort(compare);
     if (holdOrder) {
       ordered = previousOrder.filter(id => held.has(id)).map(id => held.get(id));
       const seen = new Set(ordered.map(log => String(log.id)));
@@ -2622,22 +2930,26 @@ body { --sidebar-width: 18rem; }
     $('thStage').hidden = !anyStage; $('stageNote').hidden = anyStage || !state.logs.length;
     // Keep the exact selected detection first, even outside filters or the latest loaded window.
     const now = Date.now(), all = sel ? [sel.log, ...shown.filter(log => String(log.id) !== state.selected.id)] : shown;
-    all.forEach((log) => body.append(...buildRow(log, !!sel && String(log.id) === state.selected.id && fingerprint(log) === state.selected.fingerprint, now, anyStage)));
-    const filtered = !!(state.activeClass || state.search || state.sourceIp || state.attacksOnly || state.latencyRange);
+    all.forEach((log) => body.append(...buildRow(log, !!sel && String(log.id) === state.selected.id && fingerprint(log) === state.selected.fingerprint, now, anyStage, priorityCounts)));
+    const filtered = !!(state.activeClass || state.search || state.sourceIp || state.attacksOnly || state.latencyRange || state.savedOnly);
     const empty = $('empty'); empty.hidden = all.length > 0;
-    if (!all.length) setText(empty, !state.data ? 'Waiting for the first update…' : !state.logs.length ? 'No saved flows yet. Records appear once the monitor writes detections to the database.' : 'No records match these filters.');
-    setText($('tableCount'), !state.data ? DASH : filtered ? `${rows.length.toLocaleString()} of ${state.logs.length.toLocaleString()} loaded records match · showing the newest ${shown.length.toLocaleString()}` : `Showing the newest ${shown.length.toLocaleString()} of ${state.logs.length.toLocaleString()} loaded records`);
-    if (state.expanded.size) $('tableCount').textContent = `${shown.length} displayed · ${rows.length} matching loaded records · order held while details are open`;
+    if (!all.length) setText(empty, state.savedOnly ? savedForReview.size ? 'No saved records match these filters.' : 'No records saved for review yet. Use the bookmark beside Details to save one.' : !state.data ? 'Waiting for the first update…' : !state.logs.length ? 'No saved flows yet. Records appear once the monitor writes detections to the database.' : 'No records match these filters.');
+    const scope = state.savedOnly ? 'saved copies' : 'loaded records';
+    setText($('tableCount'), `${all.length.toLocaleString()} displayed · ${rows.length.toLocaleString()} matching ${scope} · ${RECORD_SORT_LABELS[state.recordSort]}${sel ? ' · selected detection pinned above sorted results' : ''}${holdOrder ? ' · order held while Details are open' : ''}`);
+    setText($('savedReviewFilter'), `Saved for review (${savedForReview.size.toLocaleString()})`);
+    $('savedReviewFilter').setAttribute('aria-pressed', String(state.savedOnly));
+    const outside = [...savedForReview.values()].filter(saved => !state.logs.some(row => sameSavedRecord(saved,row))).length;
+    setText($('savedReviewNote'), `${savedReviewStorageAvailable ? 'Saved copies stay in this browser only.' : 'Browser storage unavailable: saved copies last for this page session only.'} Review status is separate from bookmarks and attack labels.${state.savedOnly && outside ? ` ${outside} saved ${outside === 1 ? 'copy is' : 'copies are'} outside the current loaded window; priority uses loaded records only.` : ''}`);
     $('showMore').hidden = rows.length <= state.tableLimit;
     syncExpansionControls();
     $('recordInvestigationContext').hidden = !sel;
     if (sel) {
       const context = [!matchesFilters(sel.log) ? 'outside current filters' : '', !sel.live ? 'retained snapshot' : ''].filter(Boolean);
-      setText($('recordInvestigationLabel'), `Selected detection: Flow #${sel.log.id} · ${classify(sel.log.attack_type).label} · pinned first${context.length ? ` · ${context.join(' · ')}` : ''}`);
-      setText($('tableCount'), `${all.length.toLocaleString()} displayed · ${rows.length.toLocaleString()} matching loaded records · selected detection pinned first${state.expanded.size ? ' · order held while details are open' : ''}`);
+      setText($('recordInvestigationLabel'), `Selected detection: Flow #${sel.log.id} · ${classify(sel.log.attack_type).label} · pinned above sorted results${context.length ? ` · ${context.join(' · ')}` : ''}`);
     }
     const af = $('activeFilters'); af.replaceChildren();
     const addChip = (label, onClear) => { const b = el('button', 'filter-chip'); b.type = 'button'; b.append(document.createTextNode(label), el('b', null, '✕')); b.setAttribute('aria-label', `Remove filter: ${label}`); b.addEventListener('click', onClear); af.append(b); };
+    if (state.savedOnly) addChip('Saved for review', () => { state.savedOnly = false; state.tableLimit = 50; renderTable(); });
     if (state.sourceIp) addChip(`Source: ${state.sourceIp}`, () => { state.sourceIp = null; state.tableLimit = 50; renderTable(); });
     if (state.activeClass) addChip(`Class: ${classify(state.activeClass).key === state.activeClass ? classify(state.activeClass).label : state.activeClass}`, () => toggleClass(state.activeClass));
     if (state.attacksOnly) addChip('Attacks only', () => { state.attacksOnly = false; state.tableLimit = 50; render(); });
@@ -2667,7 +2979,7 @@ body { --sidebar-width: 18rem; }
   function positionTabs() {} // Navigation uses a vertical active state.
   const NAV_ITEMS = {
     overview: ['Overview', 'See recent detections and what needs attention.'],
-    records: ['Detection records', 'Find a network event and explore its details.'],
+    records: ['Detection records', 'Review saved detections and choose a flow to investigate.'],
     detail: ['Flow investigation', 'Understand one detection and decide what to check next.'],
     classes: ['Threat classification', 'See what types of traffic the model has identified.'],
     latency: ['Processing latency', 'See how long the model takes to classify saved flows.'],
@@ -2676,7 +2988,7 @@ body { --sidebar-width: 18rem; }
     account: ['Account & workspace', 'Your identity and browser preferences'],
   };
   const singlePlacements = [
-    ['classificationPanel','singleAnalysis'], ['processingPanel','singleAnalysis'], ['offlineMetricCell','overviewMetrics'],
+    ['classificationPanel','singleAnalysis'], ['processingPanel','singleAnalysis'],
     ['detailView','singleInvestigation'], ['recordsSection','singleRecords'],
     ['sourcesPanel','singleSupport'], ['pipelineView','singleSupport'],
   ].map(([id,target]) => {
@@ -2755,7 +3067,7 @@ body { --sidebar-width: 18rem; }
   document.querySelector('[data-open-records]').addEventListener('click', () => navigateTo('records'));
   window.addEventListener('hashchange', () => navigateTo(location.hash.slice(1), { instant: true, keepHash: true }));
 
-  function toggleClass(key) { state.sourceIp = null; state.activeClass = state.activeClass === key ? null : key; state.tableLimit = 50; render(); showView('investigate',{scroll:false});revealRecords();$('recordsSection').scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'start'}); }
+  function toggleClass(key) { state.savedOnly = false; state.sourceIp = null; state.activeClass = state.activeClass === key ? null : key; state.tableLimit = 50; render(); showView('investigate',{scroll:false});revealRecords();$('recordsSection').scrollIntoView({behavior:reduceMotion?'auto':'smooth',block:'start'}); }
 
   document.querySelectorAll('[data-chart-mode]').forEach(b=>b.addEventListener('click',()=>{if(state.chartMode===b.dataset.chartMode)return;plotBusy=false;state.chartMode=b.dataset.chartMode;renderLatency(true);}));
   const plotCanvas=$('latencyChart');
@@ -2780,6 +3092,7 @@ body { --sidebar-width: 18rem; }
   $('classLegend').addEventListener('focusout',e=>{if(!$('classLegend').contains(e.relatedTarget))resetDonutPreview();});
   $('classLegend').addEventListener('pointerover',e=>{const b=e.target.closest('.legend-item');if(b)showClassificationReadout([...$('classLegend').children].indexOf(b));});
   $('classLegend').addEventListener('focusin',e=>{const b=e.target.closest('.legend-item');if(b)showClassificationReadout([...$('classLegend').children].indexOf(b));});
+  setText($('priorityHelp'), `${PRIORITY_HELP} High: ${REVIEW_PRIORITY_THRESHOLDS.high}+ flagged records from the source; Medium: ${REVIEW_PRIORITY_THRESHOLDS.medium}–${REVIEW_PRIORITY_THRESHOLDS.high - 1}; Low: 1–${REVIEW_PRIORITY_THRESHOLDS.medium - 1}. Counts use the selected loaded window. These presentation thresholds are not validated security severity thresholds; model confidence is not used.`);
   document.querySelectorAll('.metric-info').forEach(b=>{
     const box=$(b.getAttribute('aria-controls'));document.body.append(box);
     box.setAttribute('role','tooltip');b.setAttribute('aria-describedby',box.id);
@@ -2797,10 +3110,30 @@ body { --sidebar-width: 18rem; }
     document.addEventListener('keydown',e=>{if(e.key==='Escape'){dismissed=true;sync()}});
     window.addEventListener('scroll',position,{passive:true,capture:true});window.addEventListener('resize',position);
   });
+  $('toggleReviewed').addEventListener('click', () => {
+    const info = selectedInfo(); if (!info) return;
+    const key = exactReviewKey(info.log); if (!key) return;
+    const reviewed = !localReviews.has(key);
+    if (reviewed) localReviews.add(key); else localReviews.delete(key);
+    try { localStorage.setItem(LOCAL_REVIEW_STORAGE_KEY, JSON.stringify([...localReviews])); reviewStorageAvailable = true; }
+    catch (_) { reviewStorageAvailable = false; }
+    state.tableOrderVersion++; render();
+    setText($('reviewConfirmation'), reviewed ? 'Marked as reviewed. This record remains saved for future investigation.' : 'Marked as unreviewed. The original detection remains unchanged.');
+  });
+  window.addEventListener('storage', event => {
+    if (![LOCAL_REVIEW_STORAGE_KEY,SAVED_REVIEW_STORAGE_KEY,null].includes(event.key)) return;
+    try {
+      if (event.key === LOCAL_REVIEW_STORAGE_KEY || event.key === null) { const saved = JSON.parse(event.key === null ? '[]' : event.newValue || '[]'); if (Array.isArray(saved)) localReviews = new Set(saved.filter(key => typeof key === 'string')); }
+      if (event.key === SAVED_REVIEW_STORAGE_KEY || event.key === null) savedForReview = readSavedReview(event.key === null ? null : event.newValue);
+      state.tableOrderVersion++; render();
+    } catch (_) {}
+  });
+  $('recordSort').addEventListener('change', () => { state.recordSort = $('recordSort').value; state.tableLimit = 50; renderTable(); });
+  $('savedReviewFilter').addEventListener('click', () => { state.savedOnly = !state.savedOnly; state.tableLimit = 50; renderTable(); });
   $('returnToInvestigation').addEventListener('click', () => { if (selectedInfo()) showView('detail', {reveal:true}); });
   $('relatedRecords').addEventListener('click', () => {
     const info = selectedInfo(); if (!info) return;
-    state.sourceIp = String(info.log.source_ip || ''); state.search = ''; state.activeClass = null; state.attacksOnly = false; state.latencyRange = null; state.tableLimit = 50;
+    state.sourceIp = String(info.log.source_ip || ''); state.savedOnly = false; state.search = ''; state.activeClass = null; state.attacksOnly = false; state.latencyRange = null; state.tableLimit = 50;
     $('logSearch').value = state.search; renderTable(); showView('records');
   });
   $('backToCharts').addEventListener('click',()=>showView('overview'));
@@ -2841,7 +3174,7 @@ body { --sidebar-width: 18rem; }
   $('collapseDetails').addEventListener('click',()=>{state.expanded.clear();state.openSnapshots.clear();renderTable();$('logBody').querySelector('.quick-toggle')?.focus({preventScroll:true});});
   $('showMore').addEventListener('click', () => { state.tableLimit += 50; renderTable(); });
   $('logSearch').addEventListener('input', (e) => { state.search = e.target.value.trim().toLowerCase(); state.tableLimit = 50; renderTable(); });
-  $('clearFilter').addEventListener('click', () => { state.sourceIp=null; state.latencyRange=null;state.activeClass = null; state.attacksOnly = false; state.search = ''; $('logSearch').value = ''; state.tableLimit = 50; render(); $('logSearch').focus(); });
+  $('clearFilter').addEventListener('click', () => { state.savedOnly=false;state.sourceIp=null; state.latencyRange=null;state.activeClass = null; state.attacksOnly = false; state.search = ''; $('logSearch').value = ''; state.tableLimit = 50; render(); $('logSearch').focus(); });
   document.querySelectorAll('[data-scope]').forEach((b) => b.addEventListener('click', () => { state.attacksOnly = b.dataset.scope === 'attacks'; state.tableLimit = 50; renderTable(); }));
   document.querySelectorAll('[data-limit]').forEach((b) => b.addEventListener('click', () => {
     state.limit = Number(b.dataset.limit);
